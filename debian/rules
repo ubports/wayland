@@ -1,0 +1,26 @@
+#!/usr/bin/make -f
+
+PACKAGE=libwayland0
+
+# Install in debian/tmp to retain control through dh_install:
+override_dh_auto_install:
+	dh_auto_install --destdir=debian/tmp
+
+# Kill *.la files, and forget no-one:
+override_dh_install:
+	find debian/tmp -name '*.la' -delete
+	dh_install --fail-missing
+
+# Generate hard dependencies:
+override_dh_makeshlibs: V=$(shell dpkg-parsechangelog|awk '/^Version:/ {print $$2}')
+override_dh_makeshlibs:
+	sed 's/@@currentversion@@/(= $(V))/g' \
+	  debian/$(PACKAGE).symbols.in > debian/$(PACKAGE).symbols
+	dh_makeshlibs -V '$(PACKAGE) (= $(V))' -- -c4
+
+# Debug package:
+override_dh_strip:
+	dh_strip --dbg-package=$(PACKAGE)-dbg
+
+%:
+	dh $@ --with quilt,autoreconf --builddirectory=build/

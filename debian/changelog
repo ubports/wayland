@@ -1,0 +1,5 @@
+wayland (0.1.0~0-1) UNRELEASED; urgency=low
+
+  * Initial release (Closes: #611400).
+
+ -- Cyril Brulebois <kibi@debian.org>  Mon, 13 Jun 2011 21:50:26 +0200
