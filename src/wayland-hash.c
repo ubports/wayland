@@ -176,14 +176,26 @@ hash_table_search(struct wl_hash_table *ht, uint32_t hash)
 			return entry;
 		}
 
-		double_hash = hash % ht->rehash;
-		if (double_hash == 0)
-			double_hash = 1;
+		double_hash = 1 + hash % ht->rehash;
 
 		hash_address = (hash_address + double_hash) % ht->size;
 	} while (hash_address != hash % ht->size);
 
 	return NULL;
+}
+
+WL_EXPORT void
+wl_hash_table_for_each(struct wl_hash_table *ht,
+		       wl_iterator_func_t func, void *data)
+{
+	struct hash_entry *entry;
+	uint32_t i;
+
+	for (i = 0; i < ht->size; i++) {
+		entry = ht->table + i;
+		if (entry_is_present(entry))
+			func(entry->data, data);
+	}
 }
 
 WL_EXPORT void *
@@ -263,9 +275,7 @@ wl_hash_table_insert(struct wl_hash_table *ht, uint32_t hash, void *data)
 			return 0;
 		}
 
-		double_hash = hash % ht->rehash;
-		if (double_hash == 0)
-			double_hash = 1;
+		double_hash = 1 + hash % ht->rehash;
 
 		hash_address = (hash_address + double_hash) % ht->size;
 	} while (hash_address != hash % ht->size);

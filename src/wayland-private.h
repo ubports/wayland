@@ -1,5 +1,6 @@
 /*
- * Copyright © 2008 Kristian Høgsberg
+ * Copyright © 2008-2011 Kristian Høgsberg
+ * Copyright © 2011 Intel Corporation
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -20,11 +21,31 @@
  * OF THIS SOFTWARE.
  */
 
-#ifndef _CONNECTION_H_
-#define _CONNECTION_H_
+#ifndef WAYLAND_PRIVATE_H
+#define WAYLAND_PRIVATE_H
 
 #include <stdarg.h>
 #include "wayland-util.h"
+
+#define WL_ZOMBIE_OBJECT ((void *) 2)
+
+#define WL_MAP_SERVER_SIDE 0
+#define WL_MAP_CLIENT_SIDE 1
+#define WL_SERVER_ID_START 0xff000000
+
+struct wl_map {
+	struct wl_array client_entries;
+	struct wl_array server_entries;
+	uint32_t free_list;
+};
+
+void wl_map_init(struct wl_map *map);
+void wl_map_release(struct wl_map *map);
+uint32_t wl_map_insert_new(struct wl_map *map, uint32_t side, void *data);
+int wl_map_insert_at(struct wl_map *map, uint32_t i, void *data);
+void wl_map_remove(struct wl_map *map, uint32_t i);
+void *wl_map_lookup(struct wl_map *map, uint32_t i);
+void wl_map_for_each(struct wl_map *map, wl_iterator_func_t func, void *data);
 
 struct wl_connection;
 struct wl_closure;
@@ -53,7 +74,7 @@ wl_connection_vmarshal(struct wl_connection *connection,
 struct wl_closure *
 wl_connection_demarshal(struct wl_connection *connection,
 			uint32_t size,
-			struct wl_hash_table *objects,
+			struct wl_map *objects,
 			const struct wl_message *message);
 void
 wl_closure_invoke(struct wl_closure *closure,
@@ -61,7 +82,9 @@ wl_closure_invoke(struct wl_closure *closure,
 void
 wl_closure_send(struct wl_closure *closure, struct wl_connection *connection);
 void
-wl_closure_print(struct wl_closure *closure, struct wl_object *target);
+wl_closure_queue(struct wl_closure *closure, struct wl_connection *connection);
+void
+wl_closure_print(struct wl_closure *closure, struct wl_object *target, int send);
 void
 wl_closure_destroy(struct wl_closure *closure);
 

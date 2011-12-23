@@ -85,23 +85,37 @@ void wl_display_run(struct wl_display *display);
 void wl_display_add_object(struct wl_display *display,
 			   struct wl_object *object);
 
-typedef void (*wl_global_bind_func_t)(struct wl_client *client,
-				      struct wl_object *global,
-				      uint32_t version);
+typedef void (*wl_global_bind_func_t)(struct wl_client *client, void *data,
+				      uint32_t version, uint32_t id);
 
-int wl_display_add_global(struct wl_display *display,
-			  struct wl_object *object,
-			  wl_global_bind_func_t func);
+struct wl_global *wl_display_add_global(struct wl_display *display,
+					const struct wl_interface *interface,
+					void *data,
+					wl_global_bind_func_t bind);
+
+void wl_display_remove_global(struct wl_display *display,
+			      struct wl_global *global);
 
 struct wl_client *wl_client_create(struct wl_display *display, int fd);
 void wl_client_destroy(struct wl_client *client);
-void wl_client_post_error(struct wl_client *client, struct wl_object *object,
-			  uint32_t code, const char *msg, ...);
-void wl_client_post_no_memory(struct wl_client *client);
-void wl_client_post_global(struct wl_client *client, struct wl_object *object);
+void wl_client_flush(struct wl_client *client);
 
-struct wl_visual {
+struct wl_resource *
+wl_client_add_object(struct wl_client *client,
+		     const struct wl_interface *interface,
+		     const void *implementation, uint32_t id, void *data);
+struct wl_resource *
+wl_client_new_object(struct wl_client *client,
+		     const struct wl_interface *interface,
+		     const void *implementation, void *data);
+
+struct wl_resource {
 	struct wl_object object;
+	void (*destroy)(struct wl_resource *resource);
+	struct wl_list link;
+	struct wl_list destroy_listener_list;
+	struct wl_client *client;
+	void *data;
 };
 
 struct wl_shm_callbacks {
@@ -114,26 +128,10 @@ struct wl_shm_callbacks {
 	void (*buffer_destroyed)(struct wl_buffer *buffer);
 };
 
-struct wl_compositor {
-	struct wl_object object;
-	struct wl_visual argb_visual;
-	struct wl_visual premultiplied_argb_visual;
-	struct wl_visual rgb_visual;
-};
-
-struct wl_resource {
-	struct wl_object object;
-	void (*destroy)(struct wl_resource *resource,
-			struct wl_client *client);
-	struct wl_list link;
-	struct wl_list destroy_listener_list;
-};
-
 struct wl_buffer {
 	struct wl_resource resource;
-	struct wl_compositor *compositor;
-	struct wl_visual *visual;
 	int32_t width, height;
+	uint32_t busy_count;
 	void *user_data;
 };
 
@@ -145,7 +143,6 @@ struct wl_listener {
 
 struct wl_surface {
 	struct wl_resource resource;
-	struct wl_client *client;
 };
 
 struct wl_grab;
@@ -163,9 +160,10 @@ struct wl_grab {
 };
 
 struct wl_input_device {
-	struct wl_object object;
-	struct wl_compositor *compositor;
+	struct wl_list resource_list;
+	struct wl_resource *pointer_focus_resource;
 	struct wl_surface *pointer_focus;
+	struct wl_resource *keyboard_focus_resource;
 	struct wl_surface *keyboard_focus;
 	struct wl_array keys;
 	uint32_t pointer_focus_time;
@@ -175,55 +173,37 @@ struct wl_input_device {
 
 	int32_t x, y;
 	struct wl_grab *grab;
-	struct wl_grab motion_grab;
+	struct wl_grab implicit_grab;
 	uint32_t grab_time;
 	int32_t grab_x, grab_y;
 	uint32_t grab_button;
 	struct wl_listener grab_listener;
 };
 
-struct wl_drag_offer {
-	struct wl_object object;
-};
+/*
+ * Post an event to the client's object referred to by 'resource'.
+ * 'opcode' is the event number generated from the protocol XML
+ * description (the event name). The variable arguments are the event
+ * parameters, in the order they appear in the protocol XML specification.
+ *
+ * The variable arguments' types are:
+ * - type=uint: 	uint32_t
+ * - type=int:		int32_t
+ * - type=string:	(const char *) to a nil-terminated string
+ * - type=array:	(struct wl_array *)
+ * - type=fd:		int, that is an open file descriptor
+ * - type=new_id:	(struct wl_object *) or (struct wl_resource *)
+ * - type=object:	(struct wl_object *) or (struct wl_resource *)
+ */
+void wl_resource_post_event(struct wl_resource *resource,
+			    uint32_t opcode, ...);
+void wl_resource_queue_event(struct wl_resource *resource,
+			     uint32_t opcode, ...);
 
-struct wl_drag {
-	struct wl_resource resource;
-	struct wl_grab grab;
-	struct wl_drag_offer drag_offer;
-	struct wl_surface *source;
-	struct wl_surface *drag_focus;
-	struct wl_client *target;
-	int32_t x, y, sx, sy;
-	struct wl_array types;
-	const char *type;
-	uint32_t pointer_focus_time;
-	struct wl_listener drag_focus_listener;
-};
-
-struct wl_selection_offer {
-	struct wl_object object;
-};
-
-struct wl_selection {
-	struct wl_resource resource;
-	struct wl_client *client;
-	struct wl_input_device *input_device;
-	struct wl_selection_offer selection_offer;
-	struct wl_surface *selection_focus;
-	struct wl_client *target;
-	struct wl_array types;
-	struct wl_listener selection_focus_listener;
-};
-
-void
-wl_client_post_event(struct wl_client *client,
-		      struct wl_object *sender,
-		      uint32_t event, ...);
-
-int
-wl_display_set_compositor(struct wl_display *display,
-			  struct wl_compositor *compositor,
-			  const struct wl_compositor_interface *implementation);
+/* msg is a printf format string, variable args are its args. */
+void wl_resource_post_error(struct wl_resource *resource,
+			    uint32_t code, const char *msg, ...);
+void wl_resource_post_no_memory(struct wl_resource *resource);
 
 void
 wl_display_post_frame(struct wl_display *display, struct wl_surface *surface,
@@ -237,12 +217,10 @@ struct wl_display *
 wl_client_get_display(struct wl_client *client);
 
 void
-wl_resource_destroy(struct wl_resource *resource,
-		    struct wl_client *client, uint32_t time);
+wl_resource_destroy(struct wl_resource *resource, uint32_t time);
 
 void
-wl_input_device_init(struct wl_input_device *device,
-		     struct wl_compositor *compositor);
+wl_input_device_init(struct wl_input_device *device);
 
 void
 wl_input_device_set_pointer_focus(struct wl_input_device *device,
@@ -275,10 +253,12 @@ wl_shm_buffer_get_data(struct wl_buffer *buffer);
 int32_t
 wl_shm_buffer_get_stride(struct wl_buffer *buffer);
 
+uint32_t
+wl_shm_buffer_get_format(struct wl_buffer *buffer);
+
 struct wl_buffer *
 wl_shm_buffer_create(struct wl_shm *shm, int width, int height,
-		     int stride, struct wl_visual *visual,
-		     void *data);
+		     int stride, uint32_t visual, void *data);
 
 int
 wl_buffer_is_shm(struct wl_buffer *buffer);
@@ -289,11 +269,6 @@ wl_shm_init(struct wl_display *display,
 
 void
 wl_shm_finish(struct wl_shm *shm);
-
-int
-wl_compositor_init(struct wl_compositor *compositor,
-		   const struct wl_compositor_interface *interface,
-		   struct wl_display *display);
 
 #ifdef  __cplusplus
 }

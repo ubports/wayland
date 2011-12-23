@@ -40,14 +40,14 @@ extern "C" {
 #define ALIGN(n, a) ( ((n) + ((a) - 1)) & ~((a) - 1) )
 #define DIV_ROUNDUP(n, a) ( ((n) + ((a) - 1)) / (a) )
 
-#define container_of(ptr, type, member) ({			\
-	const typeof( ((type *)0)->member ) *__mptr = (ptr);	\
+#define container_of(ptr, type, member) ({				\
+	const __typeof__( ((type *)0)->member ) *__mptr = (ptr);	\
 	(type *)( (char *)__mptr - offsetof(type,member) );})
 
 struct wl_message {
 	const char *name;
 	const char *signature;
-	const void **types;
+	const struct wl_interface **types;
 };
 
 struct wl_interface {
@@ -61,9 +61,11 @@ struct wl_interface {
 
 struct wl_object {
 	const struct wl_interface *interface;
-	void (**implementation)(void);
+	void (* const * implementation)(void);
 	uint32_t id;
 };
+
+typedef void (*wl_iterator_func_t)(void *element, void *data);
 
 struct wl_hash_table;
 struct wl_hash_table *wl_hash_table_create(void);
@@ -71,6 +73,8 @@ void wl_hash_table_destroy(struct wl_hash_table *ht);
 void *wl_hash_table_lookup(struct wl_hash_table *ht, uint32_t hash);
 int wl_hash_table_insert(struct wl_hash_table *ht, uint32_t hash, void *data);
 void wl_hash_table_remove(struct wl_hash_table *ht, uint32_t hash);
+void wl_hash_table_for_each(struct wl_hash_table *ht,
+			    wl_iterator_func_t func, void *data);
 
 /**
  * wl_list - linked list
@@ -111,10 +115,17 @@ void wl_list_insert(struct wl_list *list, struct wl_list *elm);
 void wl_list_remove(struct wl_list *elm);
 int wl_list_length(struct wl_list *list);
 int wl_list_empty(struct wl_list *list);
+void wl_list_insert_list(struct wl_list *list, struct wl_list *other);
 
+#ifdef __GNUC__
 #define __container_of(ptr, sample, member)				\
-	(void *)((char *)(ptr)	-					\
+	(__typeof__(sample))((char *)(ptr)	-			\
 		 ((char *)&(sample)->member - (char *)(sample)))
+#else
+#define __container_of(ptr, sample, member)				\
+	(void *)((char *)(ptr)	-				        \
+		 ((char *)&(sample)->member - (char *)(sample)))
+#endif
 
 #define wl_list_for_each(pos, head, member)				\
 	for (pos = 0, pos = __container_of((head)->next, pos, member);	\

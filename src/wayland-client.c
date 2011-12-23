@@ -24,6 +24,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
@@ -34,9 +35,9 @@
 #include <fcntl.h>
 #include <sys/poll.h>
 
-#include "connection.h"
 #include "wayland-util.h"
 #include "wayland-client.h"
+#include "wayland-private.h"
 
 struct wl_global_listener {
 	wl_display_global_func_t handler;
@@ -50,21 +51,6 @@ struct wl_proxy {
 	void *user_data;
 };
 
-struct wl_sync_handler {
-	wl_display_sync_func_t func;
-	uint32_t key;
-	void *data;
-	struct wl_list link;
-};
-
-struct wl_frame_handler {
-	wl_display_frame_func_t func;
-	uint32_t key;
-	void *data;
-	struct wl_surface *surface;
-	struct wl_list link;
-};
-
 struct wl_global {
 	uint32_t id;
 	char *interface;
@@ -76,9 +62,8 @@ struct wl_display {
 	struct wl_proxy proxy;
 	struct wl_connection *connection;
 	int fd;
-	uint32_t id, id_count, next_range;
 	uint32_t mask;
-	struct wl_hash_table *objects;
+	struct wl_map objects;
 	struct wl_list global_listener_list;
 	struct wl_list global_list;
 
@@ -87,9 +72,6 @@ struct wl_display {
 
 	wl_display_global_func_t global_handler;
 	void *global_handler_data;
-
-	struct wl_list sync_list, frame_list;
-	uint32_t key;
 };
 
 static int wl_debug = 0;
@@ -139,10 +121,30 @@ wl_display_remove_global_listener(struct wl_display *display,
 }
 
 WL_EXPORT struct wl_proxy *
-wl_proxy_create_for_id(struct wl_display *display,
-		       const struct wl_interface *interface, uint32_t id)
+wl_proxy_create(struct wl_proxy *factory, const struct wl_interface *interface)
 {
 	struct wl_proxy *proxy;
+	struct wl_display *display = factory->display;
+
+	proxy = malloc(sizeof *proxy);
+	if (proxy == NULL)
+		return NULL;
+
+	proxy->object.interface = interface;
+	proxy->object.implementation = NULL;
+	proxy->object.id = wl_map_insert_new(&display->objects,
+					     WL_MAP_CLIENT_SIDE, proxy);
+	proxy->display = display;
+
+	return proxy;
+}
+
+WL_EXPORT struct wl_proxy *
+wl_proxy_create_for_id(struct wl_proxy *factory,
+		       uint32_t id, const struct wl_interface *interface)
+{
+	struct wl_proxy *proxy;
+	struct wl_display *display = factory->display;
 
 	proxy = malloc(sizeof *proxy);
 	if (proxy == NULL)
@@ -152,23 +154,20 @@ wl_proxy_create_for_id(struct wl_display *display,
 	proxy->object.implementation = NULL;
 	proxy->object.id = id;
 	proxy->display = display;
-	wl_hash_table_insert(display->objects, proxy->object.id, proxy);
+	wl_map_insert_at(&display->objects, id, proxy);
 
 	return proxy;
-}
-
-WL_EXPORT struct wl_proxy *
-wl_proxy_create(struct wl_proxy *factory,
-		const struct wl_interface *interface)
-{
-	return wl_proxy_create_for_id(factory->display, interface,
-				      wl_display_allocate_id(factory->display));
 }
 
 WL_EXPORT void
 wl_proxy_destroy(struct wl_proxy *proxy)
 {
-	wl_hash_table_remove(proxy->display->objects, proxy->object.id);
+	if (proxy->object.id < WL_SERVER_ID_START)
+		wl_map_insert_at(&proxy->display->objects,
+				 proxy->object.id, WL_ZOMBIE_OBJECT);
+	else
+		wl_map_insert_at(&proxy->display->objects,
+				 proxy->object.id, NULL);
 	free(proxy);
 }
 
@@ -199,12 +198,15 @@ wl_proxy_marshal(struct wl_proxy *proxy, uint32_t opcode, ...)
 					 &proxy->object.interface->methods[opcode]);
 	va_end(ap);
 
+	if (closure == NULL) {
+		fprintf(stderr, "Error marshalling request\n");
+		abort();
+	}
+
 	wl_closure_send(closure, proxy->display->connection);
 
-	if (wl_debug) {
-		fprintf(stderr, " -> ");
-		wl_closure_print(closure, &proxy->object);
-	}
+	if (wl_debug)
+		wl_closure_print(closure, &proxy->object, true);
 
 	wl_closure_destroy(closure);
 }
@@ -243,10 +245,6 @@ display_handle_global(void *data,
 	struct wl_global_listener *listener;
 	struct wl_global *global;
 
-	if (strcmp(interface, "wl_display") == 0)
-		wl_hash_table_insert(display->objects,
-				     id, &display->proxy.object);
-
 	global = malloc(sizeof *global);
 	global->id = id;
 	global->interface = strdup(interface);
@@ -259,47 +257,43 @@ display_handle_global(void *data,
 }
 
 static void
-display_handle_range(void *data,
-		     struct wl_display *display, uint32_t range)
+wl_global_destroy(struct wl_global *global)
 {
-	display->next_range = range;
+	wl_list_remove(&global->link);
+	free(global->interface);
+	free(global);
 }
 
 static void
-display_handle_key(void *data,
-		   struct wl_display *display, uint32_t key, uint32_t time)
+display_handle_global_remove(void *data,
+                             struct wl_display *display, uint32_t id)
 {
-	struct wl_sync_handler *sync_handler;
-	struct wl_frame_handler *frame_handler;
+	struct wl_global *global;
 
-	sync_handler = container_of(display->sync_list.next,
-				    struct wl_sync_handler, link);
-	if (!wl_list_empty(&display->sync_list) && sync_handler->key == key) {
-		wl_list_remove(&sync_handler->link);
-		sync_handler->func(sync_handler->data);
-		free(sync_handler);
-		return;
-	}
+	wl_list_for_each(global, &display->global_list, link)
+		if (global->id == id) {
+			wl_global_destroy(global);
+			break;
+		}
+}
 
-	frame_handler = container_of(display->frame_list. next,
-				     struct wl_frame_handler, link);
-	if (!wl_list_empty(&display->frame_list) &&
-	    frame_handler->key == key) {
-		wl_list_remove(&frame_handler->link);
-		frame_handler->func(frame_handler->surface,
-				    frame_handler->data, time);
-		free(frame_handler);
-		return;
-	}
+static void
+display_handle_delete_id(void *data, struct wl_display *display, uint32_t id)
+{
+	struct wl_proxy *proxy;
 
-	fprintf(stderr, "unsolicited sync event, client gone?\n");
+	proxy = wl_map_lookup(&display->objects, id);
+	if (proxy != WL_ZOMBIE_OBJECT)
+		fprintf(stderr, "server sent delete_id for live object\n");
+	else
+		wl_map_remove(&display->objects, id);
 }
 
 static const struct wl_display_listener display_listener = {
 	display_handle_error,
 	display_handle_global,
-	display_handle_range,
-	display_handle_key
+	display_handle_global_remove,
+	display_handle_delete_id
 };
 
 static int
@@ -370,42 +364,34 @@ wl_display_connect(const char *name)
 		flags = fcntl(display->fd, F_GETFD);
 		if (flags != -1)
 			fcntl(display->fd, F_SETFD, flags | FD_CLOEXEC);
+		unsetenv("WAYLAND_SOCKET");
 	} else if (connect_to_socket(display, name) < 0) {
 		free(display);
 		return NULL;
 	}
 
-	display->objects = wl_hash_table_create();
-	if (display->objects == NULL) {
-		close(display->fd);
-		free(display);
-		return NULL;
-	}
+	wl_map_init(&display->objects);
 	wl_list_init(&display->global_listener_list);
 	wl_list_init(&display->global_list);
 
+	wl_map_insert_new(&display->objects, WL_MAP_CLIENT_SIDE, NULL);
+
 	display->proxy.object.interface = &wl_display_interface;
-	display->proxy.object.id = 1;
+	display->proxy.object.id =
+		wl_map_insert_new(&display->objects,
+				  WL_MAP_CLIENT_SIDE, display);
 	display->proxy.display = display;
-
-	wl_list_init(&display->sync_list);
-	wl_list_init(&display->frame_list);
-
-	display->proxy.object.implementation =
-		(void(**)(void)) &display_listener;
+	display->proxy.object.implementation = (void(**)(void)) &display_listener;
 	display->proxy.user_data = display;
 
 	display->connection = wl_connection_create(display->fd,
-						   connection_update,
-						   display);
+						   connection_update, display);
 	if (display->connection == NULL) {
-		wl_hash_table_destroy(display->objects);
+		wl_map_release(&display->objects);
 		close(display->fd);
 		free(display);
 		return NULL;
 	}
-
-	wl_display_bind(display, 1, "wl_display", 1);
 
 	return display;
 }
@@ -413,8 +399,18 @@ wl_display_connect(const char *name)
 WL_EXPORT void
 wl_display_destroy(struct wl_display *display)
 {
+	struct wl_global *global, *gnext;
+	struct wl_global_listener *listener, *lnext;
+
 	wl_connection_destroy(display->connection);
-	wl_hash_table_destroy(display->objects);
+	wl_map_release(&display->objects);
+	wl_list_for_each_safe(global, gnext,
+			      &display->global_list, link)
+		wl_global_destroy(global);
+	wl_list_for_each_safe(listener, lnext,
+			      &display->global_listener_list, link)
+		free(listener);
+
 	close(display->fd);
 	free(display);
 }
@@ -431,74 +427,63 @@ wl_display_get_fd(struct wl_display *display,
 	return display->fd;
 }
 
-WL_EXPORT int
-wl_display_sync_callback(struct wl_display *display,
-			 wl_display_sync_func_t func, void *data)
+static void
+sync_callback(void *data, struct wl_callback *callback, uint32_t time)
 {
-	struct wl_sync_handler *handler;
+   int *done = data;
 
-	handler = malloc(sizeof *handler);
-	if (handler == NULL)
-		return -1;
-
-	handler->func = func;
-	handler->key = display->key++;
-	handler->data = data;
-
-	wl_list_insert(display->sync_list.prev, &handler->link);
-	wl_display_sync(display, handler->key);
-
-	return 0;
+   *done = 1;
+   wl_callback_destroy(callback);
 }
 
-WL_EXPORT int
-wl_display_frame_callback(struct wl_display *display,
-			  struct wl_surface *surface,
-			  wl_display_frame_func_t func, void *data)
+static const struct wl_callback_listener sync_listener = {
+	sync_callback
+};
+
+WL_EXPORT void
+wl_display_roundtrip(struct wl_display *display)
 {
-	struct wl_frame_handler *handler;
+	struct wl_callback *callback;
+	int done;
 
-	handler = malloc(sizeof *handler);
-	if (handler == NULL)
-		return -1;
-
-	handler->func = func;
-	handler->key = display->key++;
-	handler->data = data;
-	handler->surface = surface;
-
-	wl_list_insert(display->frame_list.prev, &handler->link);
-	wl_display_frame(display, handler->surface, handler->key);
-
-	return 0;
+	done = 0;
+	callback = wl_display_sync(display);
+	wl_callback_add_listener(callback, &sync_listener, &done);
+	wl_display_flush(display);
+	while (!done)
+		wl_display_iterate(display, WL_DISPLAY_READABLE);
 }
 
 static void
 handle_event(struct wl_display *display,
 	     uint32_t id, uint32_t opcode, uint32_t size)
 {
-	uint32_t p[32];
 	struct wl_proxy *proxy;
 	struct wl_closure *closure;
 	const struct wl_message *message;
 
-	wl_connection_copy(display->connection, p, size);
-	if (id == 1)
-		proxy = &display->proxy;
-	else
-		proxy = wl_hash_table_lookup(display->objects, id);
+	proxy = wl_map_lookup(&display->objects, id);
 
-	if (proxy == NULL || proxy->object.implementation == NULL) {
+	if (proxy == WL_ZOMBIE_OBJECT) {
+		fprintf(stderr, "Message to zombie object\n");
+		wl_connection_consume(display->connection, size);
+		return;
+	} else if (proxy == NULL || proxy->object.implementation == NULL) {
 		wl_connection_consume(display->connection, size);
 		return;
 	}
 
 	message = &proxy->object.interface->events[opcode];
 	closure = wl_connection_demarshal(display->connection,
-					  size, display->objects, message);
+					  size, &display->objects, message);
+
+	if (closure == NULL) {
+		fprintf(stderr, "Error demarshalling event\n");
+		abort();
+	}
 
 	if (wl_debug)
-		wl_closure_print(closure, &proxy->object);
+		wl_closure_print(closure, &proxy->object, false);
 
 	wl_closure_invoke(closure, &proxy->object,
 			  proxy->object.implementation[opcode],
@@ -521,6 +506,7 @@ wl_display_iterate(struct wl_display *display, uint32_t mask)
 	}
 
 	len = wl_connection_data(display->connection, mask);
+
 	while (len > 0) {
 		if (len < sizeof p)
 			break;
@@ -549,17 +535,35 @@ wl_display_flush(struct wl_display *display)
 		wl_display_iterate (display, WL_DISPLAY_WRITABLE);
 }
 
-WL_EXPORT uint32_t
-wl_display_allocate_id(struct wl_display *display)
+WL_EXPORT void *
+wl_display_bind(struct wl_display *display,
+		uint32_t name, const struct wl_interface *interface)
 {
-	if (display->id_count == 0) {
-		display->id_count = 256;
-		display->id = display->next_range;
-	}
+	struct wl_proxy *proxy;
 
-	display->id_count--;
+	proxy = wl_proxy_create(&display->proxy, interface);
+	if (proxy == NULL)
+		return NULL;
 
-	return display->id++;
+	wl_proxy_marshal(&display->proxy, WL_DISPLAY_BIND,
+			 name, interface->name, interface->version, proxy);
+
+	return proxy;
+}
+
+WL_EXPORT struct wl_callback *
+wl_display_sync(struct wl_display *display)
+{
+	struct wl_proxy *proxy;
+
+	proxy = wl_proxy_create(&display->proxy, &wl_callback_interface);
+
+	if (!proxy)
+		return NULL;
+
+	wl_proxy_marshal(&display->proxy, WL_DISPLAY_SYNC, proxy);
+
+	return (struct wl_callback *) proxy;
 }
 
 WL_EXPORT void

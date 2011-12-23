@@ -34,11 +34,10 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <time.h>
 
 #include "wayland-util.h"
-#include "connection.h"
-
-#define ARRAY_LENGTH(a) (sizeof (a) / sizeof (a)[0])
+#include "wayland-private.h"
 
 struct wl_buffer {
 	char data[4096];
@@ -53,7 +52,7 @@ struct wl_closure {
 	ffi_type *types[20];
 	ffi_cif cif;
 	void *args[20];
-	uint32_t buffer[64];
+	uint32_t buffer[256];
 	uint32_t *start;
 };
 
@@ -64,6 +63,7 @@ struct wl_connection {
 	void *data;
 	wl_connection_update_func_t update;
 	struct wl_closure receive_closure, send_closure;
+	int write_signalled;
 };
 
 union wl_value {
@@ -284,10 +284,13 @@ wl_connection_data(struct wl_connection *connection, uint32_t mask)
 		close_fds(&connection->fds_out);
 
 		connection->out.tail += len;
-		if (connection->out.tail == connection->out.head)
+		if (connection->out.tail == connection->out.head &&
+		    connection->write_signalled) {
 			connection->update(connection,
 					   WL_CONNECTION_READABLE,
 					   connection->data);
+			connection->write_signalled = 0;
+		}
 	}
 
 	if (mask & WL_CONNECTION_READABLE) {
@@ -333,11 +336,24 @@ wl_connection_write(struct wl_connection *connection,
 
 	wl_buffer_put(&connection->out, data, count);
 
-	if (connection->out.head - connection->out.tail == count)
+	if (!connection->write_signalled) {
 		connection->update(connection,
 				   WL_CONNECTION_READABLE |
 				   WL_CONNECTION_WRITABLE,
 				   connection->data);
+		connection->write_signalled = 1;
+	}
+}
+
+static void
+wl_connection_queue(struct wl_connection *connection,
+		    const void *data, size_t count)
+{
+	if (connection->out.head - connection->out.tail +
+	    count > ARRAY_LENGTH(connection->out.data))
+		wl_connection_data(connection, WL_CONNECTION_WRITABLE);
+
+	wl_buffer_put(&connection->out, data, count);
 }
 
 static int
@@ -374,7 +390,7 @@ wl_connection_vmarshal(struct wl_connection *connection,
 {
 	struct wl_closure *closure = &connection->send_closure;
 	struct wl_object **objectp, *object;
-	uint32_t length, *p, *start, size;
+	uint32_t length, *p, *start, size, *end;
 	int dup_fd;
 	struct wl_array **arrayp, *array;
 	const char **sp, *s;
@@ -385,17 +401,23 @@ wl_connection_vmarshal(struct wl_connection *connection,
 	count = strlen(message->signature) + 2;
 	extra = (char *) closure->buffer;
 	start = &closure->buffer[DIV_ROUNDUP(extra_size, sizeof *p)];
+	end = &closure->buffer[ARRAY_LENGTH(closure->buffer)];
 	p = &start[2];
+
 	for (i = 2; i < count; i++) {
 		switch (message->signature[i - 2]) {
 		case 'u':
 			closure->types[i] = &ffi_type_uint32;
 			closure->args[i] = p;
+			if (end - p < 1)
+				goto err;
 			*p++ = va_arg(ap, uint32_t);
 			break;
 		case 'i':
 			closure->types[i] = &ffi_type_sint32;
 			closure->args[i] = p;
+			if (end - p < 1)
+				goto err;
 			*p++ = va_arg(ap, int32_t);
 			break;
 		case 's':
@@ -406,6 +428,8 @@ wl_connection_vmarshal(struct wl_connection *connection,
 
 			s = va_arg(ap, const char *);
 			length = s ? strlen(s) + 1: 0;
+			if (end - p < DIV_ROUNDUP(length, sizeof *p) + 1)
+				goto err;
 			*p++ = length;
 
 			if (length > 0)
@@ -424,6 +448,8 @@ wl_connection_vmarshal(struct wl_connection *connection,
 
 			object = va_arg(ap, struct wl_object *);
 			*objectp = object;
+			if (end - p < 1)
+				goto err;
 			*p++ = object ? object->id : 0;
 			break;
 
@@ -431,7 +457,9 @@ wl_connection_vmarshal(struct wl_connection *connection,
 			closure->types[i] = &ffi_type_uint32;
 			closure->args[i] = p;
 			object = va_arg(ap, struct wl_object *);
-			*p++ = object->id;
+			if (end - p < 1)
+				goto err;
+			*p++ = object ? object->id : 0;
 			break;
 
 		case 'a':
@@ -445,9 +473,13 @@ wl_connection_vmarshal(struct wl_connection *connection,
 
 			array = va_arg(ap, struct wl_array *);
 			if (array == NULL || array->size == 0) {
+				if (end - p < 1)
+					goto err;
 				*p++ = 0;
 				break;
 			}
+			if (end - p < DIV_ROUNDUP(array->size, sizeof *p) + 1)
+				goto err;
 			*p++ = array->size;
 			memcpy(p, array->data, array->size);
 
@@ -475,6 +507,8 @@ wl_connection_vmarshal(struct wl_connection *connection,
 				      &dup_fd, sizeof dup_fd);
 			break;
 		default:
+			fprintf(stderr, "unhandled format code: '%c'\n",
+				message->signature[i - 2]);
 			assert(0);
 			break;
 		}
@@ -489,12 +523,18 @@ wl_connection_vmarshal(struct wl_connection *connection,
 	closure->count = count;
 
 	return closure;
+
+err:
+	printf("request too big to marshal, maximum size is %lu\n",
+	       sizeof closure->buffer);
+	errno = ENOMEM;
+	return NULL;
 }
 
 struct wl_closure *
 wl_connection_demarshal(struct wl_connection *connection,
 			uint32_t size,
-			struct wl_hash_table *objects,
+			struct wl_map *objects,
 			const struct wl_message *message)
 {
 	uint32_t *p, *next, *end, length;
@@ -508,13 +548,18 @@ wl_connection_demarshal(struct wl_connection *connection,
 	count = strlen(message->signature) + 2;
 	if (count > ARRAY_LENGTH(closure->types)) {
 		printf("too many args (%d)\n", count);
-		assert(0);
+		errno = EINVAL;
+		wl_connection_consume(connection, size);
+		return NULL;
 	}
 
 	extra_space = wl_message_size_extra(message);
 	if (sizeof closure->buffer < size + extra_space) {
-		printf("request too big, should malloc tmp buffer here\n");
-		assert(0);
+		printf("request too big to demarshal, maximum %lu actual %d\n",
+		       sizeof closure->buffer, size + extra_space);
+		errno = ENOMEM;
+		wl_connection_consume(connection, size);
+		return NULL;
 	}
 
 	closure->message = message;
@@ -581,10 +626,25 @@ wl_connection_demarshal(struct wl_connection *connection,
 			extra += sizeof *object;
 			closure->args[i] = object;
 
-			*object = wl_hash_table_lookup(objects, *p);
-			if (*object == NULL && *p != 0) {
+			*object = wl_map_lookup(objects, *p);
+			if (*object == WL_ZOMBIE_OBJECT) {
+				/* references object we've already
+				 * destroyed client side */
+				*object = NULL;
+			} else if (*object == NULL && *p != 0) {
 				printf("unknown object (%d), message %s(%s)\n",
 				       *p, message->name, message->signature);
+				*object = NULL;
+				errno = EINVAL;
+				goto err;
+			}
+
+			if (*object != NULL && message->types[i-2] != NULL &&
+			    (*object)->interface != message->types[i-2]) {
+				printf("invalid object (%d), type (%s), "
+					"message %s(%s)\n",
+				       *p, (*object)->interface->name,
+				       message->name, message->signature);
 				errno = EINVAL;
 				goto err;
 			}
@@ -594,7 +654,7 @@ wl_connection_demarshal(struct wl_connection *connection,
 		case 'n':
 			closure->types[i] = &ffi_type_uint32;
 			closure->args[i] = p;
-			object = wl_hash_table_lookup(objects, *p);
+			object = wl_map_lookup(objects, *p);
 			if (object != NULL) {
 				printf("not a new object (%d), "
 				       "message %s(%s)\n",
@@ -648,7 +708,7 @@ wl_connection_demarshal(struct wl_connection *connection,
 
 	closure->count = i;
 	ffi_prep_cif(&closure->cif, FFI_DEFAULT_ABI,
-		     closure->count, &ffi_type_uint32, closure->types);
+		     closure->count, &ffi_type_void, closure->types);
 
 	wl_connection_consume(connection, size);
 
@@ -684,12 +744,28 @@ wl_closure_send(struct wl_closure *closure, struct wl_connection *connection)
 }
 
 void
-wl_closure_print(struct wl_closure *closure, struct wl_object *target)
+wl_closure_queue(struct wl_closure *closure, struct wl_connection *connection)
+{
+	uint32_t size;
+
+	size = closure->start[1] >> 16;
+	wl_connection_queue(connection, closure->start, size);
+}
+
+void
+wl_closure_print(struct wl_closure *closure, struct wl_object *target, int send)
 {
 	union wl_value *value;
 	int i;
+	struct timespec tp;
+	unsigned int time;
 
-	fprintf(stderr, "%s@%d.%s(",
+	clock_gettime(CLOCK_REALTIME, &tp);
+	time = (tp.tv_sec * 1000000L) + (tp.tv_nsec / 1000);
+
+	fprintf(stderr, "[%10.3f] %s%s@%u.%s(",
+		time / 1000.0,
+		send ? " -> " : "",
 		target->interface->name, target->id,
 		closure->message->name);
 

@@ -1,19 +1,24 @@
 /*
- * Copyright © 2010 Intel Corporation
+ * Copyright © 2008-2011 Kristian Høgsberg
+ * Copyright © 2011 Intel Corporation
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * Permission to use, copy, modify, distribute, and sell this software and its
+ * documentation for any purpose is hereby granted without fee, provided that
+ * the above copyright notice appear in all copies and that both that copyright
+ * notice and this permission notice appear in supporting documentation, and
+ * that the name of the copyright holders not be used in advertising or
+ * publicity pertaining to distribution of the software without specific,
+ * written prior permission.  The copyright holders make no representations
+ * about the suitability of this software for any purpose.  It is provided "as
+ * is" without express or implied warranty.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * THE COPYRIGHT HOLDERS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+ * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
+ * EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+ * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+ * DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+ * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
+ * OF THIS SOFTWARE.
  */
 
 #include <stdio.h>
@@ -23,29 +28,6 @@
 #include <expat.h>
 
 #include "wayland-util.h"
-
-static const char copyright[] =
-	"/*\n"
-	" * Copyright © 2010 Kristian Høgsberg\n"
-	" *\n"
-	" * Permission to use, copy, modify, distribute, and sell this software and its\n"
-	" * documentation for any purpose is hereby granted without fee, provided that\n"
-	" * the above copyright notice appear in all copies and that both that copyright\n"
-	" * notice and this permission notice appear in supporting documentation, and\n"
-	" * that the name of the copyright holders not be used in advertising or\n"
-	" * publicity pertaining to distribution of the software without specific,\n"
-	" * written prior permission.  The copyright holders make no representations\n"
-	" * about the suitability of this software for any purpose.  It is provided \"as\n"
-	" * is\" without express or implied warranty.\n"
-	" *\n"
-	" * THE COPYRIGHT HOLDERS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,\n"
-	" * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO\n"
-	" * EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY SPECIAL, INDIRECT OR\n"
-	" * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,\n"
-	" * DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER\n"
-	" * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE\n"
-	" * OF THIS SOFTWARE.\n"
-	" */\n";
 
 static int
 usage(int ret)
@@ -60,6 +42,9 @@ struct protocol {
 	char *name;
 	char *uppercase_name;
 	struct wl_list interface_list;
+	int type_index;
+	int null_run_length;
+	char *copyright;
 };
 
 struct interface {
@@ -77,6 +62,9 @@ struct message {
 	char *uppercase_name;
 	struct wl_list arg_list;
 	struct wl_list link;
+	int arg_count;
+	int type_index;
+	int all_null;
 	int destructor;
 };
 
@@ -118,6 +106,8 @@ struct parse_context {
 	struct interface *interface;
 	struct message *message;
 	struct enumeration *enumeration;
+	char character_data[8192];
+	int character_data_length;
 };
 
 static char *
@@ -172,12 +162,15 @@ start_element(void *data, const char *element_name, const char **atts)
 			interface_name = atts[i + 1];
 	}
 
+	ctx->character_data_length = 0;
 	if (strcmp(element_name, "protocol") == 0) {
 		if (name == NULL)
 			fail(ctx, "no protocol name given");
 
 		ctx->protocol->name = strdup(name);
 		ctx->protocol->uppercase_name = uppercase_dup(name);
+	} else if (strcmp(element_name, "copyright") == 0) {
+		
 	} else if (strcmp(element_name, "interface") == 0) {
 		if (name == NULL)
 			fail(ctx, "no interface name given");
@@ -204,6 +197,7 @@ start_element(void *data, const char *element_name, const char **atts)
 		message->name = strdup(name);
 		message->uppercase_name = uppercase_dup(name);
 		wl_list_init(&message->arg_list);
+		message->arg_count = 0;
 
 		if (strcmp(element_name, "request") == 0)
 			wl_list_insert(ctx->interface->request_list.prev,
@@ -236,20 +230,28 @@ start_element(void *data, const char *element_name, const char **atts)
 		else if (strcmp(type, "fd") == 0)
 			arg->type = FD;
 		else if (strcmp(type, "new_id") == 0) {
-			if (interface_name == NULL)
-				fail(ctx, "no interface name given");
 			arg->type = NEW_ID;
-			arg->interface_name = strdup(interface_name);
 		} else if (strcmp(type, "object") == 0) {
-			if (interface_name == NULL)
-				fail(ctx, "no interface name given");
 			arg->type = OBJECT;
-			arg->interface_name = strdup(interface_name);
 		} else {
 			fail(ctx, "unknown type");
 		}
 
+		switch (arg->type) {
+		case NEW_ID:
+		case OBJECT:
+			if (interface_name == NULL)
+				fail(ctx, "no interface name given");
+			arg->interface_name = strdup(interface_name);
+			break;
+		default:
+			if (interface_name != NULL)
+				fail(ctx, "interface not allowed");
+			break;
+		}
+
 		wl_list_insert(ctx->message->arg_list.prev, &arg->link);
+		ctx->message->arg_count++;
 	} else if (strcmp(element_name, "enum") == 0) {
 		if (name == NULL)
 			fail(ctx, "no enum name given");
@@ -264,6 +266,9 @@ start_element(void *data, const char *element_name, const char **atts)
 
 		ctx->enumeration = enumeration;
 	} else if (strcmp(element_name, "entry") == 0) {
+		if (name == NULL)
+			fail(ctx, "no entry name given");
+
 		entry = malloc(sizeof *entry);
 		entry->name = strdup(name);
 		entry->uppercase_name = uppercase_dup(name);
@@ -271,6 +276,32 @@ start_element(void *data, const char *element_name, const char **atts)
 		wl_list_insert(ctx->enumeration->entry_list.prev,
 			       &entry->link);
 	}
+}
+
+static void
+end_element(void *data, const XML_Char *name)
+{
+	struct parse_context *ctx = data;
+
+	if (strcmp(name, "copyright") == 0) {
+		ctx->protocol->copyright =
+			strndup(ctx->character_data,
+				ctx->character_data_length);
+	}
+}
+
+static void
+character_data(void *data, const XML_Char *s, int len)
+{
+	struct parse_context *ctx = data;
+
+	if (ctx->character_data_length + len > sizeof (ctx->character_data)) {
+		fprintf(stderr, "too much character data");
+		exit(EXIT_FAILURE);
+	    }
+
+	memcpy(ctx->character_data + ctx->character_data_length, s, len);
+	ctx->character_data_length += len;
 }
 
 static void
@@ -297,7 +328,7 @@ emit_type(struct arg *a)
 	default:
 	case INT:
 	case FD:
-		printf("int ");
+		printf("int32_t ");
 		break;
 	case NEW_ID:
 	case UNSIGNED:
@@ -322,20 +353,9 @@ emit_stubs(struct wl_list *message_list, struct interface *interface)
 	struct arg *a, *ret;
 	int has_destructor, has_destroy;
 
-	/* We provide a hand written constructor for the display object */
-	if (strcmp(interface->name, "wl_display") != 0)
-		printf("static inline struct %s *\n"
-		       "%s_create(struct wl_display *display, uint32_t id, uint32_t version)\n"
-		       "{\n"
-		       "\twl_display_bind(display, id, \"%s\", version);\n\n"
-		       "\treturn (struct %s *)\n"
-		       "\t\twl_proxy_create_for_id(display, &%s_interface, id);\n"
-		       "}\n\n",
-		       interface->name,
-		       interface->name,
-		       interface->name,
-		       interface->name,
-		       interface->name);
+	/* We provide a hand written functions for the display object */
+	if (strcmp(interface->name, "wl_display") == 0)
+		return;
 
 	printf("static inline void\n"
 	       "%s_set_user_data(struct %s *%s, void *user_data)\n"
@@ -369,8 +389,7 @@ emit_stubs(struct wl_list *message_list, struct interface *interface)
 		exit(EXIT_FAILURE);
 	}
 
-	/* And we have a hand-written display destructor */
-	if (!has_destructor && strcmp(interface->name, "wl_display") != 0)
+	if (!has_destructor)
 		printf("static inline void\n"
 		       "%s_destroy(struct %s *%s)\n"
 		       "{\n"
@@ -506,9 +525,8 @@ emit_structs(struct wl_list *message_list, struct interface *interface)
 		n = strlen(m->name) + 17;
 		if (is_interface) {
 			printf("struct wl_client *client,\n"
-			       "%sstruct %s *%s",
-			       indent(n),
-			       interface->name, interface->name);
+			       "%sstruct wl_resource *resource",
+			       indent(n));
 		} else {
 			printf("void *data,\n"),
 			printf("%sstruct %s *%s",
@@ -518,7 +536,11 @@ emit_structs(struct wl_list *message_list, struct interface *interface)
 		wl_list_for_each(a, &m->arg_list, link) {
 			printf(",\n%s", indent(n));
 
-			emit_type(a);
+			if (is_interface && a->type == OBJECT)
+				printf("struct wl_resource *");
+			else
+				emit_type(a);
+
 			printf("%s", a->name);
 		}
 
@@ -536,13 +558,35 @@ emit_structs(struct wl_list *message_list, struct interface *interface)
 		   "%s(void (**)(void)) listener, data);\n"
 		   "}\n\n",
 		   interface->name, interface->name, interface->name,
-		   indent(17 + strlen(interface->name)),
+		   indent(14 + strlen(interface->name)),
 		   interface->name,
 		   interface->name,
 		   indent(37));
 	}
 }
 
+static void
+format_copyright(const char *copyright)
+{
+	int bol = 1, start = 0, i;
+
+	for (i = 0; copyright[i]; i++) {
+		if (bol && (copyright[i] == ' ' || copyright[i] == '\t')) {
+			continue;
+		} else if (bol) {
+			bol = 0;
+			start = i;
+		}
+
+		if (copyright[i] == '\n' || copyright[i] == '\0') {
+			printf("%s %.*s\n",
+			       i == 0 ? "/*" : " *",
+			       i - start, copyright + start);
+			bol = 1;
+		}
+	}
+	printf(" */\n\n");
+}
 
 static void
 emit_header(struct protocol *protocol, int server)
@@ -550,8 +594,10 @@ emit_header(struct protocol *protocol, int server)
 	struct interface *i;
 	const char *s = server ? "SERVER" : "CLIENT";
 
-	printf("%s\n\n"
-	       "#ifndef %s_%s_PROTOCOL_H\n"
+	if (protocol->copyright)
+		format_copyright(protocol->copyright);
+
+	printf("#ifndef %s_%s_PROTOCOL_H\n"
 	       "#define %s_%s_PROTOCOL_H\n"
 	       "\n"
 	       "#ifdef  __cplusplus\n"
@@ -561,8 +607,8 @@ emit_header(struct protocol *protocol, int server)
 	       "#include <stdint.h>\n"
 	       "#include <stddef.h>\n"
 	       "#include \"wayland-util.h\"\n\n"
-	       "struct wl_client;\n\n",
-	       copyright,
+	       "struct wl_client;\n"
+	       "struct wl_resource;\n\n",
 	       protocol->uppercase_name, s,
 	       protocol->uppercase_name, s);
 
@@ -596,6 +642,80 @@ emit_header(struct protocol *protocol, int server)
 	       "#endif\n"
 	       "\n"
 	       "#endif\n");
+}
+
+static void
+emit_types_forward_declarations(struct protocol *protocol,
+				struct wl_list *message_list)
+{
+	struct message *m;
+	struct arg *a;
+	int length;
+
+	wl_list_for_each(m, message_list, link) {
+		length = 0;
+		m->all_null = 1;
+		wl_list_for_each(a, &m->arg_list, link) {
+			length++;
+			switch (a->type) {
+			case NEW_ID:
+			case OBJECT:
+				m->all_null = 0;
+				printf("extern const struct wl_interface %s_interface;\n",
+				       a->interface_name);
+				break;
+			default:
+				break;
+			}
+		}
+
+		if (m->all_null && length > protocol->null_run_length)
+			protocol->null_run_length = length;
+	}
+}
+
+static void
+emit_null_run(struct protocol *protocol)
+{
+	int i;
+
+	for (i = 0; i < protocol->null_run_length; i++)
+		printf("\tNULL,\n");
+}
+
+static void
+emit_types(struct protocol *protocol, struct wl_list *message_list)
+{
+	struct message *m;
+	struct arg *a;
+
+	wl_list_for_each(m, message_list, link) {
+		if (m->all_null) {
+			m->type_index = 0;
+			continue;
+		}
+
+		m->type_index =
+			protocol->null_run_length + protocol->type_index;
+		protocol->type_index += m->arg_count;
+
+		wl_list_for_each(a, &m->arg_list, link) {
+			switch (a->type) {
+			case NEW_ID:
+			case OBJECT:
+				if (strcmp(a->interface_name,
+					   "wl_object") != 0)
+					printf("\t&%s_interface,\n",
+					       a->interface_name);
+				else
+					printf("\tNULL,\n");
+				break;
+			default:
+				printf("\tNULL,\n");
+				break;
+			}
+		}
+	}
 }
 
 static void
@@ -640,7 +760,7 @@ emit_messages(struct wl_list *message_list,
 				break;
 			}
 		}
-		printf("\", NULL },\n");
+		printf("\", types + %d },\n", m->type_index);
 	}
 
 	printf("};\n\n");
@@ -651,11 +771,26 @@ emit_code(struct protocol *protocol)
 {
 	struct interface *i;
 
-	printf("%s\n\n"
-	       "#include <stdlib.h>\n"
+	if (protocol->copyright)
+		format_copyright(protocol->copyright);
+
+	printf("#include <stdlib.h>\n"
 	       "#include <stdint.h>\n"
-	       "#include \"wayland-util.h\"\n\n",
-	       copyright);
+	       "#include \"wayland-util.h\"\n\n");
+
+	wl_list_for_each(i, &protocol->interface_list, link) {
+		emit_types_forward_declarations(protocol, &i->request_list);
+		emit_types_forward_declarations(protocol, &i->event_list);
+	}
+	printf("\n");
+
+	printf("static const struct wl_interface *types[] = {\n");
+	emit_null_run(protocol);
+	wl_list_for_each(i, &protocol->interface_list, link) {
+		emit_types(protocol, &i->request_list);
+		emit_types(protocol, &i->event_list);
+	}
+	printf("};\n\n");
 
 	wl_list_for_each(i, &protocol->interface_list, link) {
 
@@ -694,6 +829,9 @@ int main(int argc, char *argv[])
 		usage(EXIT_FAILURE);
 
 	wl_list_init(&protocol.interface_list);
+	protocol.type_index = 0;
+	protocol.null_run_length = 0;
+	protocol.copyright = NULL;
 	ctx.protocol = &protocol;
 
 	ctx.filename = "<stdin>";
@@ -704,7 +842,9 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	XML_SetElementHandler(ctx.parser, start_element, NULL);
+	XML_SetElementHandler(ctx.parser, start_element, end_element);
+	XML_SetCharacterDataHandler(ctx.parser, character_data);
+
 	do {
 		buf = XML_GetBuffer(ctx.parser, XML_BUFFER_SIZE);
 		len = fread(buf, 1, XML_BUFFER_SIZE, stdin);

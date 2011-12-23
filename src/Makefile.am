@@ -14,16 +14,17 @@ libwayland_util_la_SOURCES =			\
 	connection.h				\
 	wayland-util.c				\
 	wayland-util.h				\
+	wayland-private.h			\
 	wayland-hash.c
 
-libwayland_server_la_LIBADD = $(FFI_LIBS) libwayland-util.la
+libwayland_server_la_LIBADD = $(FFI_LIBS) libwayland-util.la -lrt
 libwayland_server_la_SOURCES =			\
 	wayland-protocol.c			\
 	wayland-server.c			\
 	wayland-shm.c				\
 	event-loop.c
 
-libwayland_client_la_LIBADD = $(FFI_LIBS) libwayland-util.la
+libwayland_client_la_LIBADD = $(FFI_LIBS) libwayland-util.la -lrt
 libwayland_client_la_SOURCES =			\
 	wayland-protocol.c			\
 	wayland-client.c
@@ -37,12 +38,12 @@ AM_CFLAGS = $(GCC_CFLAGS)
 protocoldir = $(top_srcdir)/protocol
 
 if ENABLE_SCANNER
-wayland_scanner = $(top_builddir)/wayland/wayland-scanner
+wayland_scanner = $(top_builddir)/src/wayland-scanner
 else
 wayland_scanner = wayland-scanner
 endif
 
-include $(top_srcdir)/wayland/scanner.mk
+include $(top_srcdir)/src/scanner.mk
 
 if ENABLE_SCANNER
 bin_PROGRAMS = wayland-scanner
