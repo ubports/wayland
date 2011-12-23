@@ -1,3 +1,9 @@
+wayland (0.1.0~1-1) UNRELEASED; urgency=low
+
+  * New upstream snapshot.
+
+ -- Cyril Brulebois <kibi@debian.org>  Fri, 23 Dec 2011 14:23:44 +0100
+
 wayland (0.1.0~0-1) experimental; urgency=low
 
   * Initial release (Closes: #611400).

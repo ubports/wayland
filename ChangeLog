@@ -1,3 +1,800 @@
+commit bc79f1f820409fb92c158a9d2df8a99ad269018e
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Dec 22 15:32:37 2011 -0500
+
+    Rename all instances of typeof
+
+commit 5e078bfa5a64b1d3ebf78ff2cec0a8e7daaaf983
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Dec 22 15:23:54 2011 -0500
+
+    Use __typeof__ instead of typeof
+    
+    Thiago Macieira compiles with -std=c++11.
+
+commit aad1e190588a0edc5a39a9feba534e7a6d4532d4
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Thu Dec 22 16:52:37 2011 +0200
+
+    server: destroy the socket event source on display destroy
+    
+    On wl_display_add_socket(), the listening socket fd is added to the
+    event loop. However, wl_event_source object is not stored and hence
+    cannot be freed, resulting in a minor leak.
+    
+    Store wl_event_source pointer in struct wl_socket so we can track it,
+    and destroy it on wl_display_destroy(). The event loop itself must be
+    destroyed after destroying the event sources linked to it.
+    
+    Fixes a Valgrind reported memory leak.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 1f58d155da09f66dc1eaaafafddae3312e71704f
+Author: Tiago Vignatti <tiago.vignatti@intel.com>
+Date:   Wed Dec 21 19:34:08 2011 +0200
+
+    protocol: update touch_down with focus surface
+    
+    Signed-off-by: Tiago Vignatti <tiago.vignatti@intel.com>
+
+commit e68529b52f30974841974c53605f00c9a8ca1580
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Dec 19 13:15:06 2011 -0500
+
+    protocol: Add a bit of documentation
+
+commit 1b31149f92888eae01df6ff442166b91b35843b3
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sat Dec 17 16:05:44 2011 -0500
+
+    connection: Fix printf format warnings
+
+commit 34901868b8d037c3ec230a6828aa75c79ffae59c
+Author: Laszlo Agocs <laszlo.p.agocs@nokia.com>
+Date:   Fri Dec 16 10:29:36 2011 +0200
+
+    Increase closure buffer size and fail gracefully for too big closures.
+    
+    Buffer size changed from 256 to 1024 bytes. Marshalling will now stop
+    if the buffer is not big enough.
+
+commit f598691831db779aab1f5dd17ace5992a0928960
+Author: Andy Nichols <andy.nichols@nokia.com>
+Date:   Thu Nov 24 10:19:18 2011 +0100
+
+    Removed superfluous call to wl_copy_connection
+    
+    The only purpose those code seems to serve is to introduce a buffer
+    overflow when events contain more than 128 bytes of data.
+
+commit 187eace6139754eae58a21303c808a270f70dc3f
+Author: Jørgen Lind <jorgen.lind@nokia.com>
+Date:   Tue Dec 13 22:01:34 2011 +0100
+
+    Make wl_list_for_each* work for c++
+
+commit e631ab6cde2fa0d0fe59cc4f5776c9a8b3002989
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Tue Dec 13 14:53:54 2011 +0200
+
+    client: fix a strdup memory leak
+    
+    Memory leak found by valgrinding simple-shm client.
+    struct wl_global::interface is a strdup()'d string that was never freed.
+    
+    Make a function for freeing a wl_global, and use it.
+    
+    krh: Edit to name wl_global destructor wl_global_destroy.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 58bb064afa3bfc706e3b30dd170804235aa272ea
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Mon Dec 5 10:04:37 2011 +0200
+
+    client: unset WAYLAND_SOCKET env variable
+    
+    WAYLAND_SOCKET contains a file descriptor that is an open connection to
+    a Wayland server. It is private to us, and makes no sense to relay the
+    same value (or any value) to our child processes.
+    
+    Unset the environment variable to prevent it from being accidentally
+    relayed to other processes.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit cf89b40c4ca105416240df737ba8e30c070a44af
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Tue Nov 29 14:32:32 2011 +0200
+
+    server: do not send delete_id to a dead client
+    
+    During client tear-down, all objects are destroyed in id order.
+    Therefore the display object is destroyed first.
+    
+    If the destroy listeners of any object destroy another object by calling
+    wl_resoruce_destroy(), we try to send a delete_id event to the client.
+    This leads to a segmentation fault without a display object.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 42eed3235a8349ac2139bb9a06cb8ac294872809
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Thu Nov 24 16:19:03 2011 +0200
+
+    protocol: introduce wl_shell_surface
+    
+    Requests like 'move' and 'set_toplevel' are really methods of a surface,
+    not methods of a global shell object. Move all these methods to a new
+    interface, wl_shell_surface.
+    
+    The global object wl_shell will contain only 'get_shell_surface'
+    request, which creates and associates a wl_shell_surface object to a
+    given wl_surface object.
+    
+    This will also give the shell plugin (if you look at the demo
+    compositor) means to store per-surface private data in a natural way.
+    
+    Due to a limitation in delete_id event handling on client side, the
+    client must destroy its wl_shell_surface object before destroying the
+    wl_surface object. Otherwise it may just leak an id.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit e04c137e86f3672f5274a3168a3e88483a191693
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Mon Nov 28 12:23:32 2011 +0200
+
+    server: document wl_resource_post_event() arguments
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 804d5dd348567fd286b8aa5101d3aff95ecd69d7
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Wed Nov 9 16:27:07 2011 +0200
+
+    util: clear pointers on wl_list_remove()
+    
+    Set the next and prev pointers of the removed list element to NULL. This
+    will catch programming errors that would use invalid list pointers,
+    double-remove for instance.
+    
+    It also helps debugging, making it easy to see in gdb if an object is
+    not in a list.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit ab6b0738c67bb6a3eec5b198ff909dc18a562294
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Mon Nov 28 09:47:15 2011 +0200
+
+    server: no errors to a dead client
+    
+    Do not try to send errors to an already dead client, while in the
+    middle of cleanup.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit eae3bcb4ccb80ef1c4dcd2f71987c1187aeb9e73
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Nov 15 08:58:34 2011 -0500
+
+    New drag and drop / selection protocol
+    
+    This commit brings a big change to the DND and copy/paste interfaces.
+    Most importantly the functionality is now independent of wl_shell.
+    The wl_shell interface is intended for desktop style UI interaction and
+    an optional and experimental interface.
+    
+    The new interface also allows receiving the DND data multiple times or
+    multiple times during the drag, and the mechanism for offering and receiving
+    data is now shared between DND and selections.
+
+commit 0b7d1e86af1e3da1dbee79ebdee2616a6e8bcf01
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Nov 23 10:34:50 2011 -0500
+
+    server: Stop special casing the compositor
+    
+    wl_compositor_init() was just adding the global and providing a helper
+    bind function.  Not useful enough to warrent API.
+
+commit bdbd6ef80b85f5d20608f702a6ffaa1f1f73e7a4
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Nov 18 21:59:36 2011 -0500
+
+    Add support for server allocated object IDs
+    
+    We set aside a range of the object ID space for use by the server.  This
+    allows the server to bind an object to an ID for a client and pass that
+    object to the client.  The client can use the object immediately and the
+    server can emit events to the object immdiately.
+
+commit 190492b97c9db43a910f17c576244492e19bc658
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Nov 22 14:03:33 2011 -0500
+
+    debug: Use unsigned for object IDs
+
+commit 44186b522f3083c10b8a96c6f9f815febeead054
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Nov 18 21:23:33 2011 -0500
+
+    scanner: Only strdup interface_name after making sure it's not NULL
+
+commit cf04b0a18f25cf1161c84f8ba979805eeaadea09
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Nov 18 13:46:56 2011 -0500
+
+    Move private definitions and prototypes to new wayland-private.h
+
+commit 68d13212f238f874600b8ef6020d174edbcbf5f0
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Nov 18 13:11:58 2011 -0500
+
+    Fix unused variable warning
+
+commit 4abc56bd6d476cf386fcc998d40e3d7753a2b03e
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Nov 17 16:46:36 2011 -0500
+
+    Introduce wl_resource_queue_event() for sending events later
+    
+    Some events, such as the display.delete_id, aren't very urgent and we
+    would like to not always send them immdiately and cause an unnecessary
+    context switch.  The wl_resource_queue_event() function will place the
+    event in the connection output buffer but not request the main loop to
+    poll for writable.  The effect is that the event will just sit in the
+    output buffer until a more important event comes around and requires
+    flushing.
+
+commit 3a1e6df39aa34df53c97ce9c7a1bfddf5a97faf3
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Nov 15 22:20:28 2011 -0500
+
+    Add display event to acknowledge ID deletion
+    
+    We need to make sure the client doesn't reuse an object ID until the
+    server has seen the destroy request.  When a client destroys an ID
+    the server will now respond with the display.delete_id event, which lets
+    the client block reuse until it receives the event.
+
+commit 51f50b8c6425684214e58a0e5ab2515b624feaad
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Nov 15 13:48:41 2011 -0500
+
+    util: Add wl_list_insert_list()
+
+commit 3175e91efa4d4cb1847044f9ea4a8ef57fd6f39c
+Author: Andrea Canciani <ranma42@gmail.com>
+Date:   Mon Nov 14 10:24:47 2011 +0100
+
+    hash: Improve double hashing
+    
+    Instead of artificially introducing collisions in the step value by
+    replacing 0 with 1 (which causes the value 1 to have twice the
+    frequency of any other value), the step value can simply be computed
+    as an uniformly distributed value in the range [1, rehash], extremes
+    included.
+    
+    This is safe because any step value smaller than the hash modulus is
+    co-prime with it, hence induces an orbit which includes every integer
+    in [0, size - 1].
+
+commit e742dcc9ed4b22eb5191f7e8d2b7cd8011ed5893
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Oct 31 11:21:38 2011 -0400
+
+    scanner: Check name == NULL for enum entries
+    
+    From a clang static analysis warning.
+
+commit 3f1063f92aa60cf93bca6a6b15a7f782b8df8f93
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Mon Oct 31 11:06:35 2011 +0100
+
+    connection: Check object types in message parameters
+
+commit f86338d611305fb84187298cbab5dfc78a698c99
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sat Oct 29 14:27:33 2011 -0400
+
+    event-loop: Fix idle handler dispatch corner case
+    
+    When the last idle handler queues another idle handler, we fail to
+    dispatch that last handler.  The wl_list_for_each_safe loop looks up
+    the next pointer before running the handler, and at that point it points
+    to the head of the list and the loop terminates.
+    
+    Instead, just loop until the list is empty.
+
+commit 7e57dc143e0647502668753e9cd8d2a8582d4a6e
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Oct 24 17:05:39 2011 -0400
+
+    scanner: Fix typo in error message
+
+commit bfe54cbe3703e6d7b728de3d4d9ca4b663782dbc
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Oct 24 16:05:04 2011 -0400
+
+    protocol: Change global_remove arg to be 'name' insteadl of 'id'
+    
+    Consistent with global args.
+
+commit d63884b0c701a24f3bfdded036c5d5b6b2b6bd0d
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Oct 24 16:04:09 2011 -0400
+
+    scanner: Catch more invalid attribute combinations for arg
+    
+    Spotted by Jakob Bornecrantz.
+
+commit 1ac009473bab32a304beb4f115fbae2514824a06
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Oct 20 15:05:11 2011 -0400
+
+    debug: Print debug message when client wakes up
+    
+    This helps spot and remove extraneous round trips and context switches.
+
+commit 65fe6fc41891157bce570cb6cc2411b6a8ba7b8a
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Oct 12 16:30:08 2011 -0400
+
+    Silence a valgrind warning
+
+commit 8bc1abd1f569df860700a3c9d3f1f05e76c60ec9
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Oct 11 22:19:34 2011 -0400
+
+    wayland-server: Track input_device resource for focused surface
+    
+    We no long track the focused surface, but expect the compositor to set
+    focus when the focus changes.  We do track the resource for the input
+    device that corresponds to the current surface, in case that goes away.
+
+commit ffe8ee8d602ff24588e994ec41393ccae128bca1
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Oct 11 14:36:49 2011 -0400
+
+    wayland-server: Always use the display_resource for posting wl_display errors
+
+commit a05546376c7332c111938ce6cadefd30570f689c
+Author: Mathias Fiedler <Mathias.Fiedler@xse.de>
+Date:   Tue Oct 11 14:23:45 2011 -0400
+
+    wayland-server: fix resource destroy
+    
+    Object ID was read from freed memory.
+
+commit c8dbd8cf9e0199f3bb6c9ff16287f1d8f435abfb
+Author: Mathias Fiedler <Mathias.Fiedler@xse.de>
+Date:   Tue Oct 11 13:58:18 2011 -0400
+
+    wayland-server: fix crash on invalid resource
+    
+    Using display_resource to post error about invalid resource.
+    
+    Reviewed-by: Tiago Vignatti <tiago.vignatti@intel.com>
+
+commit 1482b9e906fb80c3760cdefe12b89785bd3fd1a8
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Tue Aug 9 14:31:36 2011 +0200
+
+    scanner: Fix indent for *_add_listener
+
+commit 34b26802d710d36224db25a4bb1e9ac5ff1e9843
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Sep 6 18:12:43 2011 -0400
+
+    Rename motion_grab to implicit_grab
+    
+    Let's just use the same terms as X.
+
+commit 468c9bd9e741b720fbbfa10d1fd3fce9278bdf1b
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sun Sep 4 09:51:24 2011 -0400
+
+    Add back get/set user data wrappers for wl_display
+
+commit 25fddf65a8df409195616b308051d7e426cfa97a
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Sep 1 09:53:33 2011 -0400
+
+    server: Make error posting functions take a resource instead of a client
+
+commit c640571c00b0c1ffafb05b1ad5cd02cd511cb06a
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Aug 30 21:26:19 2011 -0400
+
+    Remove the wl_visual interface
+    
+    The visual interface was meant to be a generic mechanism for
+    specifying the content of a buffer.  It goes back to before we had the
+    buffer factory interfaces (like wl_drm and wl_shm) and we wanted to
+    keep it open-ended enough that yuv, png or even svg buffer or so would
+    be possible.
+    
+    Now that we have the buffer abstraction, we can add different buffer
+    types by introducing new interfaces that create buffers.  It only
+    makes sense to leave it to those interfaces to specify the contents of
+    the buffers.
+    
+    For wl_shm, this means that we now just specify the pixel format using
+    an enum.  For EGL buffers, the exact pixel formats are controlled by
+    the implementation (part of wl_drm and similar), and from the client
+    point of view, everything is controlled using EGLConfigs.
+
+commit f9c8a691b2f01ca4ef8e2e950b43ab19b2703e62
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Aug 29 16:50:02 2011 -0400
+
+    Update TODO
+
+commit 58b9c1bf1705087089815ae2d307ea0e1583703d
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Aug 29 15:01:41 2011 -0400
+
+    server: Disconnect client on error
+
+commit 47b446987d79fa77e6899ab1dc290a992ac5c241
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Aug 29 15:01:26 2011 -0400
+
+    shm: Compare resource interface when validating visual
+
+commit b15259bff48aa5a1f4f4c2a0675ce06e50a8c82f
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sat Aug 27 12:05:09 2011 -0400
+
+    server: Pass struct wl_resource for object references
+
+commit 990809c0637a15edbdf75753afdea537e057fd34
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 26 21:39:33 2011 -0400
+
+    Don't special case object ID 1 lookup
+
+commit 2b6f3cd2b85052dc5127d22ebb2269ab3f69bf9a
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sat Aug 20 15:48:11 2011 -0400
+
+    server: wl_display and wl_input_device are no longer resources
+
+commit e489e824fac5973499390884797b4c1a256dd184
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 19 22:52:49 2011 -0400
+
+    Update TODO
+
+commit c8147edc3afea143a2e3328c22c4daf9ae70a6f2
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 19 22:50:53 2011 -0400
+
+    Store objects in wl_map data structure
+    
+    The wl_map data structure is just an array with a free-list that lets the
+    client recycle unused client IDs and keep range of client IDs under control.
+
+commit 4a39081c1d4a8d9aa3a6c86e48924142a3406b24
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 19 17:26:57 2011 -0400
+
+    Remove range protocol
+
+commit 0e16b00b862533e316385424b7b9bfb61da722b2
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 19 17:07:14 2011 -0400
+
+    Destroy client resource by walking client hash table
+    
+    All resources are now in the client hash table and we can clean up
+    just by walking the hash.
+
+commit cc6fd94d6a5743eb94b52f1887557305784525c9
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 19 16:57:48 2011 -0400
+
+    Always allocate a new wl_resource when binding an object
+    
+    Previously we would bind some resources into multiple client hash tables.
+
+commit c4774d55e91a722e29326c30ab49dcc3850e0a00
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 19 14:48:16 2011 -0400
+
+    Add wl_hash_table_for_each()
+
+commit e908893080a391b731591720e52f4c38c4c644e4
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 19 13:44:01 2011 -0400
+
+    Bind globals to client provided object IDs
+
+commit a7c682432893d2e5e534953ef64193f1dd4bcef4
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 19 13:40:28 2011 -0400
+
+    server: Hand code all wl_display client stubs
+
+commit 3ac8757ec3f2166401afa9e059e934713382d211
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 19 11:08:09 2011 -0400
+
+    server: Assign global id as part of wl_display_add_global()
+
+commit e065b7eafa1cf446da58c7fc2f3e5b00a78c0e08
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 19 11:06:37 2011 -0400
+
+    server: Make object hash table per-client
+
+commit 84c13ab8100c5f8d6fb3de1127abf7facab145ff
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 19 11:05:01 2011 -0400
+
+    Rename global 'func' to 'bind'
+
+commit e8a192ca616107dcb672b34d0c80f2de679bcd0a
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Aug 18 17:53:50 2011 -0400
+
+    server: Make everything in the object hash a wl_resource
+
+commit 0af17ed98c8f8112c0d43ccbf90367f543846143
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jul 29 19:51:22 2011 -0700
+
+    Use a callback object instead of ad-hoc lists for sync and frame events
+    
+    So obvious in retrospect.  The object system can do all the work for us
+    and keep track of pending calls as regular objects and we don't need to
+    abuse the resource system to get them cleaned up on client exit.  We
+    don't need the custom key management or (broken) lookup, we just sue
+    object IDs.  And last but not least, anybody can receive the callback,
+    not just display listeners.
+
+commit 1648109c84a5e96fd28a29a276a668050dd6c881
+Author: Paulo Zanoni <przanoni@gmail.com>
+Date:   Fri Aug 26 19:41:05 2011 -0300
+
+    connection: fix libffi usage, our functions return void
+    
+    All clients were segfaulting on my machine.
+    
+    Signed-off-by: Paulo Zanoni <paulo.r.zanoni@intel.com>
+
+commit f6ede01b68ebdd74b2025bd087b8b52b0b5f2eef
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 12 16:32:13 2011 -0400
+
+    connection: Object ID 0 is not a valid new object ID
+
+commit efeb9e977885c2df3426346ec45a913ff403af8d
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 12 16:23:07 2011 -0400
+
+    event-loop: Quiet a few warnings
+    
+    There's no good error recovery possible in these cases though.
+
+commit f2665e21ce3f524bfacd6837f95acdee5f3903db
+Author: Jørgen Lind <jorgen.lind@nokia.com>
+Date:   Thu Aug 4 07:56:04 2011 +0200
+
+    Make expat a dependency to the scanner
+
+commit 4c260db68c028f05401727d1911582ae8b87cd70
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 12 15:09:00 2011 -0400
+
+    Rename source subdir from wayland to src
+
+commit 3733157d55df862ad5a89d1911a0500af67e7e08
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Aug 11 14:51:31 2011 -0400
+
+    Change scanner.c license to MIT
+
+commit 9a606bedfdca505fdd82044793a278b2eb4b2553
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jul 27 12:05:34 2011 -0700
+
+    scanner: Silence warning
+
+commit eb13ae17b41dea24000e8ff78b762b20c1fdf23b
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jul 27 05:50:41 2011 -0700
+
+    scanner: Initialize protocol.copyright to NULL
+
+commit 7a291117e7ff1c8f817242b9b223e600a0a9e3c8
+Author: Tiago Vignatti <tiago.vignatti@intel.com>
+Date:   Tue Jul 26 11:43:19 2011 +0300
+
+    protocol: Delete screenshooter.xml
+    
+    The protocol interface is on compositor's side now.
+    
+    Signed-off-by: Tiago Vignatti <tiago.vignatti@intel.com>
+
+commit 986703ac7365bc87a5501714adb9fc73157c62b7
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Jul 25 18:14:20 2011 -0700
+
+    scanner: Take copyright notice from xml file
+
+commit 64732b01e4e9720eaef181c631d94a509a73dc65
+Author: Kristian Høgsberg <krh@localhost.localdomain>
+Date:   Tue Jul 19 10:01:46 2011 -0700
+
+    connection: Use static strings instead of sprintf and buffer overflow
+    
+    Spotted by Samuel Rødal <samuel.rodal@nokia.com>
+
+commit f9b3c151459c1627ea971d6539f706e868b89ef4
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Jul 18 13:35:18 2011 -0400
+
+    Link to -lrt for clock_gettime()
+
+commit c86ba825c474bbbd9e95bcdbc2b8b577d24322fe
+Author: Casey Dahlin <cdahlin@redhat.com>
+Date:   Mon Jul 18 02:00:25 2011 -0400
+
+    Pass object ID not pointer when sending a global announce event
+    
+    When the type for the first argument of the global event changed from new_id to
+    uint, wl_connection_vmarshal started expecting an integer argument rather than
+    an object argument. As a result we were sending the client a chunk of pointer
+    rather than a useful global identifier.
+
+commit a8db57befa3263c6de24fd9762a4aec3b564d4d3
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Jul 18 13:10:49 2011 -0400
+
+    conection: Handle demarshal errors a little less dramatically
+
+commit 728d09936f76ce60090e0fd0505b0522d03dd535
+Author: Casey Dahlin <cdahlin@redhat.com>
+Date:   Mon Jul 18 02:00:24 2011 -0400
+
+    Fix segfault in client when demarshalling fails
+
+commit 068ba750caebb62aaef20ac3452ce23e066c7239
+Author: Tiago Vignatti <tiago.vignatti@intel.com>
+Date:   Thu Jul 14 18:56:51 2011 +0300
+
+    protocol: fix key event and related comments
+
+commit a9ef785cf83731b82334b22894dd01ee6ada66c8
+Author: Tiago Vignatti <tiago.vignatti@intel.com>
+Date:   Thu Jul 14 18:56:40 2011 +0300
+
+    debug: add timestamps when logging
+    
+    Signed-off-by: Tiago Vignatti <tiago.vignatti@intel.com>
+
+commit 98da0a7b982310992e3af1b376c4b05ea4f2c71a
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jul 12 13:22:59 2011 -0400
+
+    protocol: Fix type of visual arg in token_visual event
+
+commit f6bf070aee4527e9793681b42ac57a587d239f4c
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jul 12 13:22:25 2011 -0400
+
+    scanner: Output type info for new_id arguments
+
+commit 671a62cb968b6793f0504770888b23b79e6fb81e
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Jul 11 11:15:00 2011 -0400
+
+    protocol: Make id arg of display.global event be just a uint
+    
+    Global names are different from object IDs.
+
+commit ff1a06c03abfa18c18986d42683d69aa47f7d841
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Jul 7 13:39:08 2011 -0400
+
+    scanner: map 'int' to int32_t.
+
+commit aa7bbb210b7121b9314993228960240358e9b123
+Author: Laszlo Agocs <laszlo.p.agocs@nokia.com>
+Date:   Wed Jun 29 17:54:11 2011 +0300
+
+    Add touch events to protocol.
+
+commit 40b0a6bf630b45550ec1e5e62395006cbf4223aa
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jun 29 11:43:11 2011 -0400
+
+    server: Add wl_client_flush()
+    
+    Flush output queue up for the specified client.
+
+commit ff20a0417af35a1614ec761a67160963de6471e0
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Jun 23 06:43:47 2011 -0400
+
+    event-loop: Make idle handlers work again
+
+commit b6fdded54bc86260f2b6126d34648c85f4f2d7b1
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jun 21 16:25:28 2011 -0400
+
+    Update TODO
+
+commit 7dc36984af4b70018e4c70a39cf19172693d33fc
+Merge: bfea3d6 4c2500c
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jun 21 12:15:31 2011 -0400
+
+    Merge remote-tracking branch 'bnf/buffer.release'
+
+commit 4c2500c2e2abc380f34e3222d31222fd103015a5
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Tue Jun 21 17:37:18 2011 +0200
+
+    Drop wl_compoositor parameter in wl_buffer
+
+commit a56c0455717c4772e8e4b78e56af439ccd2356af
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Tue May 10 12:01:00 2011 +0200
+
+    Add busy_count and client parameter to wl_buffer
+    
+    Can be used to implement release event.
+
+commit 2fcebfed95447b994649f58f7b0d40e8bac8de08
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Mon May 9 17:35:58 2011 +0200
+
+    Add buffer.release event
+
+commit bfea3d6befdb688d5354e6f15a9400ea637febf9
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Jun 20 20:34:55 2011 -0400
+
+    Add more protocol for communicating screen geometry
+
+commit aae9f214e5f0d8d1deac4816fe40f76b2cf84f55
+Author: Laszlo Agocs <laszlo.p.agocs@nokia.com>
+Date:   Tue Jun 14 10:35:46 2011 +0200
+
+    Add wl_display_remove_global.
+    
+    Change 4453ba084aae5a00318b9dfdeda95e8eaa17494c disallows using
+    post_global with objects not on the global list. Therefore selection
+    and drag offers have to be added to the global list from now on.
+    However these may often get replaced by a newer object and thus need a
+    way to remove a global from the global list.
+
+commit 9c36ea776b48decd84828d0b51842c91e2c9124a
+Author: Laszlo Agocs <laszlo.p.agocs@nokia.com>
+Date:   Tue Jun 14 11:41:54 2011 +0200
+
+    Do not leak globals and listeners.
+    
+     From 3fa2ad7dec42f85795449f33b2a4c9461aa4924d Mon Sep 17 00:00:00 2001
+    From: Laszlo Agocs <laszlo.p.agocs@nokia.com>
+    Date: Tue, 14 Jun 2011 11:35:28 +0200
+    Subject: [PATCH] Do not leak globals and listeners.
+
+commit a2db57517b3648f52410c6861704b5c4190416c1
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sat Jun 18 08:17:40 2011 -0400
+
+    Move map functionality into shell
+    
+    Initial surface.attach makes the surface visible and clients
+    can set the surface type using shell.set_transient etc or
+    other interfaces prior to that.
+
 commit 98d8256b8e67a417eebc314440716e66926adf92
 Author: Corentin Chary <corentin.chary@gmail.com>
 Date:   Fri Jun 10 10:27:16 2011 +0200
