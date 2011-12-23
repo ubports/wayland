@@ -1,6 +1,7 @@
 wayland (0.1.0~1-1) UNRELEASED; urgency=low
 
   * New upstream snapshot.
+  * Update symbols file.
 
  -- Cyril Brulebois <kibi@debian.org>  Fri, 23 Dec 2011 14:23:44 +0100
 

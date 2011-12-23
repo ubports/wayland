@@ -6,19 +6,14 @@ libwayland-client.so.0 libwayland0 @@currentversion@@
  wl_buffer_interface@Base 0.1.0~0
  wl_compositor_interface@Base 0.1.0~0
  wl_display_add_global_listener@Base 0.1.0~0
- wl_display_allocate_id@Base 0.1.0~0
  wl_display_connect@Base 0.1.0~0
  wl_display_destroy@Base 0.1.0~0
  wl_display_flush@Base 0.1.0~0
- wl_display_frame_callback@Base 0.1.0~0
  wl_display_get_fd@Base 0.1.0~0
  wl_display_get_global@Base 0.1.0~0
  wl_display_interface@Base 0.1.0~0
  wl_display_iterate@Base 0.1.0~0
  wl_display_remove_global_listener@Base 0.1.0~0
- wl_display_sync_callback@Base 0.1.0~0
- wl_drag_interface@Base 0.1.0~0
- wl_drag_offer_interface@Base 0.1.0~0
  wl_hash_table_create@Base 0.1.0~0
  wl_hash_table_destroy@Base 0.1.0~0
  wl_hash_table_insert@Base 0.1.0~0
@@ -38,12 +33,9 @@ libwayland-client.so.0 libwayland0 @@currentversion@@
  wl_proxy_get_user_data@Base 0.1.0~0
  wl_proxy_marshal@Base 0.1.0~0
  wl_proxy_set_user_data@Base 0.1.0~0
- wl_selection_interface@Base 0.1.0~0
- wl_selection_offer_interface@Base 0.1.0~0
  wl_shell_interface@Base 0.1.0~0
  wl_shm_interface@Base 0.1.0~0
  wl_surface_interface@Base 0.1.0~0
- wl_visual_interface@Base 0.1.0~0
 
 libwayland-server.so.0 libwayland0 @@currentversion@@
  wl_array_add@Base 0.1.0~0
@@ -56,24 +48,15 @@ libwayland-server.so.0 libwayland0 @@currentversion@@
  wl_client_create@Base 0.1.0~0
  wl_client_destroy@Base 0.1.0~0
  wl_client_get_display@Base 0.1.0~0
- wl_client_post_error@Base 0.1.0~0
- wl_client_post_event@Base 0.1.0~0
- wl_client_post_global@Base 0.1.0~0
- wl_client_post_no_memory@Base 0.1.0~0
- wl_compositor_init@Base 0.1.0~0
  wl_compositor_interface@Base 0.1.0~0
  wl_display_add_global@Base 0.1.0~0
- wl_display_add_object@Base 0.1.0~0
  wl_display_add_socket@Base 0.1.0~0
  wl_display_create@Base 0.1.0~0
  wl_display_destroy@Base 0.1.0~0
  wl_display_get_event_loop@Base 0.1.0~0
  wl_display_interface@Base 0.1.0~0
- wl_display_post_frame@Base 0.1.0~0
  wl_display_run@Base 0.1.0~0
  wl_display_terminate@Base 0.1.0~0
- wl_drag_interface@Base 0.1.0~0
- wl_drag_offer_interface@Base 0.1.0~0
  wl_event_loop_add_fd@Base 0.1.0~0
  wl_event_loop_add_idle@Base 0.1.0~0
  wl_event_loop_add_signal@Base 0.1.0~0
@@ -105,8 +88,6 @@ libwayland-server.so.0 libwayland0 @@currentversion@@
  wl_list_remove@Base 0.1.0~0
  wl_output_interface@Base 0.1.0~0
  wl_resource_destroy@Base 0.1.0~0
- wl_selection_interface@Base 0.1.0~0
- wl_selection_offer_interface@Base 0.1.0~0
  wl_shell_interface@Base 0.1.0~0
  wl_shm_buffer_get_data@Base 0.1.0~0
  wl_shm_buffer_get_stride@Base 0.1.0~0
@@ -114,4 +95,3 @@ libwayland-server.so.0 libwayland0 @@currentversion@@
  wl_shm_init@Base 0.1.0~0
  wl_shm_interface@Base 0.1.0~0
  wl_surface_interface@Base 0.1.0~0
- wl_visual_interface@Base 0.1.0~0
