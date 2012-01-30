@@ -1,3 +1,203 @@
+commit 10eefa49470d97948719f58dfb62a97fb4701aed
+Author: Jesse Barnes <jbarnes@virtuousgeek.org>
+Date:   Wed Jan 18 10:06:02 2012 -0800
+
+    spec: list core interfaces with short descriptions
+    
+    Plus fix up misc. grammar.
+
+commit fb84662f617d2d8ec3f5724d6962a4109e6fb0ea
+Author: Jesse Barnes <jbarnes@virtuousgeek.org>
+Date:   Wed Jan 18 09:33:34 2012 -0800
+
+    spec: update high level description, add diagrams
+    
+    Add diagrams from the Wayland architecture page and add some more high
+    level text describing X limitations and Wayland architecture.
+
+commit f66aa1d08f75c6d89b539e2942baa18b454f83bc
+Author: Jesse Barnes <jbarnes@virtuousgeek.org>
+Date:   Thu Jan 19 14:13:36 2012 -0800
+
+    scanner: allow summary attributes in args and <description> in <protocol>
+    
+    Add support for arg summaries for use by detailed structure element
+    descriptions.
+
+commit 032b957698e03a3e6bb19dc051ecad1792da0385
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jan 18 19:17:23 2012 -0500
+
+    protocol: Convert comments to new documentation tags
+
+commit 5cd047131185932e937b05f6a77b9833028acbab
+Author: Jesse Barnes <jesse.barnes@intel.com>
+Date:   Wed Jan 18 14:09:47 2012 -0800
+
+    scanner: Support documentation elements
+    
+    On Wed, 18 Jan 2012 12:29:37 -0800
+    "Kristensen, Kristian H" <kristian.h.kristensen@intel.com> wrote:
+    > Yeah, that looks good.  I was thinking of a separate <description> tag
+    > to avoid stuffing too much into an attribute.
+    
+    How does this look?  It adds a summary attribute to atomic elements,
+    and a <description> tag with a summary for others.  Spits out enum
+    documentation like this:
+    
+    /**
+     * wl_display_error - global error values
+     * @WL_DISPLAY_ERROR_INVALID_OBJECT: server couldn't find object
+     * @WL_DISPLAY_ERROR_INVALID_METHOD: method doesn't exist on the specified interface
+     * @WL_DISPLAY_ERROR_NO_MEMORY: server is out of memory
+     *
+     * These errors are global and can be emitted in response to any server request.
+     */
+    enum wl_display_error {
+    	WL_DISPLAY_ERROR_INVALID_OBJECT = 0,
+    	WL_DISPLAY_ERROR_INVALID_METHOD = 1,
+    	WL_DISPLAY_ERROR_NO_MEMORY = 2,
+    };
+    
+    and structure documentation like this:
+    
+    /**
+     * wl_display - core global object
+     * @bind: bind an object to the display
+     * @sync: (none)
+     *
+     * The core global object. This is a special singleton object. It is used for
+     * internal wayland protocol features.
+     */
+    struct wl_display_interface {
+    	void (*bind)(struct wl_client *client,
+    		     struct wl_resource *resource,
+    		     uint32_t name,
+    		     const char *interface,
+    		     uint32_t version,
+    		     uint32_t id);
+    	void (*sync)(struct wl_client *client,
+    		     struct wl_resource *resource,
+    		     uint32_t callback);
+    };
+
+commit 4b5871e2b8be59b5dc3daa6fe00eb1bee80bfad6
+Author: Richard Hughes <richard@hughsie.com>
+Date:   Fri Jan 13 09:20:48 2012 +0000
+
+    Fix 'make dist' as connection.h no longer exists
+
+commit e0b6af03cad9cb970072f39d602c85be6b4b014b
+Author: Neil Roberts <neil@linux.intel.com>
+Date:   Thu Jan 12 15:48:02 2012 +0000
+
+    server: In default grab, update focus resource after sending release
+    
+    The default grab implementation in wayland-server was updating the
+    focus resource before sending the button event. This would cause the
+    button release to be dropped from the implicit grab if the pointer is
+    moved away from the focus surface. This patch just swaps the order
+    around.
+
+commit 151ca457b4384c385c0062716b55595e22fef7ea
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jan 11 14:19:50 2012 -0500
+
+    shm: Drop non-premul format, use less ambiguous ARGB8888 naming convention
+    
+    This also matches the new wl_drm format names.
+
+commit b2e619c7409a98936233b5f8afb8797f5ac457e9
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Jan 5 08:50:25 2012 -0500
+
+    Add new wl_shell popup surface type
+
+commit b6b3d07c83481a4435a3b03f2ea6c5dfa600f8f5
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jan 4 21:40:21 2012 -0500
+
+    Move data device implementation into wayland-server
+
+commit dbb3ba7269beea3ac441632bd502911bc439a0e3
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jan 4 21:29:17 2012 -0500
+
+    Move default grab implementation to wayland-server
+
+commit 5ffe9f470829a80acb711950eaa3870ec20c1057
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jan 4 21:27:26 2012 -0500
+
+    New grab API
+    
+    This commit changes the way struct wl_grab works in a couple of ways:
+    
+     - The grab itself now decides when it ends instead of hardcoding button
+       up as the terminating event.  We remove the end vfunc since a grab now
+       always know when it ends and can just clean up at that point.
+    
+     - We add a new focus vfunc that is invoked every time the pointer enters
+       a new surface, regardless of any grabs.  The callback receives the
+       surface and the surface-relative pointer coordinates.  The callback lets
+       a grab send enter/leave events and change the grab focus.
+    
+     - The grab has a focus surface, wich determines the coordinate space
+       for the motion callback coordinates.
+    
+     - The input device always tracks the current surface, ie the surface that
+       currently contains the pointer, and coordinates relative to that surface.
+    
+    With these changes, we will be able to pull the core input event delivery
+    and the drag and drop grab into the core wayland-server library.
+
+commit 44b529f2e4b953206908f73842ca76d246f715d0
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jan 4 09:13:27 2012 -0500
+
+    server: Allocate server ID for when resource->object.id is 0
+
+commit c7473897fc6175b2a1a4af673c7ba489483a1cbb
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Tue Jan 3 16:32:41 2012 +0200
+
+    server: remove wl_display::callback_list as unused
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 2755847fce68d6ad36e180f807d06e8a6e70bce7
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Tue Jan 3 16:32:40 2012 +0200
+
+    server: add wl_input_device_release()
+    
+    Add a clean-up function for destroying all objects created in
+    wl_input_device_init(). Can be used to fix memory leaks reported by
+    Valgrind in the demos.
+    
+    The init function was also missing an explicit initialisation of the
+    'keys' array. Add the explicit array init, although it is redundant with
+    the zeroing of the whole struct.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+    
+    krh: Edited to rename function to *_release()
+
+commit d6465c5b402362c730c703f3f6dd5deddefec113
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Dec 28 22:47:37 2011 -0500
+
+    Fix WL_EVENT_WRITEABLE typo
+
+commit c1b9203e5adc499677ddb69720213ff63ca66678
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Dec 27 13:53:59 2011 -0500
+
+    Drop unused hash table
+    
+    We now just use a table for looking up object IDs so we should drop the
+    hash table.
+
 commit bc79f1f820409fb92c158a9d2df8a99ad269018e
 Author: Kristian Høgsberg <krh@bitplanet.net>
 Date:   Thu Dec 22 15:32:37 2011 -0500
