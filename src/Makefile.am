@@ -11,17 +11,16 @@ include_HEADERS =				\
 
 libwayland_util_la_SOURCES =			\
 	connection.c				\
-	connection.h				\
 	wayland-util.c				\
 	wayland-util.h				\
-	wayland-private.h			\
-	wayland-hash.c
+	wayland-private.h
 
 libwayland_server_la_LIBADD = $(FFI_LIBS) libwayland-util.la -lrt
 libwayland_server_la_SOURCES =			\
 	wayland-protocol.c			\
 	wayland-server.c			\
 	wayland-shm.c				\
+	data-device.c				\
 	event-loop.c
 
 libwayland_client_la_LIBADD = $(FFI_LIBS) libwayland-util.la -lrt
