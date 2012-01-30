@@ -22,12 +22,6 @@ libwayland-client.so.0 libwayland0 @@currentversion@@
  wl_display_remove_global_listener@Base 0.1.0~0
  wl_display_roundtrip@Base 0.1.0~1
  wl_display_sync@Base 0.1.0~1
- wl_hash_table_create@Base 0.1.0~0
- wl_hash_table_destroy@Base 0.1.0~0
- wl_hash_table_for_each@Base 0.1.0~1
- wl_hash_table_insert@Base 0.1.0~0
- wl_hash_table_lookup@Base 0.1.0~0
- wl_hash_table_remove@Base 0.1.0~0
  wl_input_device_interface@Base 0.1.0~0
  wl_list_empty@Base 0.1.0~0
  wl_list_init@Base 0.1.0~0
@@ -72,7 +66,9 @@ libwayland-server.so.0 libwayland0 @@currentversion@@
  wl_client_new_object@Base 0.1.0~1
  wl_compositor_interface@Base 0.1.0~0
  wl_data_device_interface@Base 0.1.0~1
+ wl_data_device_manager_init@Base 0.1.0~2
  wl_data_device_manager_interface@Base 0.1.0~1
+ wl_data_device_set_keyboard_focus@Base 0.1.0~2
  wl_data_offer_interface@Base 0.1.0~1
  wl_data_source_interface@Base 0.1.0~1
  wl_display_add_global@Base 0.1.0~0
@@ -96,19 +92,14 @@ libwayland-server.so.0 libwayland0 @@currentversion@@
  wl_event_source_fd_update@Base 0.1.0~0
  wl_event_source_remove@Base 0.1.0~0
  wl_event_source_timer_update@Base 0.1.0~0
- wl_hash_table_create@Base 0.1.0~0
- wl_hash_table_destroy@Base 0.1.0~0
- wl_hash_table_for_each@Base 0.1.0~1
- wl_hash_table_insert@Base 0.1.0~0
- wl_hash_table_lookup@Base 0.1.0~0
- wl_hash_table_remove@Base 0.1.0~0
  wl_input_device_end_grab@Base 0.1.0~0
  wl_input_device_init@Base 0.1.0~0
  wl_input_device_interface@Base 0.1.0~0
+ wl_input_device_release@Base 0.1.0~2
  wl_input_device_set_keyboard_focus@Base 0.1.0~0
  wl_input_device_set_pointer_focus@Base 0.1.0~0
+ wl_input_device_set_selection@Base 0.1.0~2
  wl_input_device_start_grab@Base 0.1.0~0
- wl_input_device_update_grab@Base 0.1.0~0
  wl_list_empty@Base 0.1.0~0
  wl_list_init@Base 0.1.0~0
  wl_list_insert@Base 0.1.0~0
