@@ -1,2 +1,3 @@
 #git=git://anongit.freedesktop.org/wayland/wayland
-# No release, so no tarball, yet.
+version=3
+http://wayland.freedesktop.org/releases/wayland-(.*)\.tar\.xz
