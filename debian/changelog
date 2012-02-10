@@ -1,4 +1,4 @@
-wayland (0.85.0-1) UNRELEASED; urgency=low
+wayland (0.85.0-1) experimental; urgency=low
 
   * First upstream release:
     - http://article.gmane.org/gmane.comp.freedesktop.wayland.devel/1770
@@ -6,7 +6,7 @@ wayland (0.85.0-1) UNRELEASED; urgency=low
     upstream releases xz tarballs, and the 1.0 source format only suports
     gz.
 
- -- Cyril Brulebois <kibi@debian.org>  Fri, 10 Feb 2012 11:26:53 +0100
+ -- Cyril Brulebois <kibi@debian.org>  Fri, 10 Feb 2012 11:51:36 +0100
 
 wayland (0.1.0~2-1) experimental; urgency=low
 
