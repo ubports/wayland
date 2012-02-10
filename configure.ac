@@ -1,6 +1,6 @@
 AC_PREREQ([2.64])
 AC_INIT([wayland],
-        [0.1],
+        [0.85.0],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=wayland],
         [wayland],
         [http://wayland.freedesktop.org/])
@@ -8,7 +8,7 @@ AC_INIT([wayland],
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
-AM_INIT_AUTOMAKE([1.11 foreign dist-bzip2])
+AM_INIT_AUTOMAKE([1.11 foreign no-dist-gzip dist-xz])
 
 AM_SILENT_RULES([yes])
 
