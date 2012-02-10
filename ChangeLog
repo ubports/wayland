@@ -1,3 +1,62 @@
+commit 28e3cbc654a81c35a2948af93d6e86911159a13f
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Feb 9 11:16:30 2012 -0500
+
+    Release 0.85.0
+
+commit 7c6dac8740f26f0fd2440016c218a9862fdfc271
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Feb 9 11:15:33 2012 -0500
+
+    Use dist-xz for tarballs
+
+commit c6b37ac05566d0a233da69a4f6b35409b278de34
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Feb 9 11:12:18 2012 -0500
+
+    Set version to 'master' on git master branch
+
+commit 8f9de83f7b1f9c6bc265fec4aec35eff0e9164a0
+Author: Tiago Vignatti <tiago.vignatti@intel.com>
+Date:   Tue Jan 24 18:30:13 2012 +0200
+
+    scanner: don't print new line when no descriptions are provided
+    
+    Signed-off-by: Tiago Vignatti <tiago.vignatti@intel.com>
+
+commit 899652201f0be57b5dc664c5e4d0eeaf2caf34a7
+Author: Tiago Vignatti <tiago.vignatti@intel.com>
+Date:   Tue Jan 24 17:49:28 2012 +0200
+
+    protocol: fix typo
+    
+    Signed-off-by: Tiago Vignatti <tiago.vignatti@intel.com>
+
+commit 3cce6be20d5f81810d00eb89ae09eaa0025e10b3
+Author: Tiago Vignatti <tiago.vignatti@intel.com>
+Date:   Tue Jan 24 16:11:33 2012 +0200
+
+    spec: fix typo
+    
+    Signed-off-by: Tiago Vignatti <tiago.vignatti@intel.com>
+
+commit 0bcb30a9a010790f6258c890000765b17f539a46
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Feb 9 08:28:21 2012 -0500
+
+    Drop warning when we receive an event for zombie objects
+    
+    Business as usual, but the message is confusing.
+
+commit fa525622e33216207b6bba6ef5b4c434d565e4d1
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jan 24 09:52:25 2012 -0500
+
+    wayland-util.h: Avoid un-namespaced _container_of
+    
+    Yes, there are worse offenders in that file, but this one isn't used in
+    the code and it makes Xorg angry.
+
 commit 10eefa49470d97948719f58dfb62a97fb4701aed
 Author: Jesse Barnes <jbarnes@virtuousgeek.org>
 Date:   Wed Jan 18 10:06:02 2012 -0800
