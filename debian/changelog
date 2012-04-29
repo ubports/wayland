@@ -1,8 +1,13 @@
-wayland (0.85.0-2) UNRELEASED; urgency=low
+wayland (0.85.0-2) unstable; urgency=low
 
+  * Upload to unstable.
+  * Wayland/Weston aren't quite ready to replace Xorg yet, but let's
+    upload those to unstable anyway, so that people can find out by
+    themselves. On the plus side, mesa can stop getting wayland support
+    enabled in experimental, then disabled back when uploaded to unstable.
   * Update long description, wayland-demos got replaced by weston.
 
- -- Cyril Brulebois <kibi@debian.org>  Sun, 29 Apr 2012 22:32:42 +0200
+ -- Cyril Brulebois <kibi@debian.org>  Sun, 29 Apr 2012 22:34:18 +0200
 
 wayland (0.85.0-1) experimental; urgency=low
 
