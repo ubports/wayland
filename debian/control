@@ -30,7 +30,8 @@ Description: wayland compositor infrastructure - shared libraries
  .
  This is an experimental library package, neither ABI or API are fixed
  right now. As a consequence, generated dependencies are made as
- strict as possible. It should only be used by mesa and wayland-demos.
+ strict as possible. It should only be used by mesa and weston for
+ the time being.
 
 Package: libwayland0-dbg
 Section: debug

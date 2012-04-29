@@ -1,3 +1,9 @@
+wayland (0.85.0-2) UNRELEASED; urgency=low
+
+  * Update long description, wayland-demos got replaced by weston.
+
+ -- Cyril Brulebois <kibi@debian.org>  Sun, 29 Apr 2012 22:32:42 +0200
+
 wayland (0.85.0-1) experimental; urgency=low
 
   * First upstream release:
