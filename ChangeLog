@@ -1,0 +1,5913 @@
+commit 28e3cbc654a81c35a2948af93d6e86911159a13f
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Feb 9 11:16:30 2012 -0500
+
+    Release 0.85.0
+
+commit 7c6dac8740f26f0fd2440016c218a9862fdfc271
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Feb 9 11:15:33 2012 -0500
+
+    Use dist-xz for tarballs
+
+commit c6b37ac05566d0a233da69a4f6b35409b278de34
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Feb 9 11:12:18 2012 -0500
+
+    Set version to 'master' on git master branch
+
+commit 8f9de83f7b1f9c6bc265fec4aec35eff0e9164a0
+Author: Tiago Vignatti <tiago.vignatti@intel.com>
+Date:   Tue Jan 24 18:30:13 2012 +0200
+
+    scanner: don't print new line when no descriptions are provided
+    
+    Signed-off-by: Tiago Vignatti <tiago.vignatti@intel.com>
+
+commit 899652201f0be57b5dc664c5e4d0eeaf2caf34a7
+Author: Tiago Vignatti <tiago.vignatti@intel.com>
+Date:   Tue Jan 24 17:49:28 2012 +0200
+
+    protocol: fix typo
+    
+    Signed-off-by: Tiago Vignatti <tiago.vignatti@intel.com>
+
+commit 3cce6be20d5f81810d00eb89ae09eaa0025e10b3
+Author: Tiago Vignatti <tiago.vignatti@intel.com>
+Date:   Tue Jan 24 16:11:33 2012 +0200
+
+    spec: fix typo
+    
+    Signed-off-by: Tiago Vignatti <tiago.vignatti@intel.com>
+
+commit 0bcb30a9a010790f6258c890000765b17f539a46
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Feb 9 08:28:21 2012 -0500
+
+    Drop warning when we receive an event for zombie objects
+    
+    Business as usual, but the message is confusing.
+
+commit fa525622e33216207b6bba6ef5b4c434d565e4d1
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jan 24 09:52:25 2012 -0500
+
+    wayland-util.h: Avoid un-namespaced _container_of
+    
+    Yes, there are worse offenders in that file, but this one isn't used in
+    the code and it makes Xorg angry.
+
+commit 10eefa49470d97948719f58dfb62a97fb4701aed
+Author: Jesse Barnes <jbarnes@virtuousgeek.org>
+Date:   Wed Jan 18 10:06:02 2012 -0800
+
+    spec: list core interfaces with short descriptions
+    
+    Plus fix up misc. grammar.
+
+commit fb84662f617d2d8ec3f5724d6962a4109e6fb0ea
+Author: Jesse Barnes <jbarnes@virtuousgeek.org>
+Date:   Wed Jan 18 09:33:34 2012 -0800
+
+    spec: update high level description, add diagrams
+    
+    Add diagrams from the Wayland architecture page and add some more high
+    level text describing X limitations and Wayland architecture.
+
+commit f66aa1d08f75c6d89b539e2942baa18b454f83bc
+Author: Jesse Barnes <jbarnes@virtuousgeek.org>
+Date:   Thu Jan 19 14:13:36 2012 -0800
+
+    scanner: allow summary attributes in args and <description> in <protocol>
+    
+    Add support for arg summaries for use by detailed structure element
+    descriptions.
+
+commit 032b957698e03a3e6bb19dc051ecad1792da0385
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jan 18 19:17:23 2012 -0500
+
+    protocol: Convert comments to new documentation tags
+
+commit 5cd047131185932e937b05f6a77b9833028acbab
+Author: Jesse Barnes <jesse.barnes@intel.com>
+Date:   Wed Jan 18 14:09:47 2012 -0800
+
+    scanner: Support documentation elements
+    
+    On Wed, 18 Jan 2012 12:29:37 -0800
+    "Kristensen, Kristian H" <kristian.h.kristensen@intel.com> wrote:
+    > Yeah, that looks good.  I was thinking of a separate <description> tag
+    > to avoid stuffing too much into an attribute.
+    
+    How does this look?  It adds a summary attribute to atomic elements,
+    and a <description> tag with a summary for others.  Spits out enum
+    documentation like this:
+    
+    /**
+     * wl_display_error - global error values
+     * @WL_DISPLAY_ERROR_INVALID_OBJECT: server couldn't find object
+     * @WL_DISPLAY_ERROR_INVALID_METHOD: method doesn't exist on the specified interface
+     * @WL_DISPLAY_ERROR_NO_MEMORY: server is out of memory
+     *
+     * These errors are global and can be emitted in response to any server request.
+     */
+    enum wl_display_error {
+    	WL_DISPLAY_ERROR_INVALID_OBJECT = 0,
+    	WL_DISPLAY_ERROR_INVALID_METHOD = 1,
+    	WL_DISPLAY_ERROR_NO_MEMORY = 2,
+    };
+    
+    and structure documentation like this:
+    
+    /**
+     * wl_display - core global object
+     * @bind: bind an object to the display
+     * @sync: (none)
+     *
+     * The core global object. This is a special singleton object. It is used for
+     * internal wayland protocol features.
+     */
+    struct wl_display_interface {
+    	void (*bind)(struct wl_client *client,
+    		     struct wl_resource *resource,
+    		     uint32_t name,
+    		     const char *interface,
+    		     uint32_t version,
+    		     uint32_t id);
+    	void (*sync)(struct wl_client *client,
+    		     struct wl_resource *resource,
+    		     uint32_t callback);
+    };
+
+commit 4b5871e2b8be59b5dc3daa6fe00eb1bee80bfad6
+Author: Richard Hughes <richard@hughsie.com>
+Date:   Fri Jan 13 09:20:48 2012 +0000
+
+    Fix 'make dist' as connection.h no longer exists
+
+commit e0b6af03cad9cb970072f39d602c85be6b4b014b
+Author: Neil Roberts <neil@linux.intel.com>
+Date:   Thu Jan 12 15:48:02 2012 +0000
+
+    server: In default grab, update focus resource after sending release
+    
+    The default grab implementation in wayland-server was updating the
+    focus resource before sending the button event. This would cause the
+    button release to be dropped from the implicit grab if the pointer is
+    moved away from the focus surface. This patch just swaps the order
+    around.
+
+commit 151ca457b4384c385c0062716b55595e22fef7ea
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jan 11 14:19:50 2012 -0500
+
+    shm: Drop non-premul format, use less ambiguous ARGB8888 naming convention
+    
+    This also matches the new wl_drm format names.
+
+commit b2e619c7409a98936233b5f8afb8797f5ac457e9
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Jan 5 08:50:25 2012 -0500
+
+    Add new wl_shell popup surface type
+
+commit b6b3d07c83481a4435a3b03f2ea6c5dfa600f8f5
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jan 4 21:40:21 2012 -0500
+
+    Move data device implementation into wayland-server
+
+commit dbb3ba7269beea3ac441632bd502911bc439a0e3
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jan 4 21:29:17 2012 -0500
+
+    Move default grab implementation to wayland-server
+
+commit 5ffe9f470829a80acb711950eaa3870ec20c1057
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jan 4 21:27:26 2012 -0500
+
+    New grab API
+    
+    This commit changes the way struct wl_grab works in a couple of ways:
+    
+     - The grab itself now decides when it ends instead of hardcoding button
+       up as the terminating event.  We remove the end vfunc since a grab now
+       always know when it ends and can just clean up at that point.
+    
+     - We add a new focus vfunc that is invoked every time the pointer enters
+       a new surface, regardless of any grabs.  The callback receives the
+       surface and the surface-relative pointer coordinates.  The callback lets
+       a grab send enter/leave events and change the grab focus.
+    
+     - The grab has a focus surface, wich determines the coordinate space
+       for the motion callback coordinates.
+    
+     - The input device always tracks the current surface, ie the surface that
+       currently contains the pointer, and coordinates relative to that surface.
+    
+    With these changes, we will be able to pull the core input event delivery
+    and the drag and drop grab into the core wayland-server library.
+
+commit 44b529f2e4b953206908f73842ca76d246f715d0
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jan 4 09:13:27 2012 -0500
+
+    server: Allocate server ID for when resource->object.id is 0
+
+commit c7473897fc6175b2a1a4af673c7ba489483a1cbb
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Tue Jan 3 16:32:41 2012 +0200
+
+    server: remove wl_display::callback_list as unused
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 2755847fce68d6ad36e180f807d06e8a6e70bce7
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Tue Jan 3 16:32:40 2012 +0200
+
+    server: add wl_input_device_release()
+    
+    Add a clean-up function for destroying all objects created in
+    wl_input_device_init(). Can be used to fix memory leaks reported by
+    Valgrind in the demos.
+    
+    The init function was also missing an explicit initialisation of the
+    'keys' array. Add the explicit array init, although it is redundant with
+    the zeroing of the whole struct.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+    
+    krh: Edited to rename function to *_release()
+
+commit d6465c5b402362c730c703f3f6dd5deddefec113
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Dec 28 22:47:37 2011 -0500
+
+    Fix WL_EVENT_WRITEABLE typo
+
+commit c1b9203e5adc499677ddb69720213ff63ca66678
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Dec 27 13:53:59 2011 -0500
+
+    Drop unused hash table
+    
+    We now just use a table for looking up object IDs so we should drop the
+    hash table.
+
+commit bc79f1f820409fb92c158a9d2df8a99ad269018e
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Dec 22 15:32:37 2011 -0500
+
+    Rename all instances of typeof
+
+commit 5e078bfa5a64b1d3ebf78ff2cec0a8e7daaaf983
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Dec 22 15:23:54 2011 -0500
+
+    Use __typeof__ instead of typeof
+    
+    Thiago Macieira compiles with -std=c++11.
+
+commit aad1e190588a0edc5a39a9feba534e7a6d4532d4
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Thu Dec 22 16:52:37 2011 +0200
+
+    server: destroy the socket event source on display destroy
+    
+    On wl_display_add_socket(), the listening socket fd is added to the
+    event loop. However, wl_event_source object is not stored and hence
+    cannot be freed, resulting in a minor leak.
+    
+    Store wl_event_source pointer in struct wl_socket so we can track it,
+    and destroy it on wl_display_destroy(). The event loop itself must be
+    destroyed after destroying the event sources linked to it.
+    
+    Fixes a Valgrind reported memory leak.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 1f58d155da09f66dc1eaaafafddae3312e71704f
+Author: Tiago Vignatti <tiago.vignatti@intel.com>
+Date:   Wed Dec 21 19:34:08 2011 +0200
+
+    protocol: update touch_down with focus surface
+    
+    Signed-off-by: Tiago Vignatti <tiago.vignatti@intel.com>
+
+commit e68529b52f30974841974c53605f00c9a8ca1580
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Dec 19 13:15:06 2011 -0500
+
+    protocol: Add a bit of documentation
+
+commit 1b31149f92888eae01df6ff442166b91b35843b3
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sat Dec 17 16:05:44 2011 -0500
+
+    connection: Fix printf format warnings
+
+commit 34901868b8d037c3ec230a6828aa75c79ffae59c
+Author: Laszlo Agocs <laszlo.p.agocs@nokia.com>
+Date:   Fri Dec 16 10:29:36 2011 +0200
+
+    Increase closure buffer size and fail gracefully for too big closures.
+    
+    Buffer size changed from 256 to 1024 bytes. Marshalling will now stop
+    if the buffer is not big enough.
+
+commit f598691831db779aab1f5dd17ace5992a0928960
+Author: Andy Nichols <andy.nichols@nokia.com>
+Date:   Thu Nov 24 10:19:18 2011 +0100
+
+    Removed superfluous call to wl_copy_connection
+    
+    The only purpose those code seems to serve is to introduce a buffer
+    overflow when events contain more than 128 bytes of data.
+
+commit 187eace6139754eae58a21303c808a270f70dc3f
+Author: Jørgen Lind <jorgen.lind@nokia.com>
+Date:   Tue Dec 13 22:01:34 2011 +0100
+
+    Make wl_list_for_each* work for c++
+
+commit e631ab6cde2fa0d0fe59cc4f5776c9a8b3002989
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Tue Dec 13 14:53:54 2011 +0200
+
+    client: fix a strdup memory leak
+    
+    Memory leak found by valgrinding simple-shm client.
+    struct wl_global::interface is a strdup()'d string that was never freed.
+    
+    Make a function for freeing a wl_global, and use it.
+    
+    krh: Edit to name wl_global destructor wl_global_destroy.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 58bb064afa3bfc706e3b30dd170804235aa272ea
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Mon Dec 5 10:04:37 2011 +0200
+
+    client: unset WAYLAND_SOCKET env variable
+    
+    WAYLAND_SOCKET contains a file descriptor that is an open connection to
+    a Wayland server. It is private to us, and makes no sense to relay the
+    same value (or any value) to our child processes.
+    
+    Unset the environment variable to prevent it from being accidentally
+    relayed to other processes.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit cf89b40c4ca105416240df737ba8e30c070a44af
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Tue Nov 29 14:32:32 2011 +0200
+
+    server: do not send delete_id to a dead client
+    
+    During client tear-down, all objects are destroyed in id order.
+    Therefore the display object is destroyed first.
+    
+    If the destroy listeners of any object destroy another object by calling
+    wl_resoruce_destroy(), we try to send a delete_id event to the client.
+    This leads to a segmentation fault without a display object.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 42eed3235a8349ac2139bb9a06cb8ac294872809
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Thu Nov 24 16:19:03 2011 +0200
+
+    protocol: introduce wl_shell_surface
+    
+    Requests like 'move' and 'set_toplevel' are really methods of a surface,
+    not methods of a global shell object. Move all these methods to a new
+    interface, wl_shell_surface.
+    
+    The global object wl_shell will contain only 'get_shell_surface'
+    request, which creates and associates a wl_shell_surface object to a
+    given wl_surface object.
+    
+    This will also give the shell plugin (if you look at the demo
+    compositor) means to store per-surface private data in a natural way.
+    
+    Due to a limitation in delete_id event handling on client side, the
+    client must destroy its wl_shell_surface object before destroying the
+    wl_surface object. Otherwise it may just leak an id.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit e04c137e86f3672f5274a3168a3e88483a191693
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Mon Nov 28 12:23:32 2011 +0200
+
+    server: document wl_resource_post_event() arguments
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 804d5dd348567fd286b8aa5101d3aff95ecd69d7
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Wed Nov 9 16:27:07 2011 +0200
+
+    util: clear pointers on wl_list_remove()
+    
+    Set the next and prev pointers of the removed list element to NULL. This
+    will catch programming errors that would use invalid list pointers,
+    double-remove for instance.
+    
+    It also helps debugging, making it easy to see in gdb if an object is
+    not in a list.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit ab6b0738c67bb6a3eec5b198ff909dc18a562294
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Mon Nov 28 09:47:15 2011 +0200
+
+    server: no errors to a dead client
+    
+    Do not try to send errors to an already dead client, while in the
+    middle of cleanup.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit eae3bcb4ccb80ef1c4dcd2f71987c1187aeb9e73
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Nov 15 08:58:34 2011 -0500
+
+    New drag and drop / selection protocol
+    
+    This commit brings a big change to the DND and copy/paste interfaces.
+    Most importantly the functionality is now independent of wl_shell.
+    The wl_shell interface is intended for desktop style UI interaction and
+    an optional and experimental interface.
+    
+    The new interface also allows receiving the DND data multiple times or
+    multiple times during the drag, and the mechanism for offering and receiving
+    data is now shared between DND and selections.
+
+commit 0b7d1e86af1e3da1dbee79ebdee2616a6e8bcf01
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Nov 23 10:34:50 2011 -0500
+
+    server: Stop special casing the compositor
+    
+    wl_compositor_init() was just adding the global and providing a helper
+    bind function.  Not useful enough to warrent API.
+
+commit bdbd6ef80b85f5d20608f702a6ffaa1f1f73e7a4
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Nov 18 21:59:36 2011 -0500
+
+    Add support for server allocated object IDs
+    
+    We set aside a range of the object ID space for use by the server.  This
+    allows the server to bind an object to an ID for a client and pass that
+    object to the client.  The client can use the object immediately and the
+    server can emit events to the object immdiately.
+
+commit 190492b97c9db43a910f17c576244492e19bc658
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Nov 22 14:03:33 2011 -0500
+
+    debug: Use unsigned for object IDs
+
+commit 44186b522f3083c10b8a96c6f9f815febeead054
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Nov 18 21:23:33 2011 -0500
+
+    scanner: Only strdup interface_name after making sure it's not NULL
+
+commit cf04b0a18f25cf1161c84f8ba979805eeaadea09
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Nov 18 13:46:56 2011 -0500
+
+    Move private definitions and prototypes to new wayland-private.h
+
+commit 68d13212f238f874600b8ef6020d174edbcbf5f0
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Nov 18 13:11:58 2011 -0500
+
+    Fix unused variable warning
+
+commit 4abc56bd6d476cf386fcc998d40e3d7753a2b03e
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Nov 17 16:46:36 2011 -0500
+
+    Introduce wl_resource_queue_event() for sending events later
+    
+    Some events, such as the display.delete_id, aren't very urgent and we
+    would like to not always send them immdiately and cause an unnecessary
+    context switch.  The wl_resource_queue_event() function will place the
+    event in the connection output buffer but not request the main loop to
+    poll for writable.  The effect is that the event will just sit in the
+    output buffer until a more important event comes around and requires
+    flushing.
+
+commit 3a1e6df39aa34df53c97ce9c7a1bfddf5a97faf3
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Nov 15 22:20:28 2011 -0500
+
+    Add display event to acknowledge ID deletion
+    
+    We need to make sure the client doesn't reuse an object ID until the
+    server has seen the destroy request.  When a client destroys an ID
+    the server will now respond with the display.delete_id event, which lets
+    the client block reuse until it receives the event.
+
+commit 51f50b8c6425684214e58a0e5ab2515b624feaad
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Nov 15 13:48:41 2011 -0500
+
+    util: Add wl_list_insert_list()
+
+commit 3175e91efa4d4cb1847044f9ea4a8ef57fd6f39c
+Author: Andrea Canciani <ranma42@gmail.com>
+Date:   Mon Nov 14 10:24:47 2011 +0100
+
+    hash: Improve double hashing
+    
+    Instead of artificially introducing collisions in the step value by
+    replacing 0 with 1 (which causes the value 1 to have twice the
+    frequency of any other value), the step value can simply be computed
+    as an uniformly distributed value in the range [1, rehash], extremes
+    included.
+    
+    This is safe because any step value smaller than the hash modulus is
+    co-prime with it, hence induces an orbit which includes every integer
+    in [0, size - 1].
+
+commit e742dcc9ed4b22eb5191f7e8d2b7cd8011ed5893
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Oct 31 11:21:38 2011 -0400
+
+    scanner: Check name == NULL for enum entries
+    
+    From a clang static analysis warning.
+
+commit 3f1063f92aa60cf93bca6a6b15a7f782b8df8f93
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Mon Oct 31 11:06:35 2011 +0100
+
+    connection: Check object types in message parameters
+
+commit f86338d611305fb84187298cbab5dfc78a698c99
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sat Oct 29 14:27:33 2011 -0400
+
+    event-loop: Fix idle handler dispatch corner case
+    
+    When the last idle handler queues another idle handler, we fail to
+    dispatch that last handler.  The wl_list_for_each_safe loop looks up
+    the next pointer before running the handler, and at that point it points
+    to the head of the list and the loop terminates.
+    
+    Instead, just loop until the list is empty.
+
+commit 7e57dc143e0647502668753e9cd8d2a8582d4a6e
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Oct 24 17:05:39 2011 -0400
+
+    scanner: Fix typo in error message
+
+commit bfe54cbe3703e6d7b728de3d4d9ca4b663782dbc
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Oct 24 16:05:04 2011 -0400
+
+    protocol: Change global_remove arg to be 'name' insteadl of 'id'
+    
+    Consistent with global args.
+
+commit d63884b0c701a24f3bfdded036c5d5b6b2b6bd0d
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Oct 24 16:04:09 2011 -0400
+
+    scanner: Catch more invalid attribute combinations for arg
+    
+    Spotted by Jakob Bornecrantz.
+
+commit 1ac009473bab32a304beb4f115fbae2514824a06
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Oct 20 15:05:11 2011 -0400
+
+    debug: Print debug message when client wakes up
+    
+    This helps spot and remove extraneous round trips and context switches.
+
+commit 65fe6fc41891157bce570cb6cc2411b6a8ba7b8a
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Oct 12 16:30:08 2011 -0400
+
+    Silence a valgrind warning
+
+commit 8bc1abd1f569df860700a3c9d3f1f05e76c60ec9
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Oct 11 22:19:34 2011 -0400
+
+    wayland-server: Track input_device resource for focused surface
+    
+    We no long track the focused surface, but expect the compositor to set
+    focus when the focus changes.  We do track the resource for the input
+    device that corresponds to the current surface, in case that goes away.
+
+commit ffe8ee8d602ff24588e994ec41393ccae128bca1
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Oct 11 14:36:49 2011 -0400
+
+    wayland-server: Always use the display_resource for posting wl_display errors
+
+commit a05546376c7332c111938ce6cadefd30570f689c
+Author: Mathias Fiedler <Mathias.Fiedler@xse.de>
+Date:   Tue Oct 11 14:23:45 2011 -0400
+
+    wayland-server: fix resource destroy
+    
+    Object ID was read from freed memory.
+
+commit c8dbd8cf9e0199f3bb6c9ff16287f1d8f435abfb
+Author: Mathias Fiedler <Mathias.Fiedler@xse.de>
+Date:   Tue Oct 11 13:58:18 2011 -0400
+
+    wayland-server: fix crash on invalid resource
+    
+    Using display_resource to post error about invalid resource.
+    
+    Reviewed-by: Tiago Vignatti <tiago.vignatti@intel.com>
+
+commit 1482b9e906fb80c3760cdefe12b89785bd3fd1a8
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Tue Aug 9 14:31:36 2011 +0200
+
+    scanner: Fix indent for *_add_listener
+
+commit 34b26802d710d36224db25a4bb1e9ac5ff1e9843
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Sep 6 18:12:43 2011 -0400
+
+    Rename motion_grab to implicit_grab
+    
+    Let's just use the same terms as X.
+
+commit 468c9bd9e741b720fbbfa10d1fd3fce9278bdf1b
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sun Sep 4 09:51:24 2011 -0400
+
+    Add back get/set user data wrappers for wl_display
+
+commit 25fddf65a8df409195616b308051d7e426cfa97a
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Sep 1 09:53:33 2011 -0400
+
+    server: Make error posting functions take a resource instead of a client
+
+commit c640571c00b0c1ffafb05b1ad5cd02cd511cb06a
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Aug 30 21:26:19 2011 -0400
+
+    Remove the wl_visual interface
+    
+    The visual interface was meant to be a generic mechanism for
+    specifying the content of a buffer.  It goes back to before we had the
+    buffer factory interfaces (like wl_drm and wl_shm) and we wanted to
+    keep it open-ended enough that yuv, png or even svg buffer or so would
+    be possible.
+    
+    Now that we have the buffer abstraction, we can add different buffer
+    types by introducing new interfaces that create buffers.  It only
+    makes sense to leave it to those interfaces to specify the contents of
+    the buffers.
+    
+    For wl_shm, this means that we now just specify the pixel format using
+    an enum.  For EGL buffers, the exact pixel formats are controlled by
+    the implementation (part of wl_drm and similar), and from the client
+    point of view, everything is controlled using EGLConfigs.
+
+commit f9c8a691b2f01ca4ef8e2e950b43ab19b2703e62
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Aug 29 16:50:02 2011 -0400
+
+    Update TODO
+
+commit 58b9c1bf1705087089815ae2d307ea0e1583703d
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Aug 29 15:01:41 2011 -0400
+
+    server: Disconnect client on error
+
+commit 47b446987d79fa77e6899ab1dc290a992ac5c241
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Aug 29 15:01:26 2011 -0400
+
+    shm: Compare resource interface when validating visual
+
+commit b15259bff48aa5a1f4f4c2a0675ce06e50a8c82f
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sat Aug 27 12:05:09 2011 -0400
+
+    server: Pass struct wl_resource for object references
+
+commit 990809c0637a15edbdf75753afdea537e057fd34
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 26 21:39:33 2011 -0400
+
+    Don't special case object ID 1 lookup
+
+commit 2b6f3cd2b85052dc5127d22ebb2269ab3f69bf9a
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sat Aug 20 15:48:11 2011 -0400
+
+    server: wl_display and wl_input_device are no longer resources
+
+commit e489e824fac5973499390884797b4c1a256dd184
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 19 22:52:49 2011 -0400
+
+    Update TODO
+
+commit c8147edc3afea143a2e3328c22c4daf9ae70a6f2
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 19 22:50:53 2011 -0400
+
+    Store objects in wl_map data structure
+    
+    The wl_map data structure is just an array with a free-list that lets the
+    client recycle unused client IDs and keep range of client IDs under control.
+
+commit 4a39081c1d4a8d9aa3a6c86e48924142a3406b24
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 19 17:26:57 2011 -0400
+
+    Remove range protocol
+
+commit 0e16b00b862533e316385424b7b9bfb61da722b2
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 19 17:07:14 2011 -0400
+
+    Destroy client resource by walking client hash table
+    
+    All resources are now in the client hash table and we can clean up
+    just by walking the hash.
+
+commit cc6fd94d6a5743eb94b52f1887557305784525c9
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 19 16:57:48 2011 -0400
+
+    Always allocate a new wl_resource when binding an object
+    
+    Previously we would bind some resources into multiple client hash tables.
+
+commit c4774d55e91a722e29326c30ab49dcc3850e0a00
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 19 14:48:16 2011 -0400
+
+    Add wl_hash_table_for_each()
+
+commit e908893080a391b731591720e52f4c38c4c644e4
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 19 13:44:01 2011 -0400
+
+    Bind globals to client provided object IDs
+
+commit a7c682432893d2e5e534953ef64193f1dd4bcef4
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 19 13:40:28 2011 -0400
+
+    server: Hand code all wl_display client stubs
+
+commit 3ac8757ec3f2166401afa9e059e934713382d211
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 19 11:08:09 2011 -0400
+
+    server: Assign global id as part of wl_display_add_global()
+
+commit e065b7eafa1cf446da58c7fc2f3e5b00a78c0e08
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 19 11:06:37 2011 -0400
+
+    server: Make object hash table per-client
+
+commit 84c13ab8100c5f8d6fb3de1127abf7facab145ff
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 19 11:05:01 2011 -0400
+
+    Rename global 'func' to 'bind'
+
+commit e8a192ca616107dcb672b34d0c80f2de679bcd0a
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Aug 18 17:53:50 2011 -0400
+
+    server: Make everything in the object hash a wl_resource
+
+commit 0af17ed98c8f8112c0d43ccbf90367f543846143
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jul 29 19:51:22 2011 -0700
+
+    Use a callback object instead of ad-hoc lists for sync and frame events
+    
+    So obvious in retrospect.  The object system can do all the work for us
+    and keep track of pending calls as regular objects and we don't need to
+    abuse the resource system to get them cleaned up on client exit.  We
+    don't need the custom key management or (broken) lookup, we just sue
+    object IDs.  And last but not least, anybody can receive the callback,
+    not just display listeners.
+
+commit 1648109c84a5e96fd28a29a276a668050dd6c881
+Author: Paulo Zanoni <przanoni@gmail.com>
+Date:   Fri Aug 26 19:41:05 2011 -0300
+
+    connection: fix libffi usage, our functions return void
+    
+    All clients were segfaulting on my machine.
+    
+    Signed-off-by: Paulo Zanoni <paulo.r.zanoni@intel.com>
+
+commit f6ede01b68ebdd74b2025bd087b8b52b0b5f2eef
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 12 16:32:13 2011 -0400
+
+    connection: Object ID 0 is not a valid new object ID
+
+commit efeb9e977885c2df3426346ec45a913ff403af8d
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 12 16:23:07 2011 -0400
+
+    event-loop: Quiet a few warnings
+    
+    There's no good error recovery possible in these cases though.
+
+commit f2665e21ce3f524bfacd6837f95acdee5f3903db
+Author: Jørgen Lind <jorgen.lind@nokia.com>
+Date:   Thu Aug 4 07:56:04 2011 +0200
+
+    Make expat a dependency to the scanner
+
+commit 4c260db68c028f05401727d1911582ae8b87cd70
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 12 15:09:00 2011 -0400
+
+    Rename source subdir from wayland to src
+
+commit 3733157d55df862ad5a89d1911a0500af67e7e08
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Aug 11 14:51:31 2011 -0400
+
+    Change scanner.c license to MIT
+
+commit 9a606bedfdca505fdd82044793a278b2eb4b2553
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jul 27 12:05:34 2011 -0700
+
+    scanner: Silence warning
+
+commit eb13ae17b41dea24000e8ff78b762b20c1fdf23b
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jul 27 05:50:41 2011 -0700
+
+    scanner: Initialize protocol.copyright to NULL
+
+commit 7a291117e7ff1c8f817242b9b223e600a0a9e3c8
+Author: Tiago Vignatti <tiago.vignatti@intel.com>
+Date:   Tue Jul 26 11:43:19 2011 +0300
+
+    protocol: Delete screenshooter.xml
+    
+    The protocol interface is on compositor's side now.
+    
+    Signed-off-by: Tiago Vignatti <tiago.vignatti@intel.com>
+
+commit 986703ac7365bc87a5501714adb9fc73157c62b7
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Jul 25 18:14:20 2011 -0700
+
+    scanner: Take copyright notice from xml file
+
+commit 64732b01e4e9720eaef181c631d94a509a73dc65
+Author: Kristian Høgsberg <krh@localhost.localdomain>
+Date:   Tue Jul 19 10:01:46 2011 -0700
+
+    connection: Use static strings instead of sprintf and buffer overflow
+    
+    Spotted by Samuel Rødal <samuel.rodal@nokia.com>
+
+commit f9b3c151459c1627ea971d6539f706e868b89ef4
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Jul 18 13:35:18 2011 -0400
+
+    Link to -lrt for clock_gettime()
+
+commit c86ba825c474bbbd9e95bcdbc2b8b577d24322fe
+Author: Casey Dahlin <cdahlin@redhat.com>
+Date:   Mon Jul 18 02:00:25 2011 -0400
+
+    Pass object ID not pointer when sending a global announce event
+    
+    When the type for the first argument of the global event changed from new_id to
+    uint, wl_connection_vmarshal started expecting an integer argument rather than
+    an object argument. As a result we were sending the client a chunk of pointer
+    rather than a useful global identifier.
+
+commit a8db57befa3263c6de24fd9762a4aec3b564d4d3
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Jul 18 13:10:49 2011 -0400
+
+    conection: Handle demarshal errors a little less dramatically
+
+commit 728d09936f76ce60090e0fd0505b0522d03dd535
+Author: Casey Dahlin <cdahlin@redhat.com>
+Date:   Mon Jul 18 02:00:24 2011 -0400
+
+    Fix segfault in client when demarshalling fails
+
+commit 068ba750caebb62aaef20ac3452ce23e066c7239
+Author: Tiago Vignatti <tiago.vignatti@intel.com>
+Date:   Thu Jul 14 18:56:51 2011 +0300
+
+    protocol: fix key event and related comments
+
+commit a9ef785cf83731b82334b22894dd01ee6ada66c8
+Author: Tiago Vignatti <tiago.vignatti@intel.com>
+Date:   Thu Jul 14 18:56:40 2011 +0300
+
+    debug: add timestamps when logging
+    
+    Signed-off-by: Tiago Vignatti <tiago.vignatti@intel.com>
+
+commit 98da0a7b982310992e3af1b376c4b05ea4f2c71a
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jul 12 13:22:59 2011 -0400
+
+    protocol: Fix type of visual arg in token_visual event
+
+commit f6bf070aee4527e9793681b42ac57a587d239f4c
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jul 12 13:22:25 2011 -0400
+
+    scanner: Output type info for new_id arguments
+
+commit 671a62cb968b6793f0504770888b23b79e6fb81e
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Jul 11 11:15:00 2011 -0400
+
+    protocol: Make id arg of display.global event be just a uint
+    
+    Global names are different from object IDs.
+
+commit ff1a06c03abfa18c18986d42683d69aa47f7d841
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Jul 7 13:39:08 2011 -0400
+
+    scanner: map 'int' to int32_t.
+
+commit aa7bbb210b7121b9314993228960240358e9b123
+Author: Laszlo Agocs <laszlo.p.agocs@nokia.com>
+Date:   Wed Jun 29 17:54:11 2011 +0300
+
+    Add touch events to protocol.
+
+commit 40b0a6bf630b45550ec1e5e62395006cbf4223aa
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jun 29 11:43:11 2011 -0400
+
+    server: Add wl_client_flush()
+    
+    Flush output queue up for the specified client.
+
+commit ff20a0417af35a1614ec761a67160963de6471e0
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Jun 23 06:43:47 2011 -0400
+
+    event-loop: Make idle handlers work again
+
+commit b6fdded54bc86260f2b6126d34648c85f4f2d7b1
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jun 21 16:25:28 2011 -0400
+
+    Update TODO
+
+commit 7dc36984af4b70018e4c70a39cf19172693d33fc
+Merge: bfea3d6 4c2500c
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jun 21 12:15:31 2011 -0400
+
+    Merge remote-tracking branch 'bnf/buffer.release'
+
+commit 4c2500c2e2abc380f34e3222d31222fd103015a5
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Tue Jun 21 17:37:18 2011 +0200
+
+    Drop wl_compoositor parameter in wl_buffer
+
+commit a56c0455717c4772e8e4b78e56af439ccd2356af
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Tue May 10 12:01:00 2011 +0200
+
+    Add busy_count and client parameter to wl_buffer
+    
+    Can be used to implement release event.
+
+commit 2fcebfed95447b994649f58f7b0d40e8bac8de08
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Mon May 9 17:35:58 2011 +0200
+
+    Add buffer.release event
+
+commit bfea3d6befdb688d5354e6f15a9400ea637febf9
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Jun 20 20:34:55 2011 -0400
+
+    Add more protocol for communicating screen geometry
+
+commit aae9f214e5f0d8d1deac4816fe40f76b2cf84f55
+Author: Laszlo Agocs <laszlo.p.agocs@nokia.com>
+Date:   Tue Jun 14 10:35:46 2011 +0200
+
+    Add wl_display_remove_global.
+    
+    Change 4453ba084aae5a00318b9dfdeda95e8eaa17494c disallows using
+    post_global with objects not on the global list. Therefore selection
+    and drag offers have to be added to the global list from now on.
+    However these may often get replaced by a newer object and thus need a
+    way to remove a global from the global list.
+
+commit 9c36ea776b48decd84828d0b51842c91e2c9124a
+Author: Laszlo Agocs <laszlo.p.agocs@nokia.com>
+Date:   Tue Jun 14 11:41:54 2011 +0200
+
+    Do not leak globals and listeners.
+    
+     From 3fa2ad7dec42f85795449f33b2a4c9461aa4924d Mon Sep 17 00:00:00 2001
+    From: Laszlo Agocs <laszlo.p.agocs@nokia.com>
+    Date: Tue, 14 Jun 2011 11:35:28 +0200
+    Subject: [PATCH] Do not leak globals and listeners.
+
+commit a2db57517b3648f52410c6861704b5c4190416c1
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sat Jun 18 08:17:40 2011 -0400
+
+    Move map functionality into shell
+    
+    Initial surface.attach makes the surface visible and clients
+    can set the surface type using shell.set_transient etc or
+    other interfaces prior to that.
+
+commit 98d8256b8e67a417eebc314440716e66926adf92
+Author: Corentin Chary <corentin.chary@gmail.com>
+Date:   Fri Jun 10 10:27:16 2011 +0200
+
+    Call a new global listener for each existing global
+    
+    Signed-off-by: Corentin Chary <corentin.chary@gmail.com>
+
+commit d8f2e5d6ab0205141e3d6c41b815cd8029bb2911
+Author: Corentin Chary <corentin.chary@gmail.com>
+Date:   Fri Jun 10 10:24:23 2011 +0200
+
+    Flush the protocol output buffer when it fills up
+    
+    Original patch from bnf.
+    
+    Signed-off-by: Corentin Chary <corentin.chary@gmail.com>
+
+commit d7569d46c57adb44472f52c9d1392e1b4720c4e8
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jun 7 13:19:28 2011 -0400
+
+    Remove left-over visual prototypes
+
+commit 467ae367ed27976098d5065628daf24cee21e3b5
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jun 7 10:53:27 2011 -0400
+
+    connection: Fix pointer arithmetic error
+    
+    Pointed out by Nicolas Pouillon in irc.
+
+commit 02e1ffdefef7b3e3dd82198a0f2f7503e7883e9b
+Author: Samuel Rødal <samuel.rodal@nokia.com>
+Date:   Mon May 30 17:23:40 2011 +0200
+
+    Fall back to accept() on systems where accept4() is not implemented.
+
+commit b06e891e4ca47278f2712dfba804fc169db39f9a
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Tue May 31 11:18:06 2011 +0200
+
+    wayland-shm: Check visual for being NULL
+
+commit eff7fc0d99be2e51eaa351785030c8d374ac71de
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu May 19 11:53:39 2011 -0400
+
+    TODO: Update
+
+commit 4bde293ff8109d55eeaee8732f5a6ee0c8cd4bd9
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu May 12 21:29:22 2011 -0400
+
+    Add event to associate visuals with a pixel format token
+
+commit 4453ba084aae5a00318b9dfdeda95e8eaa17494c
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu May 12 21:27:57 2011 -0400
+
+    server: Send error if client tries to bind to non-existant object
+
+commit 8834a0f22f36d7890691015ef93b3c77cf9b4bbb
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed May 11 11:00:40 2011 -0400
+
+    Define shm specific errors
+    
+    We stop abusing the wl_display error codes for shm purposes.
+
+commit 1db05255728c7a9a7e1460acff0651f6f5ea3f4e
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed May 11 10:57:06 2011 -0400
+
+    Unify error events
+    
+    Consolidate the different error events into one.  This event will also be
+    usable for other interaces.
+
+commit 2d27f3b6e9001d4fae4a4de7a19db76b5174f9d7
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue May 10 22:56:01 2011 -0400
+
+    TODO: Consolidate and update
+
+commit 7c140c8c84da252104aee71ebf72dbc614b3e831
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue May 10 21:49:22 2011 -0400
+
+    connection.c: Use sizeof int for allocating fd extra storage
+
+commit dcfaf4ec2d08a12f0d72f1cb93fd37cf232b0a11
+Author: Robert Bragg <robert@linux.intel.com>
+Date:   Tue May 10 17:51:52 2011 +0100
+
+    display: Adds wl_display_flush to send buffered commands
+    
+    Previously for wayland clients to flush buffered connection data to the
+    compositor they needed to first register an event-mask-update-callback
+    via wl_display_get_fd() to determine if there is anything writeable
+    pending.  (NB: It's considered an error to iterate connection data with
+    an invalid mask)
+    
+    Since it's only possible to register a single update callback currently
+    it's a bit awkward if you want to allow multiple orthogonal components
+    to flush the connection data, such as Cogl and Clutter which both want
+    to interact with wayland and may want to flush commands at different
+    times.
+    
+    This adds a mechanism, wl_display_flush(), which makes it possible to
+    flush writeable connection data without first checking the event mask.
+
+commit a77498d07c099b96f2cfc18728a1a24430e2e999
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Tue May 10 12:56:22 2011 +0200
+
+    wayland-util: Drop unused struct wl_argument
+
+commit 53200f05c7682de3c4a2d061512b2989b6a3fd6f
+Author: jani.uusi-rantala@nokia.com <jani.uusi-rantala@nokia.com>
+Date:   Fri May 6 06:13:36 2011 +0000
+
+    Add configure option to disable scanner compilation
+    
+    When cross-compiling Wayland, wayland-scanner should be picked up from
+    the host system instead of compiling and trying to run e.g. ARM
+    wayland-scanner on X86.
+    
+    This patch adds --disable-scanner option for disabling the scanner
+    from the build and using existing wayland-scanner instead (from PATH)
+    which should help in most cross-compilation systems.
+    
+    By default everything works as before.
+    
+    Signed-off-by: Jani Uusi-Rantala <jani.uusi-rantala@nokia.com>
+
+commit bd70dc185a643f739f80a09e860b7a81bbb57272
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Fri May 6 17:09:51 2011 +0200
+
+    Add a destroy_listener to wl_resource
+    
+    Drop the one in wl_surface.
+
+commit c861852536f7983a8a94859848b1d90b875961fe
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Wed May 4 21:21:52 2011 +0200
+
+    connection: Define _GNU_SOURCE for F_DUPFD_CLOEXEC
+
+commit a9ac0eb2495fd7d5f5197427cf31477023e2bdda
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed May 4 15:51:47 2011 -0400
+
+    scanner: Fail if there's a 'destroy' request not marked as a destructor
+
+commit c72ebf5df9840b639c4193fffd9e536e60c3d35d
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed May 4 15:29:55 2011 -0400
+
+    scanner: Initialize wl_message structs completely
+
+commit 8600408cedfda025115683680003352654c8f483
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed May 4 12:35:16 2011 -0400
+
+    connection: Handle fd passing in an CLOEXEC safe way
+
+commit 92d61f13b980e4ecc16724e2b0d823dd4f9a820b
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon May 2 14:48:48 2011 -0400
+
+    mmap shm buffers read/write
+
+commit 761af3ab0a86dbb2a77446270774faf5f91e3752
+Author: Casey Dahlin <cdahlin@redhat.com>
+Date:   Fri Apr 29 02:37:47 2011 -0400
+
+    Add some things related to wayland-scanner to .gitignore
+
+commit a0da7468f87bbff74686a8b1608fb6e0de91a861
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Apr 29 09:20:29 2011 -0400
+
+    event-loop: Drop unused idle_list
+    
+    Idle sources are now just a special case of a checked source.
+
+commit c964a5201e2d47ea53d54da58c9b97bfeec992fc
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Apr 22 17:54:18 2011 -0400
+
+    Don't define wl_shell in wayland-server.h
+
+commit 6ae42181c02defea98aa3c5b6ee69c634b28f543
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Apr 22 12:15:21 2011 -0400
+
+    event-loop: Idle callback are a special case of a checked source
+
+commit f8bb7f435b884eacc2d2468b9defe5f2d5a479eb
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Apr 22 12:06:34 2011 -0400
+
+    event-loop: Dont use a check callback just dispatch again
+    
+    We pass the poll mask so the dispatch callback can know if there is
+    data on the fd or not.  The dispatch function must return true if
+    it dispatched something, in which case we need to do another round of
+    post-dispatch callbacks."
+
+commit 1c88cffa3250fbf5cb485733c4954d04b3f48ee3
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Tue Mar 8 11:32:24 2011 +0100
+
+    Add common shm-server code
+
+commit 3b2ce63015fadf97849adb360f50f01f9429c688
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Mon Mar 7 15:09:36 2011 +0100
+
+    Remove buffer.attach vfunc
+
+commit 0bf5285b44b0a8630a3b6a308e96fe7fd01572b0
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Mon Mar 7 15:05:27 2011 +0100
+
+    Add buffer.damage request to the protocol
+    
+    Thus remove the server-side used vfunc buffer::damage.
+
+commit 589e581f76ef5aaa29499abaa82703745b69f7d5
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Apr 21 14:41:48 2011 -0400
+
+    event-loop: Add an optional post-dispatch source callout
+    
+    This lets a source mark itself as ready to dispatch even though the fd
+    didn't trigger.   What can happen is that for the X11 socket, some other
+    source callback (the drm fd or a wayland client socket) can cause somebody
+    to do an X roundtrip (DRI2 get buffers, for example) and queue up events
+    in the xcb buffer.  When we get back to epoll, the X fd no longer polls
+    readable and we don't process those events until we get another X event.
+    
+    The check callback is called after a round of dispatching and lets a source
+    check if it has data to dispatch and mark itself ready.  Next round of
+    dispatching will then process it immediately instead of blocking in
+    epoll_wait().
+
+commit 13ca93794405965cac8d3e3173f3f4eda2ff28c6
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Apr 18 12:35:01 2011 -0400
+
+    Pass version number to global bind function
+
+commit c5ec478d46a8fc8590002fe156df875da2b5b143
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Apr 18 10:24:11 2011 -0400
+
+    scanner: Don't hardcode the wl_ prefix in the code generator
+
+commit 7e4f44e2ba3e0e58c0adb910687c9a334e84b243
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Apr 14 16:29:59 2011 -0400
+
+    Use wl_client_post_global() for connect events
+
+commit 320a5634cf7060b5db22a0519b0ddc532894eb3b
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Apr 14 10:38:44 2011 -0400
+
+    Introduce display.bind to request events from a global
+
+commit a0010d8f8260387e9edd27a9f3d466ac784c12de
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Apr 13 16:50:02 2011 -0400
+
+    Print line numbers in scanner errors
+
+commit 06c2ebf6ec60bacf89541f59a395f6c5c2e1edc0
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Apr 13 16:27:06 2011 -0400
+
+    Move proxy prototype to wayland-client.h
+    
+    Let's try to avoid to generate more code than we need to.
+
+commit f04e05ad76cd6af890b7b741a9e0f5181bd0ac10
+Author: Jørgen Lind <jorgen.lind@nokia.com>
+Date:   Wed Apr 13 09:38:29 2011 +0200
+
+    Add lockfile to the socket
+    
+    This uses flock to detect if there is a process that is active. If not
+    then it unlinks the socket file if it exists, so that bind won't fail
+
+commit 4378a80b083f6ad3c5a3eaadd6f55eb14740dbbf
+Merge: 7cfcdc6 94fcdde
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Apr 11 16:40:48 2011 -0400
+
+    Merge remote-tracking branch 'bnf/surface-frame-event'
+
+commit 7cfcdc610db4c5ef57ea282bff8b2a5406ac3662
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Apr 11 09:24:11 2011 -0400
+
+    Make all fds close-on-exec
+
+commit 8f081748f996b91cd49603f62f23d5617f2baf68
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Apr 11 09:15:09 2011 -0400
+
+    Make wl_client_create() public
+
+commit 4d33e802e0eaff8a4580371b6e2d30832c3c6bbd
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Apr 11 09:14:43 2011 -0400
+
+    Support passing the Wayland fd in the environment
+
+commit 0b29a2fec7801d2530bd004ae68eb9242417bafd
+Author: Harald Fernengel <harald.fernengel@nokia.com>
+Date:   Wed Apr 6 15:36:01 2011 +0200
+
+    Fix usage help text in wayland-scanner
+
+commit 94fcdde0e25ffb737734e9a696814308bcb23576
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Mon Mar 14 12:03:13 2011 +0100
+
+    Extent frame event to be surface dependent
+
+commit 21e877f3f6ac0a5b88b69d0eb4850f962af3b4cb
+Author: Iskren Chernev <iskren.chernev@gmail.com>
+Date:   Sun Mar 13 21:08:37 2011 +0200
+
+    Close signal file descriptor in event loop on remove and failure.
+    
+    When the signal handler is removed the corresponding fd is closed. This
+    should automatically remove it from the epoll set.
+
+commit 1081bca2a802ef49d0f52d5613c50b016e0136cd
+Author: Iskren Chernev <iskren.chernev@gmail.com>
+Date:   Sun Mar 13 21:05:14 2011 +0200
+
+    Close timer file descriptors in event loop on remove and failure.
+    
+    When the timer is removed the corresponding fd is closed. This should
+    automatically remove it from the epoll set.
+
+commit 61ce8749a7e78a2b6bfc60fcc21c53b8c40b898b
+Author: Iskren Chernev <iskren.chernev@gmail.com>
+Date:   Sun Mar 13 17:01:33 2011 +0200
+
+    Stored signal_number in event_source structure.
+    
+    signal_number was not previously stored, so the callbacks didn't get
+    a correct signal_number as their first argument.
+
+commit 0ae92f970650af8a53ba8fa8af92214360efe339
+Author: Iskren Chernev <iskren.chernev@gmail.com>
+Date:   Sun Mar 13 16:59:30 2011 +0200
+
+    Fix event loop timer update.
+    
+    It can now handle delays greater than 2 seconds without overflowing.
+
+commit 6d22c1bdc7720d70655d773a979e8d056be5baf1
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sat Mar 12 21:26:21 2011 -0500
+
+    Fix double remove from surface destroy_listener_list
+    
+    We remove the listener when a device loses its pointer focus, but
+    doesn't insert it in another destroy_listener list if surface is NULL.
+    When we set another pointer focus surface, we remove it again.
+    Tracked down and tested by Iskren Chernev.
+
+commit 5acf6b4b03a4cb06ef27f0f1055b60717af1c7eb
+Author: Iskren Chernev <iskren.chernev@gmail.com>
+Date:   Fri Mar 11 16:59:53 2011 +0200
+
+    Server socket creation error handling.
+
+commit ecbad0341e32a824ee8a5feb7e639672b1284b2c
+Author: Iskren Chernev <iskren.chernev@gmail.com>
+Date:   Fri Mar 11 14:43:10 2011 +0200
+
+    Added wl_connection_create failure checks.
+
+commit fcd4caa0df0f69d48e5f5d00076927c31441c851
+Author: Iskren Chernev <iskren.chernev@gmail.com>
+Date:   Fri Mar 11 14:58:06 2011 +0200
+
+    Better handling of creation errors in display.
+
+commit c9a729260fd1397a625c98f7284b2f1f44a95081
+Author: Iskren Chernev <iskren.chernev@gmail.com>
+Date:   Fri Mar 11 14:19:00 2011 +0200
+
+    Better cleanup on display creation failure.
+
+commit 9061f91eb8252e1e414365df7e909093932235ac
+Merge: 8105d28 b038d93
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Mar 1 17:04:33 2011 -0500
+
+    Merge branch 'setup_display' of git://anongit.freedesktop.org/~bnf/wayland
+
+commit b038d93abf9c448e4edcd98aa3d488186bde7586
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Mon Feb 21 09:58:29 2011 +0100
+
+    protocol/wayland: Drop drm interface (move into mesa)
+
+commit 8105d2873cd24c3632a6f1263935d3461279b8de
+Author: Rico Tzschichholz <ricotz@t-online.de>
+Date:   Thu Feb 24 10:53:06 2011 +0100
+
+    Add wayland-scanner.mk to EXTRA_DIST for make distcheck
+
+commit 9136e05ebdfaf82c87e7c4767f0fc9a12a470223
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Feb 18 15:28:54 2011 -0500
+
+    Only allow one listener per proxy
+
+commit 9a2015562c29ddbb34a8b9d2e001ec12a660c28d
+Author: Liu, Xinyun <xinyunliu@gmail.com>
+Date:   Fri Feb 18 08:40:49 2011 -0500
+
+    Several typo fixes in specs/main.tex
+
+commit fcfb4e30a47a4cd2416dac210521594b489c8bfd
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Feb 14 22:17:41 2011 -0500
+
+    Split into a core repository that only holds the core Wayland libraries
+
+commit 525e4c0beae832afc2c098c1368a19ad164e1b2b
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Feb 14 10:39:54 2011 -0500
+
+    compositor: Clip repaint to the damage region
+    
+    Drop glScissor, and just clip the surface against the repaint region and
+    render each rectangle in the resulting region.
+
+commit feb370e4ea0bd49080b2d4ee198f190af1ad29ea
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Mon Feb 14 13:20:09 2011 +0100
+
+    compositor-drm: Flush before pageflipping
+    
+    This fixes compositor-drm flickering on r600.
+
+commit fa4e2a76769bd17c2ddc19b664cbd00bf971dc9b
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sun Feb 13 13:44:55 2011 -0500
+
+    compositor: Switch away from using VBOs and just stream the vertex data
+    
+    We avoid changing uniforms for each window and it will be easier to break up
+    a surface into a series of rectangles.
+
+commit 31bd6c7ab10d4523684fa45f353b10e92f1187f4
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sun Feb 13 13:00:51 2011 -0500
+
+    Use pixman regions to reduce repainting
+    
+    For now, we just use glScissor and clip to the extent of the damage region,
+    but we can do even better by clipping the repaint to the region rectangles.
+
+commit 9c7a8cc663cb7887ba9b4499ae6e421ee6d6fef1
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Fri Feb 11 19:37:40 2011 +0100
+
+    fix typo in window.c
+
+commit 48e29895942be00d391cee484ffa8f7fc4ce4c1c
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Feb 10 12:27:35 2011 -0500
+
+    wayland-client: Support WAYLAND_DEBUG client side as well
+
+commit 52f2264b693442f80d1d560fb3fcec1d08f3c303
+Author: Tiago Vignatti <tiago.vignatti@nokia.com>
+Date:   Thu Feb 10 15:21:49 2011 +0200
+
+    configure: remove libdrm dependency for clients
+    
+    Signed-off-by: Tiago Vignatti <tiago.vignatti@nokia.com>
+
+commit 0d5007a76fadc5fe99f00fdaf26c3d6ef7fc12a1
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Feb 9 10:57:44 2011 -0500
+
+    window.c: Use eglGetProcAddress to look up extension functions
+
+commit 297d6dd4423611722d119d9e81970d2e8a600fd0
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Feb 9 10:51:15 2011 -0500
+
+    window.c: Include wayland-egl.h before EGL headers so we get the right platform
+
+commit 43c63e59a722a7dd2c7deab036fe840c483ccac3
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Feb 9 10:50:06 2011 -0500
+
+    wayland-egl: Define WL_EGL_PLATFORM in wayland-egl.h
+    
+    This indicates that we're using the wayland egl platform and will make
+    eglplatform.h typedef the native types correctly.
+
+commit 2dfe626f4ee5427f6a1c79d0c996e4e3fe3b0072
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Feb 8 11:59:53 2011 -0500
+
+    compositor-x11: Don't send enter/leave notify if we have an implicit grab
+
+commit 3eff366911eb87c1d7c4cdcceb0fd52c218bd2bc
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Feb 7 20:48:01 2011 -0500
+
+    Add struct wl_egl_display argument to wl_egl_window_create
+    
+    We don't need it in the mesa implementation, but other implementations
+    might and it's symmetric with wl_egl_pixmap_create().
+
+commit 0bbb97bab140bc0eab425ed5f40286e1ae168d71
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Feb 7 16:05:36 2011 -0500
+
+    Print object interface name when printing message arguments in debug mode
+
+commit bfb8e61381794c7d91a90e71f0f1a6e9039159a2
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Feb 7 10:30:38 2011 -0500
+
+    Follow wayland-egl renames
+
+commit c9824ddf3524fd329e7de8870a20d62e673d3a4e
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sun Feb 6 16:54:59 2011 -0500
+
+    compositor: Implement super-tab window switching
+
+commit f30c67eea63e04995a79b8ff7056de0975bad80d
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sun Feb 6 12:58:44 2011 -0500
+
+    compositor: Set repaint_on_timeout when we schedule a timeout repaint
+
+commit a495a5ed8ba1297d0ed6464f4c0e2784d455c751
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Feb 4 15:31:33 2011 -0500
+
+    simple-client: Port to wayland-egl and use eglSwapBuffers()
+    
+    simple-client is simpler.
+
+commit f57a96f98d851ca5dd5e51b66fa2fcb3c8492dac
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Feb 4 14:14:23 2011 -0500
+
+    gears: Remove unused drm_fd field
+
+commit 297c6313eb6763a2b0a10059d65d0af62903f658
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Feb 4 14:11:33 2011 -0500
+
+    Port window.c to use wayland-egl
+
+commit 66cea0ad25258aec862d311302dba8254533e301
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Fri Feb 4 11:22:35 2011 +0100
+
+    Add wayland-egl.h
+    
+    This header defines native EGL wayland types and affiliated
+    initialization, processing and destruction routines.
+    EGL implementations must implement this API in order to allow
+    applications using this native types for the EGL implementation.
+
+commit 181f52ea96afed2ebeaf8dc9c1fb793b7064f39e
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Feb 1 20:28:32 2011 -0500
+
+    Update compositor initiated resize to use a 3x3 grid
+    
+    This lets us do all combinations of resize edges.
+
+commit 5a2218aa15fa3be7d7e9e97ee9787923c3b61265
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Tue Feb 1 16:30:31 2011 +0100
+
+    compositor: Calculate resizing direction
+    
+    This applies to resizes initiated by the compositor.
+
+commit 7b87cb04a953dd598664e74c15209e13b868c3be
+Author: nobled <nobled@dreamwidth.org>
+Date:   Tue Feb 1 18:51:47 2011 +0000
+
+    window: add null checks
+    
+    Also check for invalid parameters early on, so if we crash,
+    we know *why* we crashed.
+
+commit 14d222f61280fae68c10d1833607f31495137590
+Author: nobled <nobled@dreamwidth.org>
+Date:   Tue Feb 1 18:48:46 2011 +0000
+
+    add newlines in error messages
+
+commit 3f9f73f33e39969c19f185177f4212c90eb68bbc
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Sat Jan 29 13:12:39 2011 +0100
+
+    connection: Handle broken pipes in sendmsg
+
+commit 5312f21af6b7066ed4d9c09c8192fe147bf49cc2
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Sat Jan 29 09:51:57 2011 +0100
+
+    Fix out of source build [wayland.png]
+
+commit 4b8bd1f731f3ec53a01911b89751412599dd1b94
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Jan 29 01:30:25 2011 +0100
+
+    Add wayland.png to .gitignore
+
+commit f992b2fc47c44c53a3b8f2c2d823d9d3961df7ad
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 28 15:53:07 2011 -0500
+
+    Don't crash when the previous keyboard surface goes away
+    
+    Just always set keyboard focus to the top surface.
+
+commit 0ce245761c85e989f08e4136bd91b149156e82e0
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 28 15:18:33 2011 -0500
+
+    Add initial basic support for fullscreen surfaces
+
+commit 5e4d83f499c218d09917f90dddb2d9348552c4b3
+Merge: 8446258 48f975d
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 28 11:21:42 2011 -0500
+
+    Merge remote branch 'nobled/for-krh'
+
+commit 844625834d92d575ab6bf8560c5a18b7b2ab92c9
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Fri Jan 28 16:05:46 2011 +0100
+
+    configure: Drop gdk-pixbuf version dependency
+    
+    The major version 2.0 is sufficient
+
+commit 48f975d7c574927befee4f27d2c93f43a78585cf
+Author: nobled <nobled@dreamwidth.org>
+Date:   Fri Jan 28 13:47:21 2011 +0000
+
+    fix configure check for gcc
+    
+    This shouldn't fail just because someone sets CC=gcc-4.5
+    explicitly. Besides, this way it also works with compilers
+    that advertise GCC-compatibility like clang and ICC.
+
+commit af82bea253b70ce84bc11cd1e93fef5f7d6f89d1
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Jan 27 20:18:17 2011 -0500
+
+    compositor-wayland: Handle keyboard focus too
+
+commit 3ba4858c4b62a5d253bd757944ceccae3764d6ce
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Jan 27 11:57:19 2011 -0500
+
+    compositor-x11: Handle keyboard focus correctly so we avoid stuck modifiers
+
+commit ac5c5e78533d093d9f790564bea114194a387c3a
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Thu Jan 27 01:32:36 2011 +0100
+
+    Don't create buffer from NULL pointer
+    
+    Fixes regression introduced in f58d8ca1bd20180bfae3a3a047e8098e0b22b5aa.
+
+commit 93331ff40a6caba997b84af784024d5e9256c2e5
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jan 26 20:35:07 2011 -0500
+
+    compositor: Forward pointer focus notification from compostor backend
+    
+    This lets the compositor place the pointer sprite correctly when it receives
+    pointer focus and allows it to send pointer focus to any client that might
+    receive pointer focus as the compositor receives it.
+
+commit 26ef22e3f479259890bf856a66a8a5fbf6fc7d30
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jan 26 15:33:24 2011 -0500
+
+    Test for rsvg-convert in configure.ac
+    
+    If it's not present, we just don't install the icon.
+
+commit f58d8ca1bd20180bfae3a3a047e8098e0b22b5aa
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jan 26 14:37:07 2011 -0500
+
+    compositor-x11: Set window icon
+
+commit 24ed62138869e8d510f374445c0f9bc644594142
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jan 26 14:02:31 2011 -0500
+
+    Set WM_CLASS for X11 compositor window
+    
+    Don't want to be 'Unknown' in GNOME Shell.
+
+commit f03b6c76947c9ed804a2db2b14b3f7d2f7c4ed21
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jan 26 11:46:35 2011 -0500
+
+    connection: Also consume message data in error cases
+
+commit f9edadf3f2b1ddb138a7ad47a2a80d47ba6605de
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jan 26 11:46:05 2011 -0500
+
+    shm: Check width, height and stride for invalid values
+
+commit 0fe0eb330c060451b81d87e830ba0f971f2fb093
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Tue Jan 25 22:39:00 2011 +0100
+
+    Screenshots were upside down
+
+commit 640924f37af98d9ff2bdb5f70d8c05d4c9343b7c
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jan 25 16:38:41 2011 -0500
+
+    Add gio for view fixes
+
+commit 80bf6f78e4bd8b5fd90dcd0f672e88381e19c313
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Tue Jan 25 22:22:00 2011 +0100
+
+    clients/view: Fix memory leak
+
+commit 6685aceae3895dca1fae4e40a6d19e0985a0f77c
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Tue Jan 25 22:21:59 2011 +0100
+
+    clients/view: Don't try to show inexistant files
+
+commit 9aad08e91bf41214bea9ecd25a5a2aaac7ae3de2
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Tue Jan 25 22:21:58 2011 +0100
+
+    clients/view: Allow relative paths
+
+commit 655467a5d264ba43550f9196f8cbcb86730dda63
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Tue Jan 25 22:21:57 2011 +0100
+
+    clients/view: Add mousewheel and arrow keys
+
+commit 7e182ef13b20e84fdf44bcf527f997853df27891
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Tue Jan 25 22:21:56 2011 +0100
+
+    clients/view: Remove unnecessary variables
+
+commit 1afc9a98fa918764167015d96ee2a730cb123715
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Tue Jan 25 22:21:55 2011 +0100
+
+    clients/view: Do not browse outside document range
+
+commit 00439617f395742432f08d5fe1563c2fc2b1439a
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jan 25 15:16:01 2011 -0500
+
+    Fix new gcc 4.6 warnings
+    
+    simple-client.c:156:10: warning: variable ‘ar’ set but not used [-Wunused-but-set-variable]
+    
+    etc.
+
+commit 8335568d070bfbde0f72e8129842222e8260bf07
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jan 25 15:11:53 2011 -0500
+
+    Don't compare socket(2) to NULL
+    
+    Ugh, embarassing.  Thanks, gcc 4.6.
+
+commit c4df99cb2c573d5b1ed1cadbcb8c92a1a39ba694
+Author: Darxus@chaosreigns.com <Darxus@chaosreigns.com>
+Date:   Tue Jan 25 15:00:56 2011 -0500
+
+    Replace gdk_pixbuf_unref with g_object_unref
+    
+    Because gdk_pixbuf_unref is deprecated and for compatability with
+    gdk-pixbuf 2.21.4.
+
+commit d5fb9cc769f6e3b2b29727e0bec523ac95b4affc
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jan 25 12:45:37 2011 -0500
+
+    window.c: Make title not const
+    
+    We now strdup it.
+
+commit 734a7501b6ebf80db8d4e1f64ec7227066d7d0eb
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jan 25 12:44:19 2011 -0500
+
+    Remove frame handler prototype
+    
+    I messed up the merge.
+
+commit 6ec41abf72ab04f562cb91d7c44b734c2f184b65
+Merge: 4d6ff29 6eeeb30
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jan 25 10:40:01 2011 -0500
+
+    Merge remote branch 'callum/master'
+    
+    Conflicts:
+    	clients/window.h
+
+commit 4d6ff297c809be5330f693810cf8e5bac61b238d
+Merge: 70af98c 0428a9a
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jan 25 10:17:16 2011 -0500
+
+    Merge remote branch 'nobled/for-krh'
+
+commit 70af98c57614307a427843b2f0bd6d99ed187c58
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Tue Jan 25 12:01:00 2011 +0100
+
+    fix tty_destroy
+    
+    fixes segfault when active tty could not be opened
+    fixes copy-paste mistake.
+
+commit 0428a9a15c58c14963a1a0eec245aa75389ebfe4
+Author: nobled <nobled@dreamwidth.org>
+Date:   Mon Jan 24 16:27:27 2011 +0000
+
+    don't use deprecated INCLUDES variable
+
+commit 7d9517855ab5d7acfda262c6e960ab96b7ce6b9c
+Author: nobled <nobled@dreamwidth.org>
+Date:   Mon Jan 24 16:01:26 2011 +0000
+
+    fix includes
+
+commit 238515d3d7e0d824d660b3da4f1ac98eeff4a4b8
+Author: Darxus <darxus@chaosreigns.com>
+Date:   Sun Jan 23 18:38:57 2011 -0500
+
+    Add specific versions to build dependencies
+
+commit 81bd979835fbf035f2d46907a4a68ebcd5361a7c
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sun Jan 23 23:25:26 2011 +0100
+
+    initialise display
+    
+    fixes valgrind:
+    ==25178== Conditional jump or move depends on uninitialised value(s)
+    ==25178==    at 0x409E2C: display_create (window.c:1582)
+    ==25178==    by 0x407A43: main (terminal.c:2323)
+    and
+    ==13793== Conditional jump or move depends on uninitialised value(s)
+    ==13793==    at 0x40A2D1: display_handle_global (window.c:1504)
+    ==13793==    by 0x4E2C183: display_handle_global (wayland-client.c:281)
+    ==13793==    by 0x713FEE7: ffi_call_unix64 (in /usr/lib/libffi.so.5.0.10)
+    ==13793==    by 0x713FC83: ffi_call (in /usr/lib/libffi.so.5.0.10)
+    ==13793==    by 0x4E2C71A: wl_closure_invoke (connection.c:663)
+    ==13793==    by 0x4E2BB7B: wl_display_iterate (wayland-client.c:484)
+    ==13793==    by 0x4096CA: display_create (window.c:1664)
+    ==13793==    by 0x407A43: main (terminal.c:2321)
+
+commit 748f672b2c294fbf5fe496256cfb59e7a19c99ea
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sun Jan 23 23:25:25 2011 +0100
+
+    free option context
+
+commit eae5569558eefa506e55b4a577f114b4425f0d4e
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sun Jan 23 23:25:24 2011 +0100
+
+    remove unused variable
+
+commit 7c427a9481ac3e288b0490653cb3db7c44eeaf6d
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Sat Jan 15 12:34:50 2011 +0100
+
+    compositor-wayland: Remove unused variable
+
+commit 503ccca5c82248b648551db8b58466ad56497552
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Fri Jan 21 16:56:07 2011 +0100
+
+    document the usage of libtoytoolkit
+    
+    (krh: edited to follow window_create() API changes)
+
+commit f71accc5b8b76281adff0edd98e3bceef02c660d
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Wed Jan 19 23:14:33 2011 +0100
+
+    close terminal window on exit
+
+commit b6761dc29441025ed54b1c0035f2d2de903c32ae
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Mon Jan 17 17:50:07 2011 +0100
+
+    fix resizing at top/left border
+
+commit dc3f817538db4566f1928680156936ecbbd485d1
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Mon Jan 17 17:25:34 2011 +0100
+
+    remove declaration without definition from window.h
+
+commit b0ae49e3158c2c5885caa0409c49d4e0cee25876
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Mon Jan 17 12:50:28 2011 +0100
+
+    remove unused function in clients/smoke.c, silence warning
+
+commit 8a6f7e313966c4f6d71d1da5539c7b2506a91998
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Mon Jan 17 12:40:01 2011 +0100
+
+    compositor crashes if window width or height is <= 0
+
+commit 762e5c25d6be89f1cb6d6ffc93040ece6d08e537
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Mon Jan 17 12:37:35 2011 +0100
+
+    add clients to .gitignore
+
+commit 2a332dd62ec67b5feb6a282118b132c39c36d39f
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Sat Jan 22 17:49:48 2011 +0100
+
+    compositor/shm: use internalFormat=GL_BGRA_EXT in TexImage2D
+
+commit 7d498b4f1a4669e916090483a91481b1b9a97f4a
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sun Jan 23 13:50:42 2011 -0500
+
+    Enable all compositors by default
+
+commit 6fea3dc5ced1737d644a2b657c93442f401cdcb6
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Sat Jan 22 20:41:07 2011 +0100
+
+    display_iterate: Process only enabled event masks
+    
+    (krh: Added warning for this unintended usage)
+
+commit 0f62aed1a1118c6817bd0544403567a104afef53
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sun Jan 23 12:21:15 2011 +0100
+
+    Guard enums in generated wayland-*-protocol.h
+    
+    (krh: edit #define guard to use WL_ prefix)
+
+commit 0cd8f6ededd14fed8af84c821999c5cf7941b818
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 21 22:19:40 2011 -0500
+
+    Drive-by optimization of blur_surface()
+
+commit a495333d4fe36b3f983fc90bf9a0f9d53363b211
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 21 22:17:03 2011 -0500
+
+    Remove unused bits of cairo code
+
+commit 7f075499ead048b3d72e7ec700c775ad11d71b13
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 21 22:01:48 2011 -0500
+
+    Update TODO again
+
+commit 027931bd33e6bda30a701be5dd1c33f01bb8b038
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 21 21:57:55 2011 -0500
+
+    Define the shell resize enumeration in the xml spec
+
+commit 248c1b61ce31ed01946e816b1f90f6c9f7685541
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 21 18:03:15 2011 -0500
+
+    Add an orange pop-up menu to test the new map_transient request
+
+commit 8dc378ff768e47858c34ae6e347ae3bac736d613
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 21 18:02:24 2011 -0500
+
+    Add new surface.map_transient() request to map a surface relative to another
+
+commit 6eeeb30021a9f72636887a529bb5772930cd190e
+Merge: ef57a9b e164e4e
+Author: Callum Lowcay <callum@callumscode.com>
+Date:   Sat Jan 22 12:00:48 2011 +1300
+
+    Merge branch 'master' of git://anongit.freedesktop.org/wayland
+    
+    Conflicts:
+    	clients/window.h
+
+commit d86a6bc96fd43037fd81cbd66257cb626571fb10
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 21 17:12:57 2011 -0500
+
+    Update TODO
+
+commit dd4046ae5602c12f832c9e84d77c6532e197eed5
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 21 17:00:09 2011 -0500
+
+    Take away pointer focus during server grabs
+    
+    This lets the client restore the pointer image when the grab ends.
+
+commit 6bccebee2334aae4926cb17f479ce51a2d6a4574
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 21 16:23:09 2011 -0500
+
+    terminal: Just send the pty master fd to receive the selection.
+    
+    LOL!!1
+
+commit 31cce0533faa1032f065d730cab3dd1c4fa31d81
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 21 15:18:55 2011 -0500
+
+    Actually send selected text when pasting
+
+commit e164e4ef722433b87c98f32a39e93dbd55b2231f
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 21 11:35:05 2011 -0500
+
+    Use cairo_push_group() for all double buffering, drop window_copy_*()
+
+commit f39a9ccbb32f10d193742b98986d1d2327e9a3fe
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Jan 20 12:37:33 2011 -0500
+
+    Use cairo_push_group() for double buffering in the terminal
+    
+    Slightly different version of the patch from twied.
+
+commit 5982658d62902e7a7ef845e499b42e8ba3510270
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Jan 20 11:56:57 2011 -0500
+
+    Render selection
+
+commit 23c03ad9816ed43844408216d3a406ecf02913ce
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jan 19 14:41:20 2011 -0500
+
+    Use libxkbcommon #defines for modifiers
+
+commit 58eec36f680ce7ba3e71db88350c4828724b779d
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jan 19 14:27:42 2011 -0500
+
+    Add proof-of-concept selection support to terminal
+    
+    Next will be to support mouse selections so we can copy and paste
+    something more interesting than just 'selection data'.
+
+commit 67cac8a565c3e03567372666c7e83796c6a23114
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jan 19 14:20:33 2011 -0500
+
+    Pass input device and time in key_handler callback
+    
+    Move the modifiers to a input device getter function.
+
+commit 5029a13283d5b9d4ec25302a9c3841e426dcb3c0
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jan 19 14:11:48 2011 -0500
+
+    Put the fd in the closure so debugging can print it
+
+commit 65772ce18b0e28e8282883edf5ac4c02b11c33bd
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jan 19 14:08:21 2011 -0500
+
+    Use different closures for sending and receiving
+    
+    Otherwise we can end up overwriting data in the receive buffer as we
+    try to send it.
+
+commit 943741cb40a5e2691c5a95a8c253dee69f0c86b0
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jan 18 09:23:13 2011 -0500
+
+    Use the global handler in dnd instead of custom drag_offer hook
+
+commit b46df05fa82578a24949a63909d23c650af92305
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jan 18 09:17:57 2011 -0500
+
+    window: Add a catch-all global handler hook
+
+commit ae6c8a6d731b3543bdea0f40757206908d75d6f4
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jan 18 09:08:53 2011 -0500
+
+    First attempt at selection support
+
+commit 4cca34934998eae779e0f2b33d751759407b51e4
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jan 18 07:53:49 2011 -0500
+
+    Split shell object out from compositor.c into its own file
+
+commit 25f0ba4be1c8b12e3cac1a2bdd4bf021dd8d413c
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Sat Jan 15 15:06:37 2011 +0100
+
+    clients/Makefile: Add AM_CPPFLAGS to view's CPPFLAGS
+
+commit d3b023ed7dbd7f2a5464121bce1ba184ee747744
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Sat Jan 15 12:34:49 2011 +0100
+
+    compositor: Attach only valid background buffers
+    
+    If a background is not found,
+    create_buffer_from_png will return NULL.
+    Do not attach these buffers.
+
+commit ecfb2b93f3f0a9bd79b4155acf5e8c6efc5516df
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Sat Jan 15 12:34:48 2011 +0100
+
+    compositor-wayland: Assign func pointers pre init
+
+commit ad67af1bcc6537dc46bc4fd0c5cd15bf0b664b57
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 14 20:45:23 2011 -0500
+
+    simple-client: Remove unnecessary flush
+
+commit 1a11fac8fa7503e3c32c4cf94b81721cb644ee02
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 14 20:39:21 2011 -0500
+
+    simple-client: Create GLES2 context
+
+commit a1015b9e8c135820080549006c61a8450aca688f
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 14 20:38:35 2011 -0500
+
+    Link simple-client against libGLESv2.so, not full GL
+
+commit be63ae5a2c3516e35f17b33bda41df3d09d661eb
+Merge: 8def264 aabdce0
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 14 19:13:22 2011 -0500
+
+    Merge remote branch 'bnf/simple_client'
+
+commit aabdce027f7cd9af41a20a9574b3529a337c49d0
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Sat Jan 15 00:40:17 2011 +0100
+
+    Add a simple client
+
+commit ac4326884b181a4da9491f371be61f181e0a9115
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Sat Jan 15 00:40:00 2011 +0100
+
+    connection: Write before reading connection data
+
+commit 8def2642417740cac46cb6c9cca957239865dd97
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 14 17:41:33 2011 -0500
+
+    Check for cairo-egl instead of just cairo-gl
+
+commit d711d0cd662f0a3160b56a0a46079ca95308231a
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 14 17:28:21 2011 -0500
+
+    Check for GL_EXT_texture_format_BGRA8888
+
+commit 1101b63d49db538916e9e6521b6fdf08542623f3
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 14 17:27:24 2011 -0500
+
+    Both internalFormat and format should be GL_BGRA_EXT
+
+commit a9410223720329a90d1b41de2fbb6e5b1e53f5c5
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 14 17:22:35 2011 -0500
+
+    Make it possible to enable/disable the various compositors from configure
+
+commit c5d6be95304ff89db452ac48444be978bb2aa116
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 14 16:22:37 2011 -0500
+
+    Remove unused visual argument to wlsc_surface_create()
+
+commit 8525a5036243212987b48eaf354d921e1d3e528a
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 14 16:20:21 2011 -0500
+
+    Move buffer creation and buffer details into drm.c and shm.c
+
+commit e4762a6ac1801ab1887c56e0051fa6335ba50ae2
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 14 14:59:13 2011 -0500
+
+    Move tty and vt handling out in its own file
+
+commit 96c8be98a65621a4cceb8be93c2228ca0324c103
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 14 14:49:46 2011 -0500
+
+    Some kind of support for touchscreen
+
+commit 43db4015f98133687c62508180e0d8e0819bd911
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 14 14:45:42 2011 -0500
+
+    Split out evdev handling to its own file
+
+commit ed64311b6c8cddb4e1183e5598a477c47ca82650
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 14 14:33:49 2011 -0500
+
+    Pick up input devices of type ID_INPUT_TABLET as well
+
+commit ef57a9b78884e19f353b1b9173275de28c80157e
+Author: Callum Lowcay <callum@callumscode.com>
+Date:   Fri Jan 14 20:46:23 2011 +1300
+
+    terminal: Window operations
+    
+    Implement OSC 1 (set window title), and some basic CSI t window
+    operations.
+    
+    Signed-off-by: Callum Lowcay <callum@callumscode.com>
+
+commit 9d708b07e4a87c5a7507bdcc0f71f055cd3eddcb
+Author: Callum Lowcay <callum@callumscode.com>
+Date:   Wed Jan 12 20:06:17 2011 +1300
+
+    terminal: Fix bugs in attribute rendering
+    
+    Fixed ignoring of concealed attribute, incorrect underline colour, and
+    glyph_run_flush not resetting the attribute.
+    
+    Signed-off-by: Callum Lowcay <callum@callumscode.com>
+
+commit 9acdb50084ecdba57017ddf818e8a79f6328af13
+Merge: 67a201d 08c40c3
+Author: Callum Lowcay <callum@callumscode.com>
+Date:   Wed Jan 12 19:40:14 2011 +1300
+
+    Merge branch 'master' of git://anongit.freedesktop.org/wayland
+    
+    Conflicts:
+    	clients/terminal.c
+
+commit 67a201da6f11916463e97d01a53ae8df0cd29627
+Author: Callum Lowcay <callum@callumscode.com>
+Date:   Wed Jan 12 19:23:41 2011 +1300
+
+    terminal: Escape sequences with string parameters
+    
+    Adjust escape parsing code to handle OSC, DSC, and other escape
+    sequences with string parameters.
+    
+    Signed-off-by: Callum Lowcay <callum@callumscode.com>
+
+commit 08c40c3550daa17738b78c3922fa94609638b13a
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jan 11 13:48:03 2011 -0500
+
+    clients: Make poppler-glib optional
+    
+    Just don't compile the view client.
+
+commit 1d3e93922d8b4da49491a2d5913b10b8db82c8ff
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jan 11 11:06:49 2011 -0500
+
+    Batch up drawing glyphs
+
+commit 7ae6b1a27d84b7ff3b1fa36a03d333e3ffc15e26
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sat Dec 25 16:58:31 2010 -0500
+
+    Hold on to the scaled fonts we use
+
+commit 4f506707696ae9b1bc0a57abf2c2fd74a5e96268
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sat Dec 25 16:14:23 2010 -0500
+
+    Use cairo_show_glyphs for rendering text
+    
+    A small step for now.
+
+commit 01994a596462efa2e5635b61de2facd34033f1f3
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jan 11 10:26:04 2011 -0500
+
+    Factor out decoding of character attributes
+
+commit fb266a320714f6664d810137dabf67b1e7230275
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jan 11 10:15:21 2011 -0500
+
+    Only draw background if it's different from what's already there
+
+commit 71eca89356b27515777caf4d013e3178e5611cee
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jan 11 10:13:00 2011 -0500
+
+    Make border color a color from the color table
+
+commit f106fd5b67512be2e786102b8549f182e5a00839
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jan 11 10:11:39 2011 -0500
+
+    Add helper to set color from color table
+
+commit 8c25420a50dc97966553c9b4b7a87955c2e442b5
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sat Dec 25 08:58:46 2010 -0500
+
+    Split background and foreground painting into separate loops
+
+commit da846ca91d0b86a35910c7154637f7e157abd1ca
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jan 11 10:00:52 2011 -0500
+
+    Fix terminal resizing
+    
+    Get snapping to character grid working again, avoid crashes when attempting
+    to resize below 1x1 character cell, only redraw when size actually changes.
+    
+    Also, rename window_get_child_rectangle() to window_get_child_allocation().
+
+commit 1b091dd41128d42992bc4cbbd14f195a9c219d2a
+Merge: 81179db 5fd89d2
+Author: Callum Lowcay <callum@callumscode.com>
+Date:   Tue Jan 11 09:08:59 2011 +1300
+
+    Merge branch 'master' of git://anongit.freedesktop.org/wayland
+
+commit 5fd89d255b7f4f66ad2b5040919532131750d952
+Author: Tiago Vignatti <tiago.vignatti@nokia.com>
+Date:   Mon Jan 10 19:30:04 2011 +0200
+
+    terminal: fix crashing when terminal size is < 0
+    
+    Just skip drawing when width or height is less than zero.
+    
+    Signed-off-by: Tiago Vignatti <tiago.vignatti@nokia.com>
+
+commit 81179db42c2a1d512af41f7ac0bc5998d83875b6
+Author: Callum Lowcay <callum@callumscode.com>
+Date:   Mon Jan 10 12:14:01 2011 +1300
+
+    terminal: More character attributes
+    
+    Implement the concealed attribute, and 16-colour attributes.  Fix a bug in
+    256-colour attributes that prevented them from working in elinks.
+    
+    Signed-off-by: Callum Lowcay <callum@callumscode.com>
+
+commit 86653ed273ebf90feae99efb476308dd99e86bed
+Author: Callum Lowcay <callum@callumscode.com>
+Date:   Fri Jan 7 19:47:03 2011 +0000
+
+    terminal: Various fixes
+    
+    Fix several bugs in the previous patches.  Fix inverse inverse video
+    with bold attribute, incorrect duplication of attributes when scrolling
+    up, underline aliasing, bottom scroll margin adjustment when resizing,
+    and unnecessary sleep when sending terminal reports.  Change TERM
+    environment variable to xterm-256color to better reflect terminal
+    capabilities (although it still doesn't emulate all of xterm).
+    
+    Signed-off-by: Callum Lowcay <callum@callumscode.com>
+
+commit 7e08e90c7421d4c766f4f21e99ce3d2923607be8
+Author: Callum Lowcay <callum@callumscode.com>
+Date:   Fri Jan 7 19:47:02 2011 +0000
+
+    terminal: Special keys
+    
+    Implements support for function, cursor, and editing keys, with
+    modifiers.  Partially implements application keypad mode.  Expands
+    control key support.
+    
+    Signed-off-by: Callum Lowcay <callum@callumscode.com>
+
+commit 256e72f0e2ed33fa363c414fb332727fb59adec0
+Author: Callum Lowcay <callum@callumscode.com>
+Date:   Fri Jan 7 19:47:01 2011 +0000
+
+    terminal: Implement character set switching
+    
+    Includes the 3 vt100 character sets.  Some of the graphic symbols don't
+    display because they are not included in the default font.  Apparantly
+    the cairo toy font API doesn't do font substitution.
+    
+    Signed-off-by: Callum Lowcay <callum@callumscode.com>
+
+commit 69e9658da008bb4513af984f19972e666d0bd0f8
+Author: Callum Lowcay <callum@callumscode.com>
+Date:   Fri Jan 7 19:47:00 2011 +0000
+
+    terminal: vt102 editing commands
+    
+    Implement the vt102 editing commands, and insert/replace mode.
+    
+    Signed-off-by: Callum Lowcay <callum@callumscode.com>
+
+commit 8e57dd5071cf5e0f4304520eb5596eb6dbae0592
+Author: Callum Lowcay <callum@callumscode.com>
+Date:   Fri Jan 7 19:46:59 2011 +0000
+
+    terminal: Basic vt100 escape codes
+    
+    Implements correct behaviour for vt100 cursor movement, erasing, custom
+    tabs, and reporting. Includes relevant terminal modes.
+    
+    Signed-off-by: Callum Lowcay <callum@callumscode.com>
+
+commit bbeac60b8a4490676d807877ae3195688b8e487c
+Author: Callum Lowcay <callum@callumscode.com>
+Date:   Fri Jan 7 19:46:58 2011 +0000
+
+    terminal: Scroll margins
+    
+    Implement scroll margins and related escape codes.
+    
+    Signed-off-by: Callum Lowcay <callum@callumscode.com>
+
+commit b8609ada50785cf43597653b5a41ade26aa871d7
+Author: Callum Lowcay <callum@callumscode.com>
+Date:   Fri Jan 7 19:46:57 2011 +0000
+
+    terminal: Escape sequence handling fixes
+    
+    Upgrade and refactor terminal_data to properly handle non-csi escape
+    codes, control characters in escape codes, and invalid escape sequences.
+    Also fix a buffer overflow in the escape sequence buffer.
+    
+    Signed-off-by: Callum Lowcay <callum@callumscode.com>
+
+commit a0ee21c7dcca37864552f9fe6e685e70255d5977
+Author: Callum Lowcay <callum@callumscode.com>
+Date:   Fri Jan 7 19:46:56 2011 +0000
+
+    terminal: Window size ioctls
+    
+    Use TIOCSWINSZ ioctl to set window size on terminal resize.
+    This causes applications to be notified of the resize event.
+    
+    Signed-off-by: Callum Lowcay <callum@callumscode.com>
+
+commit 30eeae55e0b82f6e7025b284f154a2d307eada4a
+Author: Callum Lowcay <callum@callumscode.com>
+Date:   Fri Jan 7 19:46:55 2011 +0000
+
+    terminal: Fancy colors
+    
+    Includes bold, underline, inverse, and blink attributes.  Blink is
+    rendered bold as in xterm.  Supports xterm's 256 color palette.
+    
+    Signed-off-by: Callum Lowcay <callum@callumscode.com>
+
+commit 15bdc5d1d39da67d7ba369ed27bddcd4a7573d3b
+Author: Callum Lowcay <callum@callumscode.com>
+Date:   Fri Jan 7 19:46:54 2011 +0000
+
+    terminal: UTF-8 support
+    
+    Signed-off-by: Callum Lowcay <callum@callumscode.com>
+
+commit 052d17d4d9b81c4ab8a23c14316047996221bb0c
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 7 16:13:00 2011 -0500
+
+    Map new surfaces on top of all other surface
+
+commit 96ce968b123f0edde7b8c3b61e9d2abed002c678
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 7 14:42:49 2011 -0500
+
+    gears: Include config.h
+
+commit 1926ebab731b6c7302f255b4181a0ec706f0b6a0
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 7 14:04:43 2011 -0500
+
+    Add missing newline in gears error message
+
+commit 8a457e3e9f023db1975fa585e92edbcd87f30dea
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 7 09:19:25 2011 -0500
+
+    Simplify visual check
+
+commit 8f66a57b4d46d309e07030a2ba4d88c1aebf18fb
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jan 7 08:38:56 2011 -0500
+
+    Ignore surface.map_toplevel() if already mapped
+
+commit 175e6cec39dfd25b0b8830a98c859077a9d2515e
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Jan 6 15:45:19 2011 -0500
+
+    Pass EGL_NO_CONTEXT to eglCreateImageKHR for EGL_DRM_BUFFER_MESA target
+
+commit f6b1471fd8a67a14d54d3f45bef3020e895f8c03
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Jan 6 15:32:14 2011 -0500
+
+    Initialize surface->link so we can always wl_list_remove() it
+    
+    In particular, even if we never added it to the compositor surface list.
+
+commit 4e63c6313bb9167842d07c78ea3573307e75404a
+Merge: f1ef15c 9835417
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Jan 6 14:22:59 2011 -0500
+
+    Merge remote branch 'nobled/fixes2'
+
+commit f1ef15cb45f8831b81aeefe03412dfb099f0220e
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Jan 6 10:00:23 2011 -0500
+
+    Move grab definitions to wayland-util.h
+    
+    These tokens really are part of the protocol and we need to extend the
+    scanner to generate them.
+
+commit 9835417962dcc65ee6c426ef8aad4cd1d979d82e
+Author: nobled <nobled@dreamwidth.org>
+Date:   Wed Jan 5 17:48:15 2011 +0000
+
+    Workaround gears depending on cairo-gl
+    
+    Extremely hacky, but at least it doesn't stop the build anymore.
+
+commit 5753188e1663241338c0b31428b0dd7a6641044b
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jan 5 17:34:54 2011 -0500
+
+    Move basic grab handling to core libraries
+
+commit f8475c93669528bbaec730afee3acb39655c5c86
+Author: nobled <nobled@dreamwidth.org>
+Date:   Wed Jan 5 17:41:55 2011 +0000
+
+    Fix window.c build without cairo-gl
+
+commit 0d8805ea18fd26d70f1c07df34d0612435e9f55a
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sat Jan 1 10:55:45 2011 -0500
+
+    Install the pkgconfig files
+    
+    Lost the install rule when we converted to automake.
+
+commit cbe6f0438813a18a06ac88b93a1fe295b3092804
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Dec 17 09:54:45 2010 -0500
+
+    Fix compositor-wayland
+
+commit 82da52b15b49da3f3c7b4bd85d334ddfaa375ebc
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Dec 17 09:53:12 2010 -0500
+
+    Update surface.attach and change surface.map to surface.map_toplevel
+    
+    The new map_toplevel() request no longer specifies a position and takes
+    the size from the attached buffer.  The attach request now takes a
+    position relative to the top-left corner of the old buffer to let
+    clients specify the relative position of the new buffer.
+
+commit 53a7f2137b5aba32e97dbc3b964bdaf19a9099ef
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Dec 16 21:11:10 2010 -0500
+
+    Fix the resizor
+
+commit 5c4056e049ebb8735cd0be8c5a639a90a6dae8f6
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Dec 16 14:56:41 2010 -0500
+
+    Schedule frame callback in the redraw handler
+
+commit 7c221d278a59f1a96bc8d5d1d6239ff2c8353a6c
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Dec 16 13:35:23 2010 -0500
+
+    Add window resize sample client
+    
+    This is an example of how to animate window resizing.  The size is
+    animated by a simple physics model that allows the user to cancel the
+    animation halfway and still look good.
+
+commit 3a1b4815b03f301df503f71460aab53800514fcc
+Author: Joel Teichroeb <joel@teichroeb.net>
+Date:   Sat Dec 11 21:08:53 2010 -0800
+
+    Fixed a small typo
+
+commit ab1862d68a063764f99d8591355e40807be659df
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Dec 9 11:29:40 2010 -0500
+
+    Move code around to keep input device interface and init function close
+
+commit 67f367f329f3640d12db43cf5dc14e7f8b1e1242
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Dec 9 11:06:46 2010 -0500
+
+    Document the shell.configure event a bit
+
+commit c5c510ec7523efc60d955d5daa8df3776c35e65a
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Dec 8 15:12:58 2010 -0500
+
+    Set up visuals in wayland-server
+    
+    Still very much hand-wavey, but at least it's only in one place now.
+
+commit b3fc757cd8a18633057634e7bedc2a91c950b09c
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Dec 8 11:07:57 2010 -0500
+
+    Handle buttons in grab objects too
+
+commit 9c3e8d734ef0e7cb24281a55e4c384985a5ba5f8
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Dec 8 09:48:52 2010 -0500
+
+    Move grab state to struct wl_input_device
+
+commit dfce71d116b91debed76081cda6c8dad4f53e513
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Dec 7 20:19:10 2010 -0500
+
+    Reenable fragment shader precision specifier
+
+commit 8321e693d2a1b09b13b5ab9b3a65dc0eba19b138
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Dec 7 17:06:15 2010 -0500
+
+    Use grab object for motion grabs too
+    
+    Now all grabs use grab objects, so drop the grab enum.
+
+commit 57db067cec418e9ae88f5c67ff49461a395dcb52
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Dec 7 15:08:16 2010 -0500
+
+    Make wlsc_input_device_update_grab() take a grab object
+
+commit 287343a0d36de3cef67d9527f15d968b01a37544
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Dec 7 14:58:57 2010 -0500
+
+    Use a grab object for drag and drop
+
+commit 6d65d5f4d47130a0cd9919d3409ef9bd7723d655
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Dec 7 13:30:18 2010 -0500
+
+    Handle shell.move using a grab object
+
+commit fc9c28adc01c39b37af35104275aa4f1e5a36284
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Dec 7 13:04:43 2010 -0500
+
+    Move resizing to a grab object
+
+commit 359d667646eae1a22af78938c94155c6225d3657
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Dec 7 12:29:03 2010 -0500
+
+    Add grab object infrastructure
+
+commit 4be2ed9611e47c3205fa61977663442a23ad6a3c
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Dec 7 09:15:57 2010 -0500
+
+    Drop dummy wl_grab_surface hack
+
+commit 855ab757874c46e2211c1ab4ed76fdda135d6d33
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Dec 7 09:03:02 2010 -0500
+
+    Remove unnecessary wlsc_compositor_schedule_repaint() call
+
+commit dff2e3c5506882a781250becb3138571c1827a43
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Dec 7 09:02:09 2010 -0500
+
+    Reduce indentation in notify_button()
+
+commit ea08115ee34d2333733e4ec6caff8bd9780b4017
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Dec 7 08:59:51 2010 -0500
+
+    Start grab when button is pressed, upgrade if we start drag, move or resize
+    
+    Fixes crash on click in terminal.
+
+commit 7132a9aeb88bc23d8841fe39279fc9256ed5fb77
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Dec 6 21:41:10 2010 -0500
+
+    Move get_time() helper back into compositor
+
+commit 4685fa324f5692c5690460905024902359e85e2a
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Dec 6 21:38:50 2010 -0500
+
+    Pass timestamp in surface destroy callback
+
+commit 02ef1c1aca7f05ffcd6081af4e1135186614b7d3
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Dec 6 21:35:19 2010 -0500
+
+    Move focus tracking surface destroy callbacks into core
+
+commit a9e8961ea298040b0a8a9952b76eb2fae5621126
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Dec 6 21:32:15 2010 -0500
+
+    Use surface destroy notifier for cancelling grabs
+
+commit 3d76e652c54007d29a5b1c3f31ec1da2326499b8
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Dec 6 17:33:11 2010 -0500
+
+    Use the per-surface destroy callback for grabs as well
+
+commit ab8475cafd730fb5b762dd3bcf9b7ae5d7a0f9ba
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Dec 6 16:56:28 2010 -0500
+
+    Move get_time() helper to core
+    
+    We'll need a better strategy for generating timestamps without input events
+    or pageflips.  At least we'll need to ensure everybody is using the same
+    underlying time source.
+
+commit c551bd2ae8bbb4cec52fd9576a217ae5e2cef43a
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Dec 6 16:43:16 2010 -0500
+
+    Add a surface destroy callback and use it for focus tracking
+
+commit 7d564d93eb28ae64998c17ac2fc92aef5ab07b75
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Dec 6 10:46:37 2010 -0500
+
+    Refactor drm buffer creation a bit
+
+commit 45568f6e33bb2af567e18b8d8b089e561e6b156d
+Author: Yuval Fledel <yuvalfl@gmail.com>
+Date:   Mon Dec 6 09:18:12 2010 -0500
+
+    When no DRM present, clients (window.c actually) now either exit orderly,
+    or if that check is removed - crash (unsurprisingly).
+    This patch relieves this assumption, and allow some clients (terminal,
+    image, flower) to run in a non-DRM environment
+
+commit f8fc08f77187f6a5723281dab66841e5f3c24320
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Dec 1 20:10:10 2010 -0500
+
+    Add origin information to output.geometry event
+
+commit aa82767c9838f2c834d7976ae6377491894ca6fe
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Dec 1 20:06:39 2010 -0500
+
+    Use generated wl_interface for visuals
+
+commit 9750a7a9b59f0ad390e19b4fadb1e6db9d5196f4
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Dec 1 17:46:56 2010 -0500
+
+    Silence scanner makefile rule by default
+
+commit b313b0298328e3837c1fb75768f9e122385d05b8
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Dec 1 17:07:41 2010 -0500
+
+    Chage the 'base' field to be the name of the super class instead
+    
+    Instead of display->base.base we want display->proxy.object, or
+    
+            buffer->buffer.resource.object.id = id;
+    
+    which makes it clear what we end up addressing.
+
+commit b71cd9e31db6869fb9526ba28607ac35c69f2024
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Dec 1 17:00:17 2010 -0500
+
+    Update TODO
+
+commit caa64425564a54431dd8304e005430a453cc2e97
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Dec 1 16:52:15 2010 -0500
+
+    compositor: Use a virtual destructor when shutting down
+    
+    Backend can now rely on their destroy function getting called on shutdown,
+    so reset tty etc there instead of handling SIGTERM twice.
+
+commit 50dc6989b84ee8b4c2337a11b3d295208723251a
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Dec 1 16:43:56 2010 -0500
+
+    compositor: Shut down properly so we remove the socket
+
+commit 2bb3ebe1e437acf836449f0a63f3264ad29566f2
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Dec 1 15:36:20 2010 -0500
+
+    Create socket in /var/run/user/${HOME}
+    
+    Use the runtime dir from XDG Base Directory Specification for creating the
+    socket in a directory only the user can read and write.
+
+commit 0611e3efc2e79e2df61f0225ebd47ef8f7b27c12
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Dec 1 10:21:15 2010 -0500
+
+    Indentation nit-picking
+
+commit 26437073910d0e0850dd5d6ee7483f6f26172004
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Dec 1 10:17:47 2010 -0500
+
+    Move pointer and keyboard focus tracking into libwayland-server
+
+commit 06bc26401c53fb36c3cacfaeaaa55d127dc2fdf1
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Dec 1 09:50:16 2010 -0500
+
+    Fix warnings from adding -Wall back
+
+commit 1f25315ae263c28687b7dffd482f6453c02cdc34
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Dec 1 09:46:10 2010 -0500
+
+    Add $(GCC_CFLAGS) back
+    
+    Missed this when moving to automake.
+
+commit 3ada7ec83ace0be56119ca8b14a568f0efb27cde
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Dec 1 09:42:10 2010 -0500
+
+    compositor-wayland: Call wlsc_compositor_finish_frame from frame callback
+
+commit 4203df1fd5be095b45389d6084047649c5763cde
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Dec 1 09:40:58 2010 -0500
+
+    compositor-wayland: Use glFlush() not glFinish() after rendering frame
+
+commit a242129257e1eb9632ea6884d84a08ca9e8a1265
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Dec 1 09:39:37 2010 -0500
+
+    Fix key handler to not run handlers from an empty list
+
+commit ebe332700323377e2b97bb8c40485461d060c608
+Author: Yuval Fledel <yuvalfl@gmail.com>
+Date:   Tue Nov 23 01:56:45 2010 +0200
+
+    Describe the wire protocol
+
+commit 0c007aea35c94907bce4dfa75fbea47e131161cb
+Author: Joel Teichroeb <joel@teichroeb.net>
+Date:   Tue Nov 30 10:22:16 2010 -0800
+
+    Make the dnd client actually work.
+    
+    The dnd client now sends a mime type of
+    application/x-wayland-dnd-flower instead of text/plain.  The dnd
+    message is just the position and random seed that lets the drop source
+    add the flower to its grid.
+
+commit d44bc8b8eef470780fd5cbd8737b5cc1a4226b39
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Nov 30 15:10:26 2010 -0500
+
+    Add reject round trip to dnd protocol
+    
+    This lets a drag target reject a drop.
+
+commit 41da90897c548bf2dfa8f4eeaed86f3215e7558b
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Nov 30 14:01:07 2010 -0500
+
+    Don't hardcode offered dnd types in window.c
+
+commit 88b272d9ffc8958178385e9ff05fee45d7771738
+Author: Joel Teichroeb <joel@teichroeb.net>
+Date:   Tue Nov 30 10:22:13 2010 -0800
+
+    Made the window save the coordinates when being draged.
+
+commit ec2e64224b111febacf645cac56046cd831b56da
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Sat Nov 27 19:04:12 2010 +0100
+
+    Add wayland backend for compositor (nested)
+
+commit 35fd2a8cc68c42d90756330535de04cbbb4d2613
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Sat Nov 27 19:04:11 2010 +0100
+
+    wayland_client: rename wl_display_create to wl_display_connect
+    
+    Avoid conflict when using wayland-{server,client} together.
+
+commit c1ad1f9c9b493bc3b8952a4b6702476f1bbaa8df
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Nov 29 17:04:21 2010 -0500
+
+    Consolidate 'sync' and 'frame' events into just one 'key' event
+
+commit ac93a3d3d74f683345bdce8cb8388532540f3f49
+Author: Yuval Fledel <yuvalfl@gmail.com>
+Date:   Mon Nov 29 21:29:10 2010 +0200
+
+    Document wl_list
+    
+    Comments only.
+
+commit 4ee71386090cc446fe12b961f616b7a3abb3dc1e
+Author: Yuval Fledel <yuvalfl@gmail.com>
+Date:   Mon Nov 29 21:05:26 2010 +0200
+
+    Describe the protocol using inline XML comments
+    
+    Signed-off-by: Yuval Fledel <yuvalfl@gmail.com>
+
+commit c4b8c457e8d765308f4791b0aaf9d23bff7639e8
+Author: Fred Morcos <fred.morcos@gmail.com>
+Date:   Sun Nov 28 19:31:55 2010 +0100
+
+    fix missing includes in clients/window.h and clients/wayland-glib.h
+
+commit 1f5d507596eabd5d76166288f83b02f260302596
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Nov 29 08:13:35 2010 -0500
+
+    Define MULT outside the HAVE_CAIRO_GL #ifdef
+
+commit 32ff69017ab003911b754982772d0644b1cd23d4
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Nov 24 14:29:59 2010 -0500
+
+    Fix udev rules install directory
+
+commit 675c77c36a1fba2973751d4e9c8f3ea073309348
+Author: Joel Teichroeb <joel@teichroeb.net>
+Date:   Tue Nov 23 18:01:40 2010 -0800
+
+    Fix potentially undefined behavior
+    
+    Really this time.
+    
+    http://llvm.org/bugs/show_bug.cgi?id=8670
+
+commit 55973f2f5a666b3a9d05598a60191205a7e69fa2
+Author: Darxus <Darxus@chaosreigns.com>
+Date:   Mon Nov 22 21:24:39 2010 -0500
+
+    Some additional return value checking
+
+commit e9f5e36730e8dfc703e90b1382ffd0dac6310a99
+Author: Yuval Fledel <yuvalfl@gmail.com>
+Date:   Mon Nov 22 21:34:19 2010 +0200
+
+    Make clients exit orderly when there is no connection
+
+commit 91b5999ce4a72aadec0aef42121045ff78e1f0df
+Author: Yuval Fledel <yuvalfl@gmail.com>
+Date:   Mon Nov 22 21:42:58 2010 +0200
+
+    add newlines for error printfs
+
+commit d1c43107150c30c4ac1f88eee025833ce55d9a9a
+Author: Yuval Fledel <yuvalfl@gmail.com>
+Date:   Mon Nov 22 21:25:58 2010 +0200
+
+    xml tag should close, or some parsers fail
+
+commit 3d46534f4a70f2a68143e0bfcc06a52ea64558da
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Nov 22 13:58:46 2010 -0500
+
+    Fix compositor crash when dragging to a surface that disappears
+
+commit 8857a96a97be66200d941c96e99d1cb917086789
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Nov 22 13:02:21 2010 -0500
+
+    window: Don't call drag_offer_handler if it's NULL
+    
+    Reported by canbaby@21cn.com.
+
+commit a6d9e11447a1639a77105c73b929d60cbfff1efb
+Author: Fabian Henze <flyser42@gmx.de>
+Date:   Fri Nov 19 10:28:32 2010 +0100
+
+    Two typo fixes in the documentation
+    
+    Two typo fixes in specs/main.tex, mentioned in an earlier mail.
+
+commit 156d057e567f6ea27b0e9771c5b2ecf80f09ce7e
+Author: Bryce Harrington <bryce@canonical.com>
+Date:   Fri Nov 19 12:14:39 2010 -0800
+
+    Function declares a pointer return, so return one.
+    
+    These two functions are just wrappers around display_create_*_surface
+    but weren't forwarding along the result of those calls as is implied by
+    their return value type.
+    
+    This fixes a compile-time warning.
+    
+    Signed-off-by: Bryce Harrington <bryce@canonical.com>
+
+commit 515f63ad72a8ea8f3435a5982dd24209835a2af1
+Author: Bryce Harrington <bryce@canonical.com>
+Date:   Fri Nov 19 12:14:55 2010 -0800
+
+    Quell warning about potentially uninitialized variable 'surface'
+    
+    In theory, it was possible for an undefined 'surface' to be passed to
+    window_set_surface().  Instead, explicitly pass NULL.
+    
+    Signed-off-by: Bryce Harrington <bryce@canonical.com>
+
+commit f57303f7cfbdcf7f1e3df76a4194f86a7d7f1125
+Author: Bryce Harrington <bryce@canonical.com>
+Date:   Fri Nov 19 12:15:15 2010 -0800
+
+    Expose window_set_surface() in window.h
+    
+    gears.c uses this routine and was complaining about it being implicitly
+    declared.
+    
+    Signed-off-by: Bryce Harrington <bryce@canonical.com>
+
+commit 40269a6ed69a6619bf97e7276083b489104c8f7e
+Author: Bryce Harrington <bryce@canonical.com>
+Date:   Fri Nov 19 12:15:36 2010 -0800
+
+    Cleanup declared but unused variables.
+    
+    Make was complaining about a bunch of unused variables that were being
+    declared.
+    
+    Signed-off-by: Bryce Harrington <bryce@canonical.com>
+
+commit 9f89a40ec17e84a70ab067b783d1d711a1307150
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Sun Nov 21 11:47:11 2010 +0100
+
+    scanner: include stddef.h to provide NULL and size_t
+
+commit b163cef6e77d0fd64af917e34971f01227ad3952
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Nov 19 10:47:28 2010 -0500
+
+    Make the server event loop embeddable
+    
+    By exposing the epoll fd, we can embed the server event loop in other
+    main loops suchs as Qt or GTK+.
+
+commit 67f4ffdf03c6520b9e0539fef8bcd79abe2f0eca
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Nov 16 10:57:55 2010 -0500
+
+    Oops, no -- in xml comments allowed
+
+commit 5dfe299b91f2f2e7c8fe460ac08df1935e3c73d5
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Nov 16 10:55:13 2010 -0500
+
+    Add logo svg
+
+commit 7637ff0839488ae4fe7be569e0e0f9ce8e77b5bf
+Author: Nikolai Kondrashov <spbnick@gmail.com>
+Date:   Mon Nov 8 19:38:40 2010 +0300
+
+    Clean up .gitignore files
+    
+    Sort the contents and update .gitignore files to hide generated files from
+    git status output.
+    
+    Signed-off-by: Nikolai Kondrashov <spbnick@gmail.com>
+
+commit b97b28c339a94223119e122ab899f500d7a4bd9e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Nov 9 16:31:30 2010 +1000
+
+    README: fix a few typos
+    
+    And one in the main.tex spec document.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 997ce64302482ba9958cbe784b44c548e42724ac
+Author: Tiago Vignatti <tiago.vignatti@nokia.com>
+Date:   Wed Nov 10 02:42:35 2010 +0200
+
+    compositor: add safety check when EGL fails to initialize
+    
+    offending message:
+    
+        Program received signal SIGSEGV, Segmentation fault.
+        create_pointer_images (ec=0x619f10) at compositor.c:240
+        240         glEGLImageTargetTexture2DOES(GL_TEXTURE_2D,
+    
+    Signed-off-by: Tiago Vignatti <tiago.vignatti@nokia.com>
+
+commit f2912fa85fc3e0bba3359032f94495dc0a77020b
+Author: Jesse Barnes <jbarnes@virtuousgeek.org>
+Date:   Mon Nov 8 11:51:12 2010 -0800
+
+    compositor: put console into KD_GRAPHICS mode at vt enter time
+    
+    This will keep the kernel from changing graphics state out from under us
+    (e.g. blanking).
+
+commit 2b43bd73a0f0f3e81cd4a8943fd10c21e00727a2
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Nov 8 15:45:55 2010 -0500
+
+    Bring gears example up to date
+    
+    Must have gears.
+
+commit 990854d0198e8fd654aed67d86342f66e666d390
+Author: Johan Bilien <jobi@litl.com>
+Date:   Sun Nov 7 09:52:11 2010 -0500
+
+    Fixed a bogus call to cairo_destroy
+
+commit 6048e8d9f63ac5dd19ae945fcbb1ea7584484cce
+Author: Nikolai Kondrashov <spbnick@gmail.com>
+Date:   Mon Nov 8 12:59:53 2010 +0300
+
+    Fix Wayland build instructions
+    
+    Replace aclocal; autoconf invocation in Wayland build instructions with
+    an up-to-date ./autogen.sh invocation.
+    
+    Signed-off-by: Nikolai Kondrashov <spbnick@gmail.com>
+
+commit fe096cdc8c22bd06f2608ed774211da919a7839f
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Nov 8 08:54:35 2010 -0500
+
+    Install and dist udev rules file
+
+commit 5b7e43ac5697b34725f8a8d7d06f529d80c68f66
+Author: Javier Jardón <jjardon@gnome.org>
+Date:   Sat Nov 6 01:55:27 2010 +0100
+
+    Update autotools configuration
+    
+    Use new libtool syntax and cleaning the code a bit
+
+commit 0bfb126e593c255dd24b464abd92dd8e39d99437
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sun Oct 31 14:24:39 2010 -0400
+
+    Add /wayland so we pick up generated header files
+    
+    Reported by Benjamin Franzke.
+
+commit 1b6c0ed95a8b9c98bca0728cdf56159cc57fec45
+Author: Chia-I Wu <olvaffe@gmail.com>
+Date:   Fri Oct 29 15:20:18 2010 +0800
+
+    Workaround an xcb-dri2 bug.
+    
+    xcb_dri2_connect_device_name generated by xcb-proto 1.6 is broken.  It
+    only works when the length of the driver name is a multiple of 4.
+
+commit 4d8ba216c543239d4419eebd41120ce74033cf2b
+Author: Chia-I Wu <olvaffe@gmail.com>
+Date:   Fri Oct 29 15:20:17 2010 +0800
+
+    Make sure there is a current context.
+    
+    The context of a display is shared with the cairo device.
+    cairo_acquire_device should be called whenever OpenGL calls are made.
+
+commit 1f411902dea5451e37d94293f023fbc1f5381a0d
+Author: Chia-I Wu <olvaffe@gmail.com>
+Date:   Fri Oct 29 15:20:16 2010 +0800
+
+    Use glTexSubImage to update the pixels.
+    
+    glTexImage causes respecification.  The DRM buffer a client renders to
+    will be different from that used to create the wl_buffer.
+
+commit 332073b9db50fefe3ee7bdd85808d90732ae43ce
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Oct 27 15:02:51 2010 -0400
+
+    List libtoytoolkit.la before libwayland-client.la on the link line
+    
+    Fixes link order for --as-needed linking.
+
+commit 61a8251360f36bcbc5ff6d21ab43ad288010c0a9
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Oct 26 11:26:44 2010 -0400
+
+    Add a geometry option for x11 compositor
+
+commit 012a00777129cbb84fa88ba1b02e1f3b2dd1b4f8
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Oct 26 00:02:20 2010 -0400
+
+    Add small client for testing shm surfaces
+
+commit d0c3b9da225b0e3bd5102c977a17e66af928ab02
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Oct 25 11:40:03 2010 -0400
+
+    Fall back to cairo image backend and shm surface if we don't have cairo gl
+
+commit 6866856dfda896fa657b0aac6e90d833c5bda744
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Oct 25 10:28:23 2010 -0400
+
+    Remove leftover of fds_in_tail hack
+    
+    It's breaking the case of multiple fds in one buffer.
+
+commit cf2bc67ccdf7468e906615840ecd5eb41f17e622
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Oct 15 22:47:09 2010 -0400
+
+    Plug in no-op drm buffer attach function
+
+commit 29fc5592c57ab88697025b3414ce8115042ebc28
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Oct 12 18:04:57 2010 -0400
+
+    Delete leftover makefile debugging
+
+commit f0152daad719209d6984217e43dc79eb47d102c9
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Oct 12 17:24:20 2010 -0400
+
+    Use automake
+
+commit 49291497d3cb696bb9b17033c38859eaf1cc1be8
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Oct 12 15:48:29 2010 -0400
+
+    Add more cursors from the DMZ theme
+
+commit 118fb49eeba2e372419bd3413f705a3ad010ba91
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Oct 12 13:53:13 2010 -0400
+
+    Fix clients include path after moving files around
+
+commit a969c8a7f055a35aa5d3acfc865adffde29c7f62
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Oct 8 09:32:55 2010 -0400
+
+    Use GL_BGRA_EXT for shm texture uploads
+
+commit 25694e7c3c31e4a4d29ea77865018cde73694a79
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Oct 8 08:58:51 2010 -0400
+
+    A couple more TODO items
+
+commit 3d5bae0700e4467000948133f89ce48cc295b4ff
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Oct 6 21:17:40 2010 -0400
+
+    Add a shm buffer sharing mechanism
+
+commit 98ffc93b95c2b43d03735cfccf52fac203c26ac3
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Sep 24 10:01:18 2010 -0400
+
+    Fix EGLImageKHR leak in wl_buffer destroy
+
+commit 45115a435e04a0ba27d0edeaddb27aed14715212
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Sep 17 09:04:46 2010 -0400
+
+    Fix screenshoot.c type in Makefile
+
+commit 2a4372cbcd4c45b1e9df57b9f050dc1ffd481f31
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Sep 16 09:10:17 2010 -0400
+
+    Add autogen.sh
+
+commit 3dd66d66a39453d48c7ef4ec85c1d02e66088846
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Sep 14 16:23:24 2010 -0400
+
+    Use scanner to generate screenshooter client code as well
+
+commit c5dcb90d2a0d4c31b54b8aa1a91e7b243f9b983b
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Sep 14 15:53:32 2010 -0400
+
+    Use scanner for screenshooter protocol
+
+commit 2cd5144fa554b408664310aa9bea2a76bd939103
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Sep 14 15:52:43 2010 -0400
+
+    scanner: Use protocol name for #include guards
+
+commit ce457ba68cd44ec4514abc2d0e3589388397d72d
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Sep 14 15:39:45 2010 -0400
+
+    Add timestamp to pointer image attach request
+    
+    This lets the server discard requests received after the pointer has
+    exited and the re-entered a surface.
+
+commit 6dcf8718ae3ae44a0e2022ce2a2c318430936fe6
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Sep 14 13:44:37 2010 -0400
+
+    Consolidate notes from a few files in TODO
+
+commit a6f6999e49cc5faccb4f404844b9280475a3dbaa
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Sep 14 12:41:26 2010 -0400
+
+    Consolidate NOTES and README
+
+commit a46dc06da7fdabde7311a33355fbe3dfa256a446
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Sep 14 11:25:55 2010 -0400
+
+    Copy over updated build instructions from the google group
+
+commit 6dd08ebbe108c2c78cc23d6af0b00a84199d8b2c
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Sep 14 11:13:18 2010 -0400
+
+    Move core protocol libraries into wayland/ subdirectory
+
+commit 76b43326a57b6c90ca464ff11e76e1217c9b7c70
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Sep 14 10:45:00 2010 -0400
+
+    Move example compositor to subdirectory
+
+commit ef2f48505651ec21c2c46fe4833d067ac0df160c
+Author: Kristian Høgsberg <krh@madara.(none)>
+Date:   Mon Sep 13 16:23:52 2010 -0400
+
+    Add support for more types of input devices
+    
+    Well, maybe not support, but we at least recognize touchpads and touchscreens
+    and try to work with them.
+
+commit 99d7c64d1b6f60d5515304f5380a0f98908cecc7
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Sep 10 08:51:09 2010 -0400
+
+    Remove non-gles2 glEnable(GL_TEXTURE_2D) call
+
+commit 877d71a6e247ac1d17bc47a86af45f8e7ee041d4
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Sep 7 22:15:22 2010 -0400
+
+    Marshall NULL strings correctly
+
+commit 9ccf08d9b8e3c2daee960c0674da0c457b5ee5b9
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Sep 7 22:06:54 2010 -0400
+
+    Change debug format to not confuse object id and message parameters
+
+commit ab2f1cddc60132ebe3b3cad466a408b803c990c3
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Sep 7 22:01:32 2010 -0400
+
+    Dont post damage event from window_copy_surface
+    
+    We always call this between window_draw() and attaching the window surface
+    so the surface we're copying to isn't visible.
+
+commit 7d804068b67b8d05db366b1fbb593f65ccbbc4ae
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Sep 7 21:50:06 2010 -0400
+
+    Only set pointer image when it changes
+
+commit acf82a36bb20a869f66563b365fa65af429f067e
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Sep 7 21:40:31 2010 -0400
+
+    Log emitted events as well in debug mode
+
+commit 6bce89da789d99a177ec02821dcc6163dcbdbd73
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Sep 7 21:34:45 2010 -0400
+
+    Return the closure from wl_connection_vmarshal()
+    
+    And provide a function to write it to a connection.
+
+commit 50038e4757e6486df555d22cba4cc85650e0c738
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Sep 7 21:08:59 2010 -0400
+
+    Drop wl_surface_post_event() helper
+    
+    Now wl_client_post_event() is the only entry point for sending out events.
+
+commit 7cd36185d79a2940b8f99c7472149443f5367c18
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Sep 7 20:57:40 2010 -0400
+
+    Fill out a closure when sending events as well
+
+commit 4f14f6e109a3418dd4416feb8e6d10156d36db2b
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Sep 7 17:03:17 2010 -0400
+
+    Fix integer signedness and fd size confusion
+
+commit f821f5ad935015ab05ad9f509a950c56103aa83e
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Sep 7 17:00:34 2010 -0400
+
+    Demarshal all arguments from protocol buffer
+
+commit 6c7c7a909a7ffa047414a913730f7eee6ac18ad3
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Sep 7 15:51:41 2010 -0400
+
+    Keep strings and arrays in the buffer when demarshalling
+    
+    Avoids the malloc+copy, and is a step towards using the closure for
+    marshalling too.
+
+commit de0fa3bc6423e1cb0c0c66ec02e8cf3facb8e9e5
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Sep 7 15:33:56 2010 -0400
+
+    Send terminating nul character when sending strings
+
+commit 9f897988fdbe695202addb47044ee72361930143
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Sep 7 15:26:39 2010 -0400
+
+    Move marshal/demarshal buffer into struct wl_closure
+
+commit f1e7bd384c48a7c7531539ef4dedbe6b384a7609
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Sep 7 10:58:19 2010 -0400
+
+    Add protocol debugging facility
+
+commit b6eb39710de16155256a074db56d308bfa91a16c
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Sep 7 10:58:03 2010 -0400
+
+    TODO editing
+
+commit 2feb988c7f23b60474d9d7179836480b30954dd7
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Sep 3 22:04:35 2010 -0400
+
+    Update TODO
+
+commit f8ffded1e59d9e723d830b5a445ca386ea31ec21
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Sep 3 15:15:33 2010 -0400
+
+    Drop  wl_display_set_compositor() special case
+
+commit 9d69f8e7963965ec4301364a01d941b3615fa1a1
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Sep 3 14:46:38 2010 -0400
+
+    Replace commit/ack/frame protocol with simpler sync and frame callbacks
+
+commit 13b8ae49867bee41e2d6f73d7afdeba4ecd7570c
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Sep 2 20:55:16 2010 -0400
+
+    Add convenience functions for posting display events
+
+commit f66d0f4e14818b12d2c02f924237a2e8a90de720
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Sep 2 20:27:16 2010 -0400
+
+    Get rid of wl_client_add_surface() special case
+
+commit e9d37bdc5fe7f0244695859d5905af87dd3c82aa
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Sep 2 20:22:42 2010 -0400
+
+    Use a transient object for the dnd session
+
+commit 5c63df7f1eafa8badf2290e9c732a1e890d983b5
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Sep 1 17:18:33 2010 -0400
+
+    Fix const warning
+
+commit 45b7789a8b59d86d35ff29acb1b1d48a8e666f6e
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Aug 30 09:47:36 2010 -0400
+
+    Return a closure object from wl_connection_demarshal
+    
+    This way we can invoke it multiple times without having to demarshal
+    and build the cfi every time.
+
+commit 8ca1cc20a1db53f670ed5d53b0b74287c0c8d8ba
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Aug 30 08:21:44 2010 -0400
+
+    flower: Clear surface
+
+commit c7c60646adb58bd145486ec7cc7e7a6b42d33244
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sun Aug 29 21:33:39 2010 -0400
+
+    Add options to specify xkb details
+
+commit 30620609b296306f463d1a2533f95f765f81b309
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sun Aug 29 21:12:25 2010 -0400
+
+    Remove debug message
+
+commit e968f9c6b926f5af46417774867c029e5ee6aebf
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 27 22:18:00 2010 -0400
+
+    Provide visual feedback as to whether drop is supported
+    
+    Change the cursor in response to target events.
+
+commit b571f5db6b086ab712ff3a7abb4d7734ea5dacc0
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 27 22:17:13 2010 -0400
+
+    Handle NULL mime-type in drag::accept request
+
+commit 3bbbd15c65c3ebded14f558be93e760c38c52e1b
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 27 22:16:50 2010 -0400
+
+    Marshall NULL strings without crashing
+
+commit 4eb536091af7983847cef482072f053f1ab9d8b2
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 27 20:29:56 2010 -0400
+
+    Update drag protocol to use fd passing for data transfer
+
+commit aebeee0bbfc0229f3a393b54df8c98a2722b3068
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Aug 26 21:49:44 2010 -0400
+
+    Support marshalling of file descriptors
+
+commit d6f4da7927bc2d7593497e802a5b6b8eb37c3b36
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Aug 26 17:44:31 2010 -0400
+
+    connection: Factor out circular buffer functionality
+
+commit 4363d2aa4d9591528f202e0b5a80ceec46fe7573
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Aug 26 12:13:43 2010 -0400
+
+    Ask for glesv2, not gl for compositor in configure.ac
+
+commit b0496261176538f5e788388083d2ecb8248ae0cf
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Aug 25 17:11:29 2010 -0400
+
+    Use sendmsg/recvmsg for socket I/O
+
+commit 1d7ffd32f8cb769a2713d5f334da17a9e1f7f823
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Aug 25 16:34:05 2010 -0400
+
+    Set pointer image only in response to 'target' event
+
+commit 8a4087164587b48ae34e421b5b3f90b5f6d4650a
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Aug 25 13:38:40 2010 -0400
+
+    A few makefile/autoconf fixes
+
+commit b12fcceeb740094e98deb31dfc330002d7369baf
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Aug 24 17:34:23 2010 -0400
+
+    Update to EGL_MESA_drm_image from mesa master
+    
+    Woo, running on stock mesa now.
+
+commit d6a4787ed71136eac2894fd72f7dac7fc4fb6fab
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Aug 24 17:34:15 2010 -0400
+
+    TODO editing
+
+commit 506e20eed96e39737a402358e43aa3d5249d49a0
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Aug 19 17:26:02 2010 -0400
+
+    More work on dnd
+
+commit 041d63e3ee97ab96611ab251866c92d57116de68
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Aug 18 20:45:43 2010 -0400
+
+    Add clean target for data/ so make clean works again
+
+commit b8cc24e1a894d6ec2b74e39700f057743cb1870b
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Aug 18 20:31:06 2010 -0400
+
+    Actually add dnd client
+
+commit 9a686243b650c77b349b74087f5a555a2ff7824a
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Aug 18 15:28:04 2010 -0400
+
+    Add a drag and drop test client
+
+commit eef08fbb1a32d206c32608c95fe8a80db0fbc081
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Aug 17 21:23:10 2010 -0400
+
+    First step towards drag and drop protocol
+
+commit 084d41aac1496258861f285074970c5fd711b0f3
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Aug 18 14:51:26 2010 -0400
+
+    Add missing drm.c
+
+commit ef613fbf830bd5aee50151d43d9b9e77d6eb50f8
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Aug 17 13:50:06 2010 -0400
+
+    Always consume message, even if no proxy was found
+    
+    Doh.
+
+commit 225a1768822761af1caa2a73b703822d7ad2db5e
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Aug 17 13:14:24 2010 -0400
+
+    Split GRAB_MOTION and GRAB_MOVE handling
+
+commit 10ddbd220a69c1aeca5f5fcf62620a25f8c21868
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Aug 16 21:08:52 2010 -0400
+
+    Insert unexplainable cairo_device_flush() to fix terminal drawing
+
+commit da275dd09f32216e9659a0d0e69b6aaf43fd490b
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Aug 16 17:47:07 2010 -0400
+
+    Add client side pointer image handling
+
+commit f4cb20139279f325420d39eb61817b4c2b861a04
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Aug 16 17:46:25 2010 -0400
+
+    Fix a few bugs in compositor cursor handling
+
+commit c9ce03769d0f62e87d1b52caa6e830c3b5319d3c
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Aug 16 16:45:36 2010 -0400
+
+    Remove duplicate #define ARRAY_LENGTH
+
+commit 4219a407aee063460b296fbc7e3dfa2e2157edaf
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Aug 16 16:43:03 2010 -0400
+
+    Add DMZ cursor theme
+    
+    Some day we can make this parse X cursor themes
+
+commit 77a4a795596fc43e67fb9d752d565b43c30d580f
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Aug 16 16:24:19 2010 -0400
+
+    Fix warnings
+
+commit b91cd10fcb4d6c4bc3f44820ba3d34fadc453468
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Aug 16 16:17:42 2010 -0400
+
+    Move cairo-util.[ch] to clients/
+
+commit 1db21f1cf5240a12f91cebb1971fcd35a6e60903
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Aug 16 16:08:12 2010 -0400
+
+    Use different cursor images in the compositor
+
+commit 77fb1679566566d881f16d2547d8b00857dc55bc
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Aug 16 10:38:29 2010 -0400
+
+    Add protocol for setting the pointer image
+
+commit b036ad4a9ac53def327b80203ab3aaebe709744c
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 13 10:39:57 2010 -0400
+
+    Drop noisy warning
+
+commit 117d5130b1c4a70d4d057cfd56ad84530665d9bd
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Aug 11 08:56:47 2010 -0400
+
+    Schedule repaint from surface destructor
+    
+    Not just the surface_destroy protocol entry points.
+
+commit a661f263b4ff9e3b15267df461bc9197abf19934
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Aug 10 14:12:05 2010 -0400
+
+    Name libraries -client and -server for consistency
+    
+    Instead of wayland-server and wayland...
+
+commit 4fe1a3ed3a031eea5ebb5f23ab70d5c1f99d298f
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Aug 10 14:02:48 2010 -0400
+
+    Don't track globals in the client lib, just send out events
+    
+    Users of the client library must install an global handler to get access
+    to globals.
+
+commit ccb75867acd93fa41392b3d77e749e523a9cf15f
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Aug 10 10:53:44 2010 -0400
+
+    Generate the wl_*_add_listener() stubs as well
+
+commit 230ee3736143887cd43e49295460e5ea6c2d0123
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Aug 10 10:07:26 2010 -0400
+
+    Update TODO
+
+commit 640609acfc92d2602ddeb7ad336395fe77f215aa
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Aug 9 22:11:47 2010 -0400
+
+    Implement current drm auth scheme in the drm object
+
+commit 3862e43779d464fb5bd321e849185adcca9a3a6a
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Aug 9 21:25:50 2010 -0400
+
+    Generate client side marshal stubs from protocol spec
+
+commit 5fcd0aa58e243caf24f4deb080ac76e83d52213f
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Aug 9 14:43:33 2010 -0400
+
+    Introduce 'buffer' object for attaching, image cahce and cursor images
+    
+    The buffer object is created by a 'drm' object, which encapsulates the
+    buffer sharing and authentication mechanism.  Once the buffer is created
+    it can be attached to a surface.
+
+commit 5b0079aed5555ef82f86c95516e90a9a8f018324
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Aug 9 14:34:11 2010 -0400
+
+    Demarshal robustness fixes
+
+commit 6d70202f8052eec7c64730e8a788341eca4a08cb
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Aug 6 15:12:22 2010 -0400
+
+    Send out coordinates with pointer_focus event
+    
+    We can't rely on motion events happening right away, pointer_focus could
+    change because of windows coming or going etc.
+
+commit c071f4d00802ec417828b80cdea046b703cd8915
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Aug 5 17:44:31 2010 -0400
+
+    Handle failure to reference a buffer name better
+
+commit 5b75f1b218db312df0140b9f89d7c04649f554ce
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Aug 4 23:21:41 2010 -0400
+
+    Implement server side move override
+
+commit 83fc061c9cbe776de54fd335893f524793e4e92b
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Aug 4 22:44:55 2010 -0400
+
+    Introduce 'shell' object for moving and resizing surfaces in the compositor
+
+commit a1f3f60bea874d758694c827ff27fa05ff0a2910
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Aug 3 09:26:44 2010 -0400
+
+    Generate protocol types and metadata from xml
+
+commit c37c57aec7128be829fa80640d7236ca0a4b56fc
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Aug 2 12:45:38 2010 -0400
+
+    TODO: Add a few lines about removing commit request
+
+commit 723b2852d22851d0cf1dfe737f0fc375cc692f12
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jul 30 10:58:26 2010 -0400
+
+    Generate makefile dependencies with gcc
+
+commit b56cb000459ac79643b7d09ac0c6ad1cda63d0eb
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Jul 29 15:43:46 2010 -0400
+
+    Use "" when including our own header files
+
+commit fbd0fb0098f0f57f39eab7ecd71d6fb95ab141f1
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Jul 29 15:01:01 2010 -0400
+
+    memset epoll event structs to quiet valgrind
+
+commit 8f2e67725efba16abe1558b6e3775b02545f110e
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Jul 29 14:48:13 2010 -0400
+
+    x11: Dont use buffers after free()
+
+commit eba6f0d32bed67f20d575c8c61646192b20c5a67
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Jul 29 00:02:58 2010 -0400
+
+    Delete a few duplicate TODO items
+
+commit 43788b13df4d00ab5b030116e414a1dafa79d50f
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jul 28 23:50:12 2010 -0400
+
+    Update keyboard focus handler signatures
+
+commit 2c28aa59816819d2ff28a517e5f5781551a0d624
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jul 28 23:47:54 2010 -0400
+
+    Bind GLES2 API, not OpenGL
+
+commit c098d8da474df9d6ce396ec4068371a022248b16
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jul 28 23:47:16 2010 -0400
+
+    Print more info when demarshal fails
+
+commit 379b678c574eb3b0f5e995e0049e1e0c0235a638
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jul 28 22:52:28 2010 -0400
+
+    Use EGL_KHR_surfaceless_opengl
+
+commit e0f5cc25740aa39b203eb6fbfc44b73f1012e290
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jul 28 22:52:06 2010 -0400
+
+    Minor spec edits
+
+commit 808fd4186109960f687507fb326f43b3dae75078
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jul 20 17:06:19 2010 -0400
+
+    Drop coordinates from buttons press, add timestamp to events
+
+commit 747638b46be785d2e00d00cae1030518193858a7
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Jul 12 17:06:06 2010 -0400
+
+    Fix window picking order
+
+commit f252d6a98e75236a4059fb8ff6579ddad2e0e8aa
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Jul 8 20:15:10 2010 -0400
+
+    Update to use eglGetDRMDisplayMESA()
+
+commit 86e09896730314864a6fbd779e27901c5d00ea1a
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jul 7 09:51:11 2010 -0400
+
+    Hide wayland cursor when X11 compositor loses focus
+
+commit 554a131b291a33cd44d2137932f641085d49c994
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jul 7 09:37:41 2010 -0400
+
+    Update TODO list
+
+commit 3e6e7e6acb90563486f51d13ee8d44d7f02f0974
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jul 2 15:12:02 2010 -0400
+
+    Track libxkbcommon API changes
+
+commit 67a21bdf56765c15316077ab36a3a280828e606e
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jun 25 18:58:24 2010 -0400
+
+    Fix indentation
+
+commit 2d6b7c118b2af194a370fd1bf5c264499f1e37cc
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jun 25 16:51:57 2010 -0400
+
+    Fix some warnings
+
+commit 94adf6cb9e14b91cd98db0174f6a1fbe375b1184
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jun 25 16:50:05 2010 -0400
+
+    Use libxkbcommon for mapping keycodes to keysyms
+
+commit c8c3734ef9dac948d1a440e76aba17de8cd5262d
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jun 25 11:19:22 2010 -0400
+
+    Set window user data using separate function
+
+commit dcb71b62a0c78ef6f5eadd9b80f5f69848ec0739
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jun 15 17:16:35 2010 -0400
+
+    Update decoration drawing to be less cairo path happy
+
+commit 49e868cb05c428c1b9b76779b8cb50b2a918ba05
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jun 15 16:18:58 2010 -0400
+
+    Fix a few bugs in blur implementation
+
+commit 80d746f6e3113dcaa3c0a5d05795022bd40c924d
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Jun 14 23:52:50 2010 -0400
+
+    Consolidate redraw scheduling in window.c
+
+commit 0953162db87f0a060376f17e7f5a9dcadee9bca3
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Jun 14 23:22:15 2010 -0400
+
+    Fix resizing
+
+commit a946821b4fa9e6ebf380aa3f2ca76ca5e48bd27a
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Jun 14 21:03:11 2010 -0400
+
+    Propagate shader compile/link errors
+    
+    And silence the no-error case.
+
+commit bf6ceda545f92728a96f3ce8918b2658c84311a4
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Jun 14 20:25:06 2010 -0400
+
+    Implement resizing from all sides
+
+commit f9112b2de043209378a20203be883d85863400b6
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Jun 14 12:53:43 2010 -0400
+
+    Fix X button and keycodes
+    
+    Not a real fix, we're just mapping them to evdev codes for now.
+
+commit ce5325d3edf85d17254241ae7d3299ea4979900f
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Jun 14 11:54:00 2010 -0400
+
+    Add x11 backend for compositor
+    
+    This still needs all the bells and whistles from the egl-kms mesa branch,
+    but it makes it a lot easier to work on wayland.
+
+commit fc783d4071b71ce42368ec10ad010a9756910b54
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jun 11 12:56:24 2010 -0400
+
+    Split native drm part of compositor out
+
+commit 44be655b6de79957b1441b1d6f72905068560380
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jun 11 11:25:29 2010 -0400
+
+    Add discussion/notes on object cache to spec
+
+commit 54c324e1bd7cf4a3b2a5d20ded1e30dbb019b723
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Jun 10 13:53:19 2010 -0400
+
+    Drop stuff from notes that are in the spec now
+
+commit da6c6b1a382e4b8da5ad83499bd14d5a60a7ca98
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Jun 10 13:48:44 2010 -0400
+
+    Add extern "C" wrappers to public header files
+
+commit 26e6666fabbab81d61ee7209c2e676d35c120741
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Jun 10 13:43:51 2010 -0400
+
+    Add section about setting cursor images to spec
+
+commit 39f5db73e253ffa6288be50b2ea5778b0464eed3
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Jun 10 13:05:48 2010 -0400
+
+    Add drag and drop section to spec
+
+commit 478d9265f9a01b2dd1ed92d640081d3dd82f1c87
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jun 8 20:34:11 2010 -0400
+
+    Send device name at connect time
+
+commit 945ea0e743a80cc9d47e71bff6f733500e857f36
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jun 8 16:00:55 2010 -0400
+
+    configure.ac: Look for cairo-gl instead of cairo-drm
+
+commit 0b77e0914b9e404a00a4b9aa65d318f6dfc3db79
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jun 8 15:41:20 2010 -0400
+
+    Update todo
+
+commit 38bb71638388ff321cb7bdaa950880aa1cde87a5
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jun 8 15:33:55 2010 -0400
+
+    Drop surface::copy
+
+commit 0b8646bbd3d824239ef6e4ad05c98137e9c47b1c
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jun 8 15:29:14 2010 -0400
+
+    Fix surface picking
+
+commit 7824d81e0745b3f031e7db41f85ace1a8352cc5f
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jun 8 14:59:44 2010 -0400
+
+    Consolidate more code in clients/window.c
+
+commit a85fe3cf45421b513fa95d5b5b18e7f3fd886348
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jun 8 14:08:30 2010 -0400
+
+    Use cairo-gl in clients
+
+commit 2cdc18452eced84dca24bef8b61bac8bbf7c9032
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jun 8 10:44:38 2010 -0400
+
+    Fix matrix setup in surface_map()
+
+commit 6619d383112809e142e4c66f04bcb8624ee0b7a2
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Jun 7 12:23:01 2010 -0400
+
+    Use correct token for drm image format
+
+commit a7f258221a7dcc9dc7034203e20d9a50bfa8c621
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Jun 7 12:22:48 2010 -0400
+
+    Add spec document in progress
+
+commit 1292383025d2e5b9c0f54046c94f7ec1bbed2493
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sun Jun 6 22:44:12 2010 -0400
+
+    Use eglCreateImageKHR() the right way
+
+commit 6a9bbd0db24df10c95e277d88be1b4e7b5d03ce0
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sun Jun 6 22:43:55 2010 -0400
+
+    Quit if set or drop master fails
+
+commit 27803c6859d152affc9dfcc59814a353cb6f5860
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sun Jun 6 22:23:21 2010 -0400
+
+    Port compositor to GLES2
+
+commit f88ae45e41e591a47ed5729d0c4d3617a8dd5c8e
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sat Jun 5 10:17:55 2010 -0400
+
+    Make clients at least compile for now
+
+commit f0d65bb50a1551e02d2f702260691b7542529139
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jun 4 22:23:53 2010 -0400
+
+    Update udev rules to work with new udev
+
+commit a2ee67586114159b558fa2655e0746192db06579
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jun 4 22:14:28 2010 -0400
+
+    Make compositor compile and port it to new mesa extensions
+
+commit 8286302644614ca8fd8bdcfce71de0dfa26649be
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jun 4 21:52:02 2010 -0400
+
+    Rename wayland-system-compositor back to just compositor
+
+commit b2a432ef18f400dd40d5f7904e56a42b97dab780
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jun 4 21:46:50 2010 -0400
+
+    Move clients to subdirectory
+
+commit c9e208899b84895072ba171f9e6013ac28a06747
+Author: nobled <nobled@dreamwidth.org>
+Date:   Thu Mar 25 19:47:11 2010 -0400
+
+    Fix passing the height in resize_window
+    
+    Otherwise the attr_list's height value is left at 0.
+
+commit fa548856007d0326632cc4baab66b705a38249ed
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Mar 8 17:16:01 2010 -0500
+
+    Fix a couple of typos in rotation matrix
+
+commit 3afd45d49c8103878c2c1bcc689c0f1f22db45c9
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Mar 3 09:54:29 2010 -0500
+
+    Switch to using mesa EGL
+
+commit f52e03ff473a504a9a12a98b68b9b923de664fe2
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Feb 26 11:42:59 2010 -0500
+
+    Import Eric Anholts hash table implementation
+    
+    Adapted from git://people.freedesktop.org/~anholt/hash_table.
+
+commit a5db589efaedebf2b01a61baa2efc917a7e45d68
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Feb 26 10:28:44 2010 -0500
+
+    Add wl_list_for_each() and simplify some loops
+
+commit d923e9d93b95e1c902dade030ae5af2e80242878
+Author: Janusz Lewandowski <lew21@xtreeme.org>
+Date:   Sun Jan 31 03:01:26 2010 +0100
+
+    Replace cairo_drm_device_t with cairo_device_t
+
+commit a341fa016c54948af4fc76cde864f460f962f9db
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sun Jan 24 18:10:15 2010 -0500
+
+    Use FBOs instead of eagle-specific API
+
+commit 450cc8136d5c3c84407b3c621006a1fa6b092085
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Dec 21 10:36:21 2009 -0500
+
+    Require libdrm 2.4.17 for page flip API
+
+commit 2aac302bd9c2f7bc5dc751746dc09465ca8ba867
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Dec 21 10:04:53 2009 -0500
+
+    Stop using surface::copy in window
+
+commit 6a1b20102c6f1b57f3b8e830dba3abc431f656a4
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Dec 16 14:43:37 2009 -0500
+
+    window: factor out surface attachment code
+
+commit e4bf8844f63207fdc1599330443833be20849bc4
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Dec 16 13:18:12 2009 -0500
+
+    Use new page flip API
+
+commit d2311cfba73ea92f91de1e709359ac85d564e9c7
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Thu Oct 1 16:43:54 2009 -0400
+
+    Set an drop drm master on enter and leave vt
+    
+    This way we can vt switch between wayland and X.
+
+commit beed22b9a39a3f0cb793b986a01f63d4b8695590
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Wed Sep 30 23:14:19 2009 -0400
+
+    Update TODO
+
+commit 12308a49973c54e1524cdbfe4e297759faa3bd74
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Sep 28 13:08:50 2009 -0400
+
+    Add color scheme support
+
+commit 1b8b66f9387fe08dd5d0f38398f72f0d5fab2776
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Sep 21 16:00:17 2009 -0400
+
+    Light up multiple outputs when possible
+    
+    Multihead is still a little confused, but this is a first step.
+
+commit e000d8cd23a63b6d42b4055179da68b67764c963
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Sep 21 15:10:24 2009 -0400
+
+    Make connector option actually work
+
+commit 9ae561d5bd081598ff120c490cc31d7a29d84a09
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Sep 21 13:47:53 2009 -0400
+
+    Make gears track focus
+
+commit 8f2f7738466c6ad499060631af03844164c69aee
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Sep 21 13:46:45 2009 -0400
+
+    Add a simple PDF viewer
+
+commit 7d7b5dbf4d0b9e09b9ebcc9747f0cb5e77e813f1
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Sep 21 13:43:46 2009 -0400
+
+    Tweak theme a bit
+
+commit 2cbedd1874f1cc2edc1218f8fdf1c6e44c681862
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Sep 18 17:29:49 2009 -0400
+
+    Terminate on Ctrl-Alt-Backspace
+    
+    So that 10 years from now we can have a huge flamewar about it.
+
+commit 3f8f39c01934493eaf98c3e24954c82e98dccf65
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Sep 18 17:05:13 2009 -0400
+
+    Remove surfaces when destroyed, refocus pointer
+
+commit dd73dd5c81673b2da0095a2c8edce964a3453861
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Sep 18 17:04:20 2009 -0400
+
+    Select the right fb on enter_vt
+
+commit ffbc607123b73f715f1b75decfb2b494cf8516f3
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Sep 18 17:03:18 2009 -0400
+
+    Only raise surface on click, not release
+
+commit f5878facf387a95b5f4d1063491c7a308f40024e
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Sep 18 17:02:41 2009 -0400
+
+    Support running on a specified KMS connector
+
+commit b559fcbf7204179e4273433d34f4b560f9891c8a
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Sep 18 17:00:37 2009 -0400
+
+    Add function to remove surfaces from client
+
+commit f15ce9f40057495fbe6a21107020358e57aaa430
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Sep 18 16:57:55 2009 -0400
+
+    Add a hash remove implementation
+
+commit ecf65fe0411403d57d6d2418782bd741b6d9e034
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Sep 18 09:49:21 2009 -0400
+
+    Implement user_data for surface
+    
+    Not sure if we need more than one piece of user_data per surface.
+    And this should be a general feature of any proxy object.
+
+commit 59fa346ac9a5a3244af1aae0d13bd3d56f84c4b8
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Sep 18 09:47:34 2009 -0400
+
+    Export list implementation
+
+commit 9db4efaefad45b161595a97ad5b862ba2ba40f7c
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sat Sep 12 21:09:02 2009 -0400
+
+    Drop sessions for now
+
+commit 75b70cef556263e39e8061a93f259508f966cf8e
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sat Sep 12 21:08:48 2009 -0400
+
+    Fix gears rotation for high timestamp values
+
+commit 5d312db56ea7c6d03c9ae4ae6782cabba1f1c568
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sat Sep 12 16:57:02 2009 -0400
+
+    Tweak repaint timeout to 5ms after vblank
+    
+    Reduces risk of flicker, but we need something better here.
+
+commit 4adaf5c6bc3e366739d03b01b809ac8fa1dc431d
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sat Sep 12 16:42:07 2009 -0400
+
+    Fix surface copy by using FBOs
+
+commit 5fc96ff6e2e23bc6fab267392ead0594ccf88044
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sat Sep 12 15:58:48 2009 -0400
+
+    Dont use an image surface for the tmp
+    
+    It may have a incompatible stride and there's no point
+    in using a cairo surface for this.
+
+commit b0a167cdc98b94951ba82e2b6649fc74b69d35cb
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Aug 14 11:15:18 2009 -0400
+
+    Always repaint out of vsync callback.
+
+commit 45b7a3a64578a56c1e119893d9e77f74946bcea6
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Aug 14 05:53:50 2009 -0400
+
+    Terminate on Super-Backspace.
+    
+    It's almost like Ctrl-Alt-Backspace!
+
+commit 2644910241b79301add45d7b66ca38dda6b95597
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Thu May 28 20:23:31 2009 -0400
+
+    Update to track the cairo_drm_device_t rename
+
+commit cda0e0db98d19c3e95621a61c9a7f78091bb7e1a
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Wed May 27 20:07:38 2009 -0400
+
+    Update gears example to latest eagle API changes
+
+commit 01f941bfda97fba7ebbf7fabbe610f2e3d1feadd
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Wed May 27 17:47:15 2009 -0400
+
+    Update to use new eagle API and drm page flipping
+
+commit 8da19acab777ddc4a5603e14d4f5025d302bac91
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Mar 17 16:12:51 2009 -0400
+
+    Factor out session switching stuff to struct wlsc_session.
+
+commit b22382bfdc9d055196ea29fce0e90838f0ae0832
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Mar 10 23:40:35 2009 -0400
+
+    Create front buffer with eagle.
+    
+    This removes the intel dependencies from the system compositor.
+
+commit 820a87742852b52004f06626bb4f683aebcd7dca
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Mar 10 23:19:46 2009 -0400
+
+    Trim include list.
+
+commit 4fa4873928f2903dc4aeebf63236aa151b504c03
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Mar 10 23:17:00 2009 -0400
+
+    Dont crash when surfaces and clients disappear
+    
+    Set up a notification system, so we get a callback when a client and its
+    surfaces disappear and can drop references the lost surface.
+
+commit 786ca0d572bc38e32f5b79cf4971752babd0b245
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Mar 6 21:25:21 2009 -0500
+
+    Send key array when losing focus too.
+    
+    The compositor tracks this anyway, and the client will typically need
+    this to post key release events and adjust modifier status.
+
+commit da1f30a8f0dc9ffa98aa83f8ab489834c4844568
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Mar 6 21:24:01 2009 -0500
+
+    Allocate GL front buffer through eagle instead of cairo.
+
+commit 0acc6c426c278208202116855de3aef78c5027a0
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Thu Mar 5 07:49:42 2009 -0500
+
+    Renable blurred dropshadows and fix call to blur_surface().
+
+commit 99f090db3eb6e33d4ec52e451113abc6b14ed267
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Feb 23 22:37:14 2009 -0500
+
+    Update modifier state on focus in and out.
+
+commit 3c38fa0c3e55893911f85edeb0a0eaa4460e59ca
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Feb 23 22:30:29 2009 -0500
+
+    Include the currently pressed keys in keyboard focus event.
+
+commit 7e3e860031282d439e4f2da5477a6c96392ea09d
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Feb 23 21:06:05 2009 -0500
+
+    terminal: trim unused headers.
+
+commit 3c248cc9b68d8f2850178d6b3a9560ba0669283a
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Feb 22 23:01:35 2009 -0500
+
+    Paint terminal cursor hollow when focus is lost.
+
+commit 0208ed4c79ed9aa1a983d372248f781c27969082
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Feb 22 22:30:10 2009 -0500
+
+    Don't close the pty master in forkpty child.
+
+commit db6c2f3f0e355f856baa59423fa84e05269b6125
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Feb 22 21:51:24 2009 -0500
+
+    Add keyboard and pointer focus events.
+
+commit ce5a9c10960e2a4abc8da3b5514c6587d58bae82
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Feb 22 20:59:44 2009 -0500
+
+    Remove spurious unused local variable.
+
+commit 2c837483ec8f509105e3afa49ab0f6fcaeb183b0
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Feb 22 20:58:29 2009 -0500
+
+    Add new surfaces to client hash table.
+
+commit 4a35fc2563264601967de14990f1c0b3264acfe3
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Feb 22 20:57:57 2009 -0500
+
+    Handle marshalling NULL objects.
+
+commit 0555d8e6fc95f87a3c6b3d2e6aec65d93af5f270
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Feb 22 19:19:47 2009 -0500
+
+    Rename pointer_surface to sprite in wlsc_surface.
+
+commit b0b82e2eeb8d844dcb0677a96d55903012be314f
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sat Feb 21 15:42:25 2009 -0500
+
+    Draw terminal cursor.
+
+commit 0de19eb6888ce3f7d87a8478216f05385be4e99d
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Sat Feb 21 15:22:06 2009 -0500
+
+    Add an image viewer client
+
+commit 5544491240c604be04e688aa2c8490507f00f5f7
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sat Feb 21 14:31:09 2009 -0500
+
+    Move keymap to window.c
+
+commit 1eff73c75885c4ef7067e16db73df74f1404e7c7
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Feb 16 00:26:22 2009 -0500
+
+    Use chooser instead of hardcoded fbconfig in gears.c.
+
+commit 41a106815bdfe8e852c0291c501017cfb0baa688
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Feb 15 22:37:03 2009 -0500
+
+    Track drm modesetting api changes (grr).
+
+commit 7b6907f67866f993bac51516ce4352a868c7256c
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sat Feb 14 17:47:55 2009 -0500
+
+    Don't forget to transform coordinates for the grab surface.
+
+commit bb8cd938b51a60e3ff1eb1f85b5dc7401a0286de
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Feb 10 19:48:47 2009 -0500
+
+    Re-init link when removing animation.
+
+commit 1febe0108461a067bc4839ad74c8415644e785b6
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Feb 10 18:30:14 2009 -0500
+
+    Don't crash when there's no primary surface.
+
+commit 6c9c8f8923926bf0bf270c0ecf21eae8371d4778
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Feb 10 18:29:24 2009 -0500
+
+    Fix surface coordinate transformation.
+
+commit 1a208d58cb87fdfc8991f4509c8953f36ebc4e2a
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Feb 10 14:20:26 2009 -0500
+
+    Add surface animation framework, implement fullscreen surface switcher.
+
+commit 03fd86b042f509ed912f3b458775c36e35e3351d
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Feb 10 14:15:44 2009 -0500
+
+    Read connection events in screenshot.c
+
+commit 5c8c3286ea6fe5590d74c946e765790a1f791f9b
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Feb 9 15:17:46 2009 -0500
+
+    Add a per-surface matrix.
+
+commit 57b751b0c32d4c71e050ec2edaca5136fd6b7095
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Jan 1 23:44:10 2001 -0500
+
+    Fix flower client.
+
+commit ab909aedac076926ebc5d752c9739cbe6ccf62da
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Jan 1 22:24:24 2001 -0500
+
+    Quit compositor on eject key press.
+
+commit fdec236609ec1130b5f4a4192d22ed72fc718f77
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Jan 1 22:23:51 2001 -0500
+
+    Switch to using a projective transformation.
+
+commit f75f0e80b78b5871fb26364f8f445dff08b42944
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Thu Feb 5 22:59:16 2009 -0500
+
+    Add a crazy rambling style TODO file.
+
+commit 43c28eee32ae9383d3056e45a8f824710ce4615d
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Jan 26 23:42:46 2009 -0500
+
+    Add a toy-display object that caches state.
+    
+    This will be GdkDisplay for GTK+ on Wayland etc.  This restores
+    the terminal fullscreen mode.
+
+commit 8e438625ae1599969d6a6dd29fc4e1c05f5763cc
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Jan 26 23:07:00 2009 -0500
+
+    Finish egl_* to wlsc_* rename.
+
+commit c0b44328d25900678bdff9b68a6760afafde5a6d
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Jan 26 22:54:40 2009 -0500
+
+    Use glReadPixels() for the screen shooter
+    
+    "Those who don't understand OpenGL are bound to reimplement it badly..."
+
+commit f13eb147117be427858285dcbb06757c9160c0cd
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Jan 26 21:38:14 2009 -0500
+
+    Depend on udev 136 and clean up some code.
+
+commit b14852d7a29037d6001480acce99a41c8d794e38
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Jan 26 21:37:29 2009 -0500
+
+    Only tag the card0 device with seat info for now.
+
+commit 8012f32978b9b3d7ca162d971be48f6d3c0aa891
+Author: Kristian Høgsberg <krh@sasori.boston.redhat.com>
+Date:   Fri Jan 16 08:13:00 2009 -0500
+
+    Drop libdrm CFLAGS where no longer necessary.
+
+commit 0ac16f056dc32235a54d1376cf8018d080506813
+Author: Kristian Høgsberg <krh@sasori.boston.redhat.com>
+Date:   Thu Jan 15 11:37:43 2009 -0500
+
+    Switch to cairo-drm, drop struct buffer hacks.
+
+commit 32692d2f48693ed61957f3252307ca26cdf50a18
+Author: Kristian Høgsberg <krh@sasori.boston.redhat.com>
+Date:   Fri Jan 16 07:47:28 2009 -0500
+
+    Fix udev rules install rule.
+
+commit e68d24c559cdc3043a63f82bd7d81fc28e860b8e
+Author: Kristian Høgsberg <krh@sasori.boston.redhat.com>
+Date:   Thu Jan 15 11:44:35 2009 -0500
+
+    Initialize output position properly.
+
+commit 3b94998f6ac3c7fdace3a7369beb555dbf81f75c
+Author: Kristian Høgsberg <krh@sasori.boston.redhat.com>
+Date:   Thu Jan 15 12:45:49 2009 -0500
+
+    Randomize flower offset again.
+
+commit aa68fe346a01c394c90e246dd647e6d0947850f8
+Author: Kristian Høgsberg <krh@sasori.boston.redhat.com>
+Date:   Thu Jan 15 12:50:21 2009 -0500
+
+    Update to track udev API change in eagle.
+
+commit ff52fbaaf87ff75bfdcb9c2766ba2f76f2d9bab2
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Wed Dec 31 16:24:16 2008 -0500
+
+    Add wayland udev rules file.
+
+commit 81ce09a6c4226221c4f6f607b19d85827dff2244
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Wed Dec 31 16:18:42 2008 -0500
+
+    Split out per-output state, use libudev for enumerating hardware.
+    
+    This paves the way for proper multi-head support and removes more
+    hardcoded i965 defaults by using udev to discover output devices
+    and their PCI IDs.
+
+commit 890bc057631428e542510336c770427837a0d27e
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Dec 30 14:31:33 2008 -0500
+
+    Use libudev for enumerating input devices.
+
+commit 94448c0ad7fc452aa363f74021b7c3d87f20a462
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Dec 30 11:03:33 2008 -0500
+
+    Add listener interfaces for output and input_device objects.
+
+commit e787bc60e50da65204e53b7587fca05d011e38ba
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Dec 30 10:53:20 2008 -0500
+
+    Use a more generic glob for input devices.
+
+commit b3131d9268ce68062c7410a9b672539026000f75
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Wed Dec 24 19:30:25 2008 -0500
+
+    Add client side demarshalling for events.
+    
+    This also consolidates the marshalling code in connection.c and
+    uses the same functions in the server and client for marshalling.
+
+commit fabd4395ba309850403f94a459c3a7298351dd0a
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Dec 22 18:06:49 2008 -0500
+
+    Track objects client side using a hash too.
+    
+    This leads up to using the demarshal machinery for decoding events
+    in the client library.
+
+commit 12ea62e2112c754d62113e0656b223fbdbe351dd
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Dec 22 16:37:07 2008 -0500
+
+    Add a proxy for the server side output object.
+
+commit 0395f30e652bd32234942206bce15e7e6f3a9fb1
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Dec 22 12:14:50 2008 -0500
+
+    Add a fullscreen mode to the terminal.
+
+commit ee02ca6fa489a99ddec5d1542d51cce9948d39a9
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Dec 21 23:37:12 2008 -0500
+
+    Add hook to allow globals to send cold-plug events to new clients.
+    
+    This lets us boot strap the client side state cache.  This commit also adds the first user
+    of this feature, an output object that represents the current output.  Very simple
+    at this point, but will grow to something more like RandR 1.2.
+
+commit 8049cbb88a4d2c93cdee9188eeb1d219aebcd343
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Dec 21 22:50:32 2008 -0500
+
+    Also check for interface version wl_display_get_object_id().
+
+commit 97079ad52c313d4b622110cae978ee7c2392b714
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Dec 21 22:45:33 2008 -0500
+
+    Send client id range as an event.
+    
+    This also makes the server send the event again when the client is
+    about to exhaust its current client range.
+
+commit fb6d68ddbe76d2cf716bf6075e6e1afe2caaea1e
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Dec 21 21:54:51 2008 -0500
+
+    Represent event and method metadata with struct wl_message.
+
+commit fe831a749421470c6c1c8e842a785d7fc3c4ac9b
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Dec 21 21:50:23 2008 -0500
+
+    Move protocol metadata to wayland-protocol.[ch].
+    
+    This lets us share the metadata between server and client and we
+    can now use a va_arg marshalling function for sending client
+    requets.
+
+commit bf967b469f21f915931853d53a3a7108054cf29e
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Dec 21 20:25:16 2008 -0500
+
+    Advertise globals using a new display event.
+
+commit 0ab262421ae486d4087dc693c530de1b750fd510
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Dec 21 19:33:09 2008 -0500
+
+    Consolidate tty setup and fix a few spacing issues.
+
+commit e3ef3e59f82ab8224722279f40359a116b10d479
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Dec 21 19:30:01 2008 -0500
+
+    Oops, fix compilation.
+
+commit 7e972a5b18883befec4f987b986eafc9cb5cc0a0
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Dec 21 17:26:00 2008 -0500
+
+    Move coordinate transformation to pick_surface().
+
+commit e96dcb8f93565fd6d4ef49ccc6e03e9e70ed3ef6
+Author: Ray Strode <rstrode@redhat.com>
+Date:   Sat Dec 20 02:00:49 2008 -0500
+
+    Only forward events to compositor if on active VT
+    
+    Previously, we'd send things like the user's password
+    to the active irc window when they logged into a getty
+    running on a different tty.
+
+commit 33500890b32f33e1bf95ec8c9460079232a3f7e3
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Dec 19 17:37:49 2008 -0500
+
+    Handle more control characters in terminal.
+
+commit 966aa112e7851625f764718e3d45c46d246760fc
+Author: Ray Strode <rstrode@redhat.com>
+Date:   Fri Dec 19 14:28:02 2008 -0500
+
+    Ignore tty input
+    
+    Previously, ctrl-c would kill wayland and input like
+    passwords and commands would get typed into the terminal
+    under the scenes.
+
+commit 2c0e56b2d5d31f3665b6af4d6ea12fa5c66fc067
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Dec 19 13:54:40 2008 -0500
+
+    Drop the silly overlay hack.
+
+commit 82f6e8a2efcf6039f0ada8dfa3828d203c0b797d
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Dec 19 13:47:53 2008 -0500
+
+    Rename egl-compositor to wayland-system-compositor.
+    
+    The wayland-system-compositor is the top-level compositor.  X sessions
+    or nested Wayland sessions will run as clients of the system compositor.
+    The system compositor is licensed under the GPL.
+
+commit 15d0f8b236efde6db3211182bdc45b10bdf61d2d
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Dec 19 12:13:42 2008 -0500
+
+    Use the new eagle config chooser for picking the config.
+
+commit 112c0bee18b36786a5154c4090120d59bf830beb
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Dec 19 11:17:38 2008 -0500
+
+    Remove visual debug prints.
+
+commit 2c875bd31e510391ab6e7d21f35b7f39af08a132
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Dec 19 10:34:02 2008 -0500
+
+    Cache modesetting data and just do drmModeSetCrtc on vt enter.
+
+commit 38ccd3a23e51dfa06064e438619e7eef65564687
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Dec 19 10:15:35 2008 -0500
+
+    Do vt ioctl on the right fd.
+
+commit 19ad6a9db3ab699cdb7cee3bd0232ccb6d0e1e0e
+Author: Ray Strode <rstrode@redhat.com>
+Date:   Fri Dec 19 01:45:41 2008 -0500
+
+    Restore framebuffer when switching back to VT
+    
+    The kernel currently automatically redirects
+    output to the kernel framebuffer when switching
+    VTs away from wayland.  It doesn't restore
+    output back to wayland's fb when coming back
+    to the VT.  This patch works around that issue.
+
+commit fe57347cb9b1653baf62db76804fa3d8d84be720
+Author: Ray Strode <rstrode@redhat.com>
+Date:   Fri Dec 19 00:22:18 2008 -0500
+
+    Add new event loop api for watching signals
+    
+    This will provide us with a nice, safe mechanism
+    for getting notification of VT changes.
+
+commit 90e701df0898538ca06ad4327697a4e55644b4d4
+Author: Ray Strode <rstrode@redhat.com>
+Date:   Thu Dec 18 23:05:43 2008 -0500
+
+    Force pointer to stay on screen.
+    
+    Without this change it's really easy to
+    accidentally send the pointer flying and not
+    be able to get it back.
+
+commit 2d4219e54222f7bd5fd2b89f03ba5a0701b9f3e6
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Thu Dec 18 21:40:03 2008 -0500
+
+    Scale background pixbuf when loading.
+    
+    This lets us avoid hitting the texture limit for some backgrounds.
+
+commit 18fd33c9bb4708f3009e94609e5d9b03b93f93a4
+Author: Ray Strode <rstrode@redhat.com>
+Date:   Thu Dec 18 21:05:20 2008 -0500
+
+    Fix rgb byte order for GdkPixbuf backgrounds.
+
+commit e10b8285628b0265b53486e16c1fa5ebd451ecd2
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Thu Dec 18 19:58:44 2008 -0500
+
+    Remember to handle rgb_visual case in surface_attach.
+
+commit de31d5ca6f2650da3c4e8c45acdcee73ed655602
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Thu Dec 18 17:55:33 2008 -0500
+
+    Add preliminary visual support.
+
+commit c8c5d5872d3e12896eeb70c48883143a50a1cdb7
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Thu Dec 18 14:50:08 2008 -0500
+
+    Set terminal type to vt100.
+
+commit b7037a02f02069e207a633ec6f00b805ebaf17eb
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Thu Dec 18 13:18:02 2008 -0500
+
+    Don't pin front buffer, kernel modesetting takes care of that now.
+
+commit 5b7f832eabba6b9fa04a5b433a7fd77abeba7165
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Thu Dec 18 12:08:19 2008 -0500
+
+    Fall back to solid color background if not image is found.
+
+commit d2412e2c2ea463189550d5f7a5d95a7aab13a502
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Dec 15 20:35:24 2008 -0500
+
+    Redesign the compositor / server interface.
+    
+    This lets the compositor directly provide the implementation of the RMI
+    objects for the surface object and a new compositor object.  We avoid the
+    manual forwarding of requests into the compositor and the clumsy compositor
+    interface struct.
+
+commit 0ea4710b3dcf1fcfd596a1d68e0ab38e3657bc5f
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Dec 14 15:53:13 2008 -0500
+
+    Use gdk-pixbuf for saving the screenshot.
+
+commit 3f16956c067e825109d1e2ce925fae3ba7040207
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Dec 14 15:52:34 2008 -0500
+
+    Initialize count to 0 in wl_list_length().
+    
+    Not sure how this ever really worked before...
+
+commit 64949978f47607ea356b4c4e6c7a3379f1266ed7
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Dec 12 14:48:46 2008 -0500
+
+    Fix default input device path.
+
+commit a7700c8ff1b0ec5b06048092bb16f0531ec89e08
+Author: Kristian Høgsberg <krh@hinata.localdomain>
+Date:   Fri Dec 12 13:48:30 2008 -0500
+
+    Handle per-device keyboard focus.
+
+commit f0c7b2083ac0654dba6508e8ddd5de1a431a95e1
+Author: Kristian Høgsberg <krh@hinata.localdomain>
+Date:   Fri Dec 12 13:39:03 2008 -0500
+
+    Don't close uninitialized fd, check forkpty error.
+
+commit c492b482d02e04ca2bd0feaf7c14d29c85b245a3
+Author: Kristian Høgsberg <krh@hinata.localdomain>
+Date:   Fri Dec 12 12:00:02 2008 -0500
+
+    Make multi-pointer work.
+    
+    This also add command line parsing as a way to specify the input
+    device files to use.
+
+commit d6531261de0c8b44e84f413a152477ae5d709f7e
+Author: Kristian Høgsberg <krh@hinata.localdomain>
+Date:   Fri Dec 12 11:06:18 2008 -0500
+
+    Add option parsing using GOption.
+
+commit 864c468b4232c9529fc90cf76f5686657bab9c27
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Dec 12 11:05:17 2008 -0500
+
+    Make sure we initialize object hash.
+    
+    This patch also move the hash implementation details to wayland-util.c.
+
+commit 997e71eb1e6322fb91b0c8be2fe7e29c68b8b4df
+Author: Kristian Høgsberg <krh@hinata.localdomain>
+Date:   Fri Dec 12 10:33:04 2008 -0500
+
+    Use the screen size for sizing the background.
+
+commit 9e4c76b5300c5eee252c5ad0251411ce05a983dd
+Author: Kristian Høgsberg <krh@hinata.localdomain>
+Date:   Fri Dec 12 10:26:04 2008 -0500
+
+    Pass -fPIC when compiling shared libraries.
+
+commit aad70ba986629fac106b567b78b39f6a2caa1279
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Dec 12 09:53:27 2008 -0500
+
+    Forgot to add egl-compositor.h.
+
+commit 29573bc56985ea8256c7c042f6aebc209a13b386
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Thu Dec 11 23:27:27 2008 -0500
+
+    Implement passive grabs on button clicks.
+
+commit 5ee1a60f1a03b3176332f6d4f27744d0dfdb0601
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Thu Dec 11 23:18:45 2008 -0500
+
+    Rewrite input event delivery path.
+    
+    Instead of having the input driver push the events into the core server,
+    only to have the server call back out to the compositor hooks, the driver now
+    just calls the compositor directly.  The input drivers are always dependent on
+    the type of compositor anyway so there was no point in passing the events
+    through the server.  Now the server is only involved when it's time to actually
+    send the events to the clients.
+
+commit d1c58d60f6c212c3de1f2c214745ef4db9623c7e
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Wed Dec 10 17:31:44 2008 -0500
+
+    Fix signature for pointer motion event.
+
+commit b96785ca612b60ff0c90dd225852c99223d965a1
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Wed Dec 10 17:26:28 2008 -0500
+
+    Drop glx-compositor for now.
+    
+    Might want to resurrect this later, but for now, let's not try to
+    drag it along.
+
+commit 4a8767bbb7392515add63d38111a90cc70dd30cd
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Wed Dec 10 13:44:23 2008 -0500
+
+    Install libraries plus headers and add pkg-config files.
+
+commit 7fdff04cdc92f9db58f11c19e93af7e8ef68f62c
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Wed Dec 10 13:25:00 2008 -0500
+
+    Only send key events to toplevel surface.
+
+commit 5a75c90d0153eb8f57993d17a3a0884ed8eb6907
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Wed Dec 10 13:16:50 2008 -0500
+
+    Feed button events through compositor.
+    
+    This also generalizes the code to send events to a surface a bit.
+
+commit 715a081cf48b1d448cf2535309b7727f4b868308
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Wed Dec 10 10:42:04 2008 -0500
+
+    Feed motion events through compositor.
+    
+    This lets us pass events only to the window that we're mousing over
+    and we can now transform input events back to the window coordinate space.
+
+commit 201a904889a4c12e9961df7967ce4ee21b52bf5a
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Wed Dec 10 00:40:50 2008 -0500
+
+    Drop surface iterator API, just track surfaces in the compositor.
+
+commit eac149ad067370e1234740b9ee41dd29c77d1cc0
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Wed Dec 10 00:24:18 2008 -0500
+
+    Pass button clicks through to compositor.
+    
+    This lets us handle raising windows, which is useful.
+
+commit 98fed0fb8477b68e7200aaa4e5959adb57065c66
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Dec 9 13:35:35 2008 -0500
+
+    Use bilinear filtering.
+
+commit fdea72a078f15740a86ea48ad2d479d29c68370a
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Dec 9 10:47:36 2008 -0500
+
+    Handle interrupted system calls in connection code.
+
+commit dbd54640f4308e2f6f1c73788de026f1d80c3b0f
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Dec 8 22:22:25 2008 -0500
+
+    Implement a bunch of escape codes.
+    
+    Bash command line editing and gdb is pretty much there.  Emacs, vi and even less
+    need more work.
+
+commit 73f4e760a2f188dc17ce750b8521f231d49c5733
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Dec 8 14:07:33 2008 -0500
+
+    Fix wl_method for screenshooter.
+
+commit 6e0a2f8953f10b1cd7e8c57203beaff4664fbab3
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Dec 8 14:06:56 2008 -0500
+
+    Tweak terminal font color.
+
+commit 9f88b185a0cb8ed78eff49125d10a45aa0a4f3f4
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Dec 8 13:52:08 2008 -0500
+
+    Don't forget to initialize overlay position.
+
+commit 221067654c70a2fde12e72dd5df54d32d3431653
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Dec 8 13:50:07 2008 -0500
+
+    Let clients override the suggested size on resize.
+    
+    This lets gears enforce a square aspect ration and minimum size of 300x300
+    and the terminal now properly resizes in steps of character cells.
+
+commit 1584c57edcbeb34a628afe12fd6e527fda8ec486
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Dec 8 12:59:37 2008 -0500
+
+    Snap terminal size to an integer number of character cells.
+
+commit 17809b1e4373ea9e3635d224c5ef1efda6889cfb
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Dec 8 12:20:40 2008 -0500
+
+    Handle \e[J and \e[H so we can clear the terminal.
+
+commit 721f09f187c8a60e1084d8d88b423c4910048a20
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Dec 8 11:13:26 2008 -0500
+
+    Make sure we don't miss queue redraws between commit and ack.
+
+commit c47303f2d23884bf7e76200f7582ac2f50d966d6
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Dec 8 09:57:08 2008 -0500
+
+    Destroy back buffer in acknowledge handler.
+
+commit 7a8431f67098d46bd74f6147635e17b0ed9c2e21
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Dec 8 09:39:22 2008 -0500
+
+    Only update gears angle in frame handler.
+
+commit 0d77fd484c4114e4f60d1c4389aaa1c4d0a0a5e7
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Dec 8 00:23:55 2008 -0500
+
+    Add key map for ctrl modifier as well.
+
+commit b29415ee6d23c83f35b3a0557032996382a8016c
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Dec 8 00:16:39 2008 -0500
+
+    Update tail pointer correctly so scrolling works.
+
+commit f04e838d4afd1edde10552e4ade91780b0d52123
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Dec 8 00:07:49 2008 -0500
+
+    Skip escape codes for now.
+
+commit 6e83d58153c0bd6efd268dc5d76ee0f87fd3afb1
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Dec 8 00:01:36 2008 -0500
+
+    Add keyboard input to terminal.
+
+commit 269d6e3daf70e13c2e774c64decb7c33a1420b47
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Dec 7 23:17:31 2008 -0500
+
+    Run command in a pty and feed output to wayland terminal.
+
+commit 44e3c5e1ad795a4405f8f0147fddd3afce34b518
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Dec 7 21:51:58 2008 -0500
+
+    Add some text contents to terminal.
+
+commit 0c4457f0c287aace452880674db8b3785b819235
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Dec 7 19:59:11 2008 -0500
+
+    Refactor window logic into reusable parts, add a new terminal application.
+    
+    The gears code is moved into a new file gearc.c and the window decoration
+    and management code stays in window.c.  A new application 'terminal' is the
+    second user of the windowing code, but doesn't do anything useful yet.
+
+commit dc0f355f0ace3538dfea541907aca53ec2ff9590
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Dec 7 15:22:22 2008 -0500
+
+    Fix API to always include socket name length.
+
+commit cb703161057aeb3f4de0faed9f8ff5005efa71a3
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Dec 5 11:20:30 2008 -0500
+
+    Update .gitignore.
+
+commit 841883b43c88538401295da776344c9d0e6e766b
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Dec 5 11:19:56 2008 -0500
+
+    Fail if we can't create the compositor.
+
+commit 122912c69bb09e0756a836b638182a968659f69c
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Dec 5 11:13:50 2008 -0500
+
+    Make the wayland server a library used by the compositors.
+
+commit 87e0a384da42dea76f548a82f03899cf6ca915fc
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Dec 5 10:38:42 2008 -0500
+
+    Use type strings for method and event signatures.
+
+commit d4de54efe73024da52949528ab265ace83da26b8
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Thu Dec 4 22:48:50 2008 -0500
+
+    Use autoconf instead of $(shell ...) in the Makefile.
+
+commit b820b82cad2a657935f445b1120f3ab55e80ea7e
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Thu Dec 4 18:40:14 2008 -0500
+
+    Add note about how clients could embed other applications.
+
+commit e2ce43a9bebce49836abfa8b8893bd8dda7fee26
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Dec 2 18:28:23 2008 -0500
+
+    Fix namespace convention for glib source.
+
+commit 35052568d083ffb5db191993c9233f9a2cf4180b
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Dec 2 15:38:53 2008 -0500
+
+    Exit if load_compositor() fails.
+
+commit d91e0497358447370a1fe06c7eb50d11d234b45c
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Dec 2 15:18:38 2008 -0500
+
+    Update .gitignore.
+
+commit fcb6cbd5d02e56c6230338dd1f58941d62fbb4c1
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Dec 2 15:17:28 2008 -0500
+
+    Drop early, obsolete compositor.
+
+commit 3620295d17f43b61070916e1e44a67f4df855dac
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Dec 2 15:16:11 2008 -0500
+
+    Drop unused clients, pointer and window.
+
+commit ffd710e65337936f219ec174e60390d57d1a2bac
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Dec 2 15:15:01 2008 -0500
+
+    Put Wayland under the MIT license.
+
+commit c2b633e6c2c24722ed58f7e04db8cb3c9e2fa95e
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Nov 28 19:12:45 2008 -0500
+
+    Add wl_client_marshal() for sending events.
+
+commit 4a29890da774c5724921ee1018fa5ae7852abb81
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Nov 28 18:35:25 2008 -0500
+
+    Generalize event loop a bit and pull in the timerfd stuff.
+
+commit fbdbbdc153bf7f6ed22f1b9cb0be73b66e87a3e7
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Nov 28 17:06:06 2008 -0500
+
+    Finally implement the commit/ack/frame protocol and improve repaint loop.
+    
+    This implements the commit/ack/frame protocol that let clients batch up
+    a series of requests and then commit them atomically using the commit request.
+    The commit requests generats two following events: the acknowledge event,
+    which lets the client know that the server has received the request and
+    which frame the rendering has been scheduled for.  At this point the client
+    can start rendering the next frame or free up temporary buffers.  Then when
+    the compositor finally makes the newly composited frame visible on screen
+    the server sends a frame event, which contains the number of the frame that
+    was presented and the time when it happened.
+    
+    The window and flower clients have been updated to use these two events in
+    their main loops and everything now updates per frame.  The EGL compositor
+    repaint loop has been tweaked to delay the compositing of the screen to
+    10ms after last swapbuffer completed so as to allow processing as many
+    requests as possible before blocking on the next vertical retrace.
+
+commit 44f36e3585cf7bb1ba8e73febabb7facf5cd6151
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Wed Nov 26 12:57:31 2008 -0500
+
+    Make ack event signal that the requests have been composited.
+
+commit f3723fe79e7bafcd663160ee8f7798faf9a2c2f9
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Nov 25 23:18:29 2008 -0500
+
+    Add .gitignore.
+
+commit 0ee84083a2403925a265c2c6744ce2bac558ecf2
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Nov 25 23:16:31 2008 -0500
+
+    Convert touchpad absolute events to relative.
+
+commit 18fb78307b9609e687bd6b7d6040302c4fbb5e7e
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Nov 25 22:53:28 2008 -0500
+
+    Use struct buffer from cairo-util.c in flower.c.
+
+commit 73c305851d692a28359c5858fe5592274b75a094
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Nov 25 22:45:46 2008 -0500
+
+    Make overlay animation actually stop.
+
+commit 4097923a644688e0a7bfffbe76c2e8af098e26e5
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Nov 25 22:40:39 2008 -0500
+
+    Add commit request + ack event to wayland core.
+    
+    Use in window.c to manage life cycle of buffer correctly.
+
+commit 961a04cef08f6475ec82df5608b28a470832b096
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Nov 25 22:38:56 2008 -0500
+
+    Correct pointer hotspot location.
+
+commit ffb7406eaa955e104ab9993a4d923152ce205d31
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Nov 25 18:10:39 2008 -0500
+
+    Add different type of overlay animation.
+
+commit 5c1e6ecab41d94948ab30d482f9b921e44a5bfd6
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Nov 25 13:51:36 2008 -0500
+
+    Tweak overlay animation a bit.
+
+commit 443853cbdab72f955a27abfba58eda9bb8f1008e
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Nov 25 12:12:05 2008 -0500
+
+    Pick a config instead of hard coding one.
+
+commit bf9541ffa34b1bdd94157bae47c4edc4aabecb69
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Nov 25 12:10:09 2008 -0500
+
+    Allocate and set mode in egl-compositor.
+    
+    Pass the front buffer name to eglCreateSurfaceForName to create the
+    fullscreen EGLSurface.
+
+commit f53f4bbd528be246d4517a8cd7371857e583b64d
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Nov 24 11:32:43 2008 -0500
+
+    Quit screenshooter when idle.
+
+commit 9af92b380c419d1447fcb79d952e4f643af98d3c
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Nov 24 01:12:46 2008 -0500
+
+    Animate overlay on/off.
+
+commit cddc0ad502a03040916b47fc75647cd05a9b5e18
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Nov 24 00:31:49 2008 -0500
+
+    Add keyboard input, move input device creation to compositor.
+
+commit ec8ef722e90338c631734d1a1f72b06b6678de6b
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Nov 24 00:13:13 2008 -0500
+
+    Add missing breaks in evdev switch.
+
+commit a5a2c8e5dbba5cae6e1997f2b4db6cc1aee6575e
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Nov 24 00:12:20 2008 -0500
+
+    Rename input.c to evdev.c.
+
+commit 1e4b86af1ae16b9eeb4f952f2735b65536bcdc7c
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Nov 23 23:41:08 2008 -0500
+
+    Expose screenshooting as an interface, drop SIGUSR hack.
+    
+    This pulls in a bit of extra infrastructure for discovering adertised objects on the
+    client side.
+
+commit 14fcff77265bbdf9893925c993c10d52c178e566
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Nov 23 19:10:23 2008 -0500
+
+    Generalize the object advertising mechanism.
+
+commit 548798266ebecea12bdd01869c0d09476e9ce81f
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Nov 23 17:07:32 2008 -0500
+
+    Add an overlay type window in the compositor.
+
+commit aa5b5bed73d1f12ebc5ab0a7885abda711b75122
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Nov 21 21:31:54 2008 -0500
+
+    Load and draw background in compositor.
+
+commit 4c9f2c9b1a8b7807512380378730bdd984638cc9
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Nov 21 19:25:44 2008 -0500
+
+    Move pointer drawing into compositor.
+
+commit e9d550bdd4627512f00d30dc80257ce8d93b586a
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Wed Nov 19 00:49:39 2008 -0500
+
+    Optimize blur further, resize gears with window.
+
+commit 29590034f47f1a532f161e0d2024bab9483390a3
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Nov 17 23:33:19 2008 -0500
+
+    Remove redundant glFlush().
+
+commit 873302649a3374dfae65aae932a6a12f81c09940
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Nov 17 22:23:55 2008 -0500
+
+    Optimize blur a bit more.
+
+commit 8c304f6d9ace435817506b18b228b62787b1ce15
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Nov 10 10:46:53 2008 -0500
+
+    A couple more theme tweaks.
+
+commit 6e635f3472788639b881d0a4c7c61dc5a89b7866
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Nov 9 09:15:46 2008 -0500
+
+    Get corner radius right for inner bevel.
+
+commit 8d7ca6be21889297adb0e27b4743b510320f1b20
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Nov 9 00:22:51 2008 -0500
+
+    Add quick screenshot hack.
+
+commit 10bdd298b836f9859b8bc5a1645bf0ee48e8a252
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sat Nov 8 23:27:27 2008 -0500
+
+    Optimize window blur calculation.
+
+commit 2f2cfae227d0ea9c8f811b257ca1190bfcc3d845
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sat Nov 8 22:46:30 2008 -0500
+
+    Factor out common cairo code, add blur function.
+
+commit e4feb563168fe32877c6628600959e106f5a266b
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sat Nov 8 18:53:37 2008 -0500
+
+    Make window prettier again.
+
+commit 30749426dc7c2b2bb27a877ebac45746b2382281
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sat Nov 8 16:01:59 2008 -0500
+
+    Tweak pointer image a bit.
+
+commit b7a01928beda1f9ada42e6a32c5d8ab0400d1069
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sat Nov 8 15:39:41 2008 -0500
+
+    Add prototypes warnings, use -fvisibility.
+
+commit f099fd24a364e8ee7a2b9a5d7277e0dfd481bfe4
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sat Nov 8 15:30:41 2008 -0500
+
+    Use the eagle pkg-config file instead of assuming ../eagle.
+
+commit 78231c8dd0f16e2a64e16691b1137834062e78d9
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sat Nov 8 15:06:01 2008 -0500
+
+    Implement surface copy request, use it for egl gears.
+
+commit 1cbaa6abacfef875ace3d35166f8dc04f4347601
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Nov 7 15:54:48 2008 -0500
+
+    Use glib main loop for all clients.
+
+commit fb59084fbf03b738276579e121defcc6a586301d
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Nov 7 14:27:23 2008 -0500
+
+    Add glib main loop integration, use it in flower client.
+
+commit 7f77bd8fbedee8a8a1fbb26776084ccaffc2a087
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Fri Nov 7 08:39:37 2008 -0500
+
+    Add copy and damage surface requests.
+
+commit 5503bf82c44b2da26c27582b3d4400d7fd8d23c3
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Thu Nov 6 10:38:17 2008 -0500
+
+    dlopen the compositor, add a glx compositor.
+
+commit 61ba898b7358ea0cdc9e933e6f7ddb74de2113e9
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Wed Nov 5 10:37:20 2008 -0500
+
+    README: Add link to google group.
+
+commit 56f3c71f8c5c153b75fb061333c7a9bacdd388a5
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Wed Nov 5 07:55:45 2008 -0500
+
+    Add a FIXME for when we have a working fbconfig chooser.
+
+commit b8bf19b7a9f3a9ea02cfd0c57986d589b40a81d5
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Wed Nov 5 07:38:46 2008 -0500
+
+    Clear depth buffer, but only depth buffer for gears.
+
+commit 8a9cda8cfb25d1dc41ed3864ee0b9ee637495b24
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Nov 3 15:31:30 2008 -0500
+
+    Add the gears from glxgears.
+
+commit 33a52bd07d28853dbdc19a1426be45f17e573c6b
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Nov 3 15:31:30 2008 -0500
+
+    Add README for the adventurous, allow evdev override from getenv().
+
+commit 35370f80735d2a8926aadd081b2ca9a0367cc557
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Nov 3 11:42:01 2008 -0500
+
+    Redraw window in idle handler.
+
+commit 2d9cd1ee5146fab1ed2aaedaea9a6408c9b78678
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Nov 3 08:09:34 2008 -0500
+
+    Use eglBindTexImage instead of copying texture data.
+
+commit ca1d1f65d0b76224a158f01751ff34973e8092e7
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Nov 3 06:59:52 2008 -0500
+
+    Make window client a little more interesting.
+
+commit 3f59e82c20e2bcbf663701fb1abfb6132e6d04ea
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Nov 3 06:35:46 2008 -0500
+
+    Use GL_ONE for the source in glBendFunc instead of pre-unmultiplying.
+    
+    Eventually we need to allow both pre-multiplied alpha and not, but for now default to premultiplied.
+
+commit 61017b190a5c46e052f02a49c094e42316f2e511
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Nov 2 18:51:48 2008 -0500
+
+    Add a window client, first implementation of surface resizing.
+
+commit 2a20d83fdb8a9513e3ced35712e62826eac431be
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Nov 2 17:22:39 2008 -0500
+
+    Always poll on display fd so we only read when there's data.
+
+commit 6b5e7626f5458864726712cf7e49a70fa421f934
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Nov 2 17:11:51 2008 -0500
+
+    Move background drawing to a client.
+
+commit 1b2f4390f54ed9f5ed0f1440c2fd620ec06e1590
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Nov 2 15:50:55 2008 -0500
+
+    Unpremultiply cairo surface data.
+
+commit d3fa34ca298e734d4e7f14a7023848ff13360109
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Nov 2 15:28:22 2008 -0500
+
+    Don't use poll timeout for timing animation.
+    
+    Receiving events breaks out of the poll and resets the time out.
+    Effectively, this blocks the animation when the client receives events.
+    As a quick fix, use timerfd for timing the animation.
+
+commit 5a27f3e6a787be874e0415eda184b0ee01b95a39
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Nov 2 10:55:25 2008 -0500
+
+    Add a new client that draws a pointer.
+
+commit e120a4b1ee1ea7e153280340f4f68ce61fcedd5c
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Nov 2 10:55:25 2008 -0500
+
+    Rename client, prepare Makefile for more clients.
+
+commit f9bc795a7d72c0877119b3564f865af579603bde
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Nov 2 10:12:29 2008 -0500
+
+    Add crude input device support.
+    
+    Just pointer motion and button clicks for now, broadcast to all clients.
+
+commit 362a34ed898d62558c8cd0afc8a1a93f3fd2aa4c
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sat Nov 1 17:25:33 2008 -0400
+
+    Drop unused struct definition.
+
+commit c508d93be27bdaf53fbb656e10a1d2ec15b94431
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Oct 13 22:52:42 2008 -0400
+
+    Update for eagle changes.
+
+commit 23fceb1cf3ca0840a49e80a084d1299d0cf4520b
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Mon Oct 13 22:51:56 2008 -0400
+
+    Add note about fullscreen surfaces, misc edits.
+
+commit d311e8a06114d82a8ef9d8cee1903dd5cb4ad844
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Oct 12 22:58:40 2008 -0400
+
+    Make clients graphics use lighter random colors.
+
+commit 48a33baec7b617b63efa15fe16892b3c76f8c89e
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sun Oct 12 12:56:11 2008 -0400
+
+    Use triangle strips for drawing surfaces.
+
+commit a234e7026834605312954de4c36b2437636bc0d8
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sat Oct 11 22:13:51 2008 -0400
+
+    Make test client a little more interesting.
+
+commit 94a2e86dcb30feb1ba8344d548db503115d57783
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sat Oct 11 21:37:55 2008 -0400
+
+    Track client objects and destroy them on disconnect.
+    
+    We're going to need a virtual destructor eventually...
+
+commit ef7a9ca8c9e76e43b7a15db2229fc4b8e0e93fde
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sat Oct 11 21:21:39 2008 -0400
+
+    Run compositor fullscreen, repaint when surfaces come and go.
+
+commit 19a0ac25b9d356ade2bc3bef6e1bcb0cb8626f00
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sat Oct 11 19:40:01 2008 -0400
+
+    Add notes on throttling, scheduling and atomicity.
+
+commit 5ebb317383b9863ca7da037a7348ab3ee4f9f34c
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sat Oct 11 19:21:35 2008 -0400
+
+    Recomposite screen in idle handler.
+
+commit f921289954840063722c8e3d541c5089b34a082a
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Sat Oct 11 18:40:23 2008 -0400
+
+    Handle multiple clients better.
+
+commit 16eb6753991d33cc2a90e6f8d1b970cf4603ef0e
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Wed Oct 8 22:51:32 2008 -0400
+
+    Add an EGL compositor.  Still pretty lame.
+
+commit 427524aedf0373250b907640f4f69d1bf3f16b8f
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Wed Oct 8 13:32:07 2008 -0400
+
+    Use new connection object in client code too.
+
+commit 680f1c702515c3ddcd4d819ee840a92787d657ae
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Wed Oct 8 12:48:46 2008 -0400
+
+    Split out connection io buffer logic.
+
+commit c5089878cb6972ccb114ca83c118cee595128e91
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Wed Oct 8 10:47:59 2008 -0400
+
+    Make in and out circular buffers actually work.
+
+commit 05eff51e413ff48c2edd2a2ab3ca9f9435c5c855
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Oct 7 10:10:36 2008 -0400
+
+    Add surface.map request.
+
+commit a67a71a7cf2f6cf17cb10eeeb4e9bb867bb9eb40
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Oct 7 10:10:36 2008 -0400
+
+    Bunch of new stuff: simple compositor, cairo+gem use in client, events.
+
+commit 33bea964cae3791cc00173b62e82089168f87804
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Sep 30 22:21:49 2008 -0400
+
+    More NOTES.
+
+commit 97f1ebe8d5c2e166fabf757182c289fed266a45a
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Sep 30 09:46:10 2008 -0400
+
+    Initial commit.
+    
+    This has the basic event loop, and a first cut of the libffi dispatcher.
