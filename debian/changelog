@@ -6,6 +6,8 @@ wayland (0.95.0-1) UNRELEASED; urgency=low
   * control: Update Standards-Version to 3.9.3, no changes.
   * rules: Make it non-fatal to fail the tests, which don't all succeed
     when ran in headless mode.
+  * rules: Drop the creation of hard dependencies, wayland should be
+    mostly API stable now.
 
  -- Timo Aaltonen <tjaalton@ubuntu.com>  Thu, 16 Aug 2012 13:04:41 +0300
 
