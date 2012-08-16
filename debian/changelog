@@ -13,6 +13,7 @@ wayland (0.95.0-1) UNRELEASED; urgency=low
   * libwayland*.install: Add missing files.
   * rules: Temporarily disable installing the protocol docs, decide where
     to put them first.
+  * Add README.source
 
  -- Timo Aaltonen <tjaalton@ubuntu.com>  Thu, 16 Aug 2012 13:04:41 +0300
 
