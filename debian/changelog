@@ -1,6 +1,7 @@
 wayland (0.95.0-1) UNRELEASED; urgency=low
 
   * New upstream release.
+  * Migrate to multiarch.
 
  -- Timo Aaltonen <tjaalton@ubuntu.com>  Thu, 16 Aug 2012 13:04:41 +0300
 
