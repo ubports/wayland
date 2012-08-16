@@ -1,3 +1,9 @@
+wayland (0.95.0-1) UNRELEASED; urgency=low
+
+  * New upstream release.
+
+ -- Timo Aaltonen <tjaalton@ubuntu.com>  Thu, 16 Aug 2012 13:04:41 +0300
+
 wayland (0.85.0-2) unstable; urgency=low
 
   * Upload to unstable.

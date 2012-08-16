@@ -1,8 +1,2625 @@
-commit 28e3cbc654a81c35a2948af93d6e86911159a13f
+commit f5ccd7a9e670e097ff9b5faae8a26b3af4bb7b60
 Author: Kristian Høgsberg <krh@bitplanet.net>
-Date:   Thu Feb 9 11:16:30 2012 -0500
+Date:   Tue Jul 24 15:45:00 2012 -0400
 
-    Release 0.85.0
+    Bump version to 0.95.0
+
+commit 6ebde80f0f5c614a3ef95003b788ee6a7694413f
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jul 24 15:10:12 2012 -0400
+
+    Make distcheck work from builddir configured  with --disable-documentation
+
+commit 3ec40512c7e43c5e5a223a9d33e4737a0782916a
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Mon Jul 23 19:54:42 2012 +0100
+
+    More consistent ID printing
+    
+    Use unsigned rather than signed for IDs, so they match up with what we
+    see in other prints.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit db0add6d5e23deac53c834f73d5e56180600cead
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Mon Jul 23 19:54:41 2012 +0100
+
+    Make NEW_IDs nullable
+    
+    The connection-handling code already allows this, so make it legal in
+    the protocol definition too.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit efe23443d8bcdad0513d5dd9d027233b3d7dc968
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Mon Jul 23 19:54:40 2012 +0100
+
+    Unstatic arg_count_for_signature and get_next_argument
+    
+    Expose these to other files using wayland-private.h, so wayland-client.c
+    can walk NULLables properly.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit a2c79b14a1aa58424eae77db39ded4d745acce1d
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Jul 23 20:14:33 2012 -0400
+
+    tests: Wrap calloc by just returning NULL if we're called too early
+    
+    Since glibc dlsym() calls calloc, we get a call to our calloc wrapper as
+    we try to look up the real calloc implementation.  dlsym() will fall back
+    to a static buffer in case calloc returns NULL, so that's what we'll do.
+    
+    This is all highly glibc dependent, of course, but the entire malloc
+    weak symbol wrapper mechanism is, so there's no loss of generality here.
+
+commit 61e9196f565e02b1774699e865a81a4efd3904bb
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Mon Jul 23 19:54:39 2012 +0100
+
+    test-runner: Wrap realloc() too
+    
+    So all our tests don't start failing just because we had the temerity to
+    use realloc() rather than malloc().
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 16b4c8747053e73bb963ea2bdf566cc54b9aeb90
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Mon Jul 23 19:54:38 2012 +0100
+
+    .gitignore: Add ctags and cscope files
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit eadb68ec32df8ee54ccba175d19adcdedfaa5015
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sun Jul 22 15:46:16 2012 -0400
+
+    protocol: Add transform argument to wl_output.geometry event
+
+commit 0b8b397e3438f0acad78ce2646bacc4905c97f01
+Author: Mathias Fiedler <mathias.fiedler@xse.de>
+Date:   Wed Jul 18 15:53:23 2012 +0200
+
+    connection: reserve id on incoming new object
+    
+    If a new object id arrives ensure that there is an empty array entry
+    created, otherwise we might get out of sync for new ids if object isn't
+    created by interface implementation.
+
+commit bfcd6819303b0304ba38d57af4856eb6db286907
+Author: Mathias Fiedler <mathias.fiedler@xse.de>
+Date:   Wed Jul 18 15:52:51 2012 +0200
+
+    wayland-util: add method for reserving new object id
+    
+    wl_map_reserve_new() ensures that new id is valid and will point to an
+    empty array entry.
+
+commit 900e4b63ef185767a4f1f1eea0ea1fb9899b4da5
+Author: Mathias Fiedler <mathias.fiedler@xse.de>
+Date:   Wed Jul 18 15:51:45 2012 +0200
+
+    wayland-server: send error on invalid new object id
+    
+    Creation of new client resources was silently ignored when
+    wl_client_add_resource() was used on server side and new object id was out
+    of range.
+    
+    An error is now send out to the client in such case.
+    
+    Also changed error message in wl_client_add_object, since
+    wl_map_insert_at() returns -1 only at invalid new id.
+
+commit 76bfd68f47c6cd8552151aa90efc4e5d074d14f9
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jul 20 12:30:07 2012 -0400
+
+    wayland-shm: Commit the width/height getters that actually compile
+
+commit 0b4ed5fe72bb96b0b0ef6bfdb280889b51da62dc
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jul 20 12:20:15 2012 -0400
+
+    README: Update
+    
+    The wayland README had outdated build instructions for weston.  Let's just
+    trim it down to build instructions for wayland and a link to the web site.
+
+commit 7ba218c9f80c9ce6f1a54e4e1b2f8aa66c590ade
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jul 20 12:04:42 2012 -0400
+
+    shm: Add shm_buffer getters for width and height
+
+commit 0a9cd16f6a6819392777e7b50601bb7e39b019da
+Author: Robert Ancell <robert.ancell@canonical.com>
+Date:   Tue Jul 10 15:52:12 2012 +1200
+
+    wayland-client: Add missing newline from an error message
+
+commit 2e79c4877fc4f402297e9d685b5eb2c41d7dd814
+Author: Dmitry Guryanov <dmitry.guryanov@gmail.com>
+Date:   Tue Jul 17 18:56:03 2012 +0400
+
+    remove listener from wl_data_source destroy_signal listener list
+    
+    I've found a bug during wayland exploration - if you make two
+    drag'n'drops in weston client example, dnd - weston crashes with
+    segfault. I've tried to investigate it and found a problem.
+    
+    In function drag_grab_button we first call data_device_end_drag_grab,
+    which sets seat->drag_data_source to NULL. Then we remove
+    listener from list only if drag_data_source is not NULL.
+    
+    So if client will not free wl_data_source and start another drag'n'drop,
+    after the first one. Then two wl_data_source structures will be
+    free'd on client exit (let's name them s1 and s2).
+    
+    next and prev pointer of
+    wl_data_source.resource.destroy_signal.listener_list in both
+    wl_data_source structures will be seat->drag_data_source_listener,
+    but next and prev in seat->drag_data_source_listener.link point
+    to listener_list in s2.
+    
+    So if you try to iterate over listener_list in s1
+    then you get drag_data_source_listener as first item and
+    (struct wl_listener *)(&s2.resource.destroy_signal.listener_list)
+    
+    Iteration over that list occurs in
+    wl_resource_destroy->destroy_resource->wl_signal_emit->wl_signal_emit
+    and try to call function at address of wl_resource->client, so
+    weston segfaults there.
+
+commit 52e6dc71becf4ee7f473f8af79fd71f95b6889c0
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Tue Jul 10 13:05:03 2012 +0300
+
+    cursor: fix fd leak and a segfault
+    
+    - don't leak fd in shm_pool_destroy()
+    - return NULL from wl_cursor_theme_load() if pool fails
+    
+    Tha last one fixes a segfault, when shm_pool_create() has failed.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit a88a4386cbf5f3a627345f12683210c3b81b292b
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Tue Jul 10 13:05:02 2012 +0300
+
+    cursor: use os_create_anonymous_file()
+    
+    Copy the implementation of os_create_anonymous_file() here from weston,
+    so we can use it instead of hardcoding a path to /tmp.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 9326498d03c9c4b0120082387b623ad70b4205c7
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Tue Jul 10 13:05:01 2012 +0300
+
+    server: fix wl_seat_set_keyboard
+    
+    This makes wl_seat_set_keyboard similar to wl_seat_set_pointer in that
+    it's a no-op, if you try to set keyboard to NULL when it already is
+    NULL, instead of refusing to set it to NULL ever.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 23bf48063ff6d3150cee99715f0f1b48ebd4a82e
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Tue Jul 10 13:05:00 2012 +0300
+
+    server: add lose_touch_focus()
+    
+    Just like wl_keyboard and wl_pointer, add a signal handler for losing
+    touch focus.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit e7e1296682b550349832d8922d688014dae7f968
+Author: Robert Ancell <robert.ancell@canonical.com>
+Date:   Thu Jul 5 16:31:29 2012 +1200
+
+    scanner: Include weston-client.h as the inline functions require it
+
+commit b4aff6b79f80cf8110de346e527b2288903a839f
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Jul 9 21:50:39 2012 -0400
+
+    wayland-shm: Add return before we hit the error clean-up path
+    
+    Regression in c94c0946db694ec29b5aebb94a8be0501bacfbc7
+
+commit dba322c1c0a7e09b4ca616c53762865921f77526
+Author: Martin Olsson <martin@minimum.se>
+Date:   Mon Jul 9 18:22:05 2012 +0200
+
+    Fixup source comment in wayland-util.h and fix typo in TODO
+
+commit fc0c2e04c50c2ba60272270d1a71ec57a42e7b5b
+Author: Martin Olsson <martin@minimum.se>
+Date:   Mon Jul 9 15:50:39 2012 +0200
+
+    doc: fix some typos in documentation
+
+commit 84bac043e1c6313f7b8812a31ddb179b3f7933d5
+Author: Ander Conselvan de Oliveira <ander.conselvan.de.oliveira@intel.com>
+Date:   Mon Jul 9 13:15:20 2012 +0300
+
+    protocol: Add missing allow-null to data_device.enter data_offer field
+    
+    Fixes bug 51889.
+
+commit c94c0946db694ec29b5aebb94a8be0501bacfbc7
+Author: Martin Olsson <martin@minimum.se>
+Date:   Mon Jul 9 11:35:57 2012 +0200
+
+    shm: Plug leak in shm_create_pool()
+
+commit 53bb40170475a9eaef23c700c5d1f6fac8b3510f
+Author: Martin Olsson <martin@minimum.se>
+Date:   Mon Jul 9 11:35:56 2012 +0200
+
+    server: Don't crash for wl_seat_set_touch(seat, NULL)
+
+commit e760ec9fa97c3776d8db47d26ad93b1bfd09fc6d
+Author: Martin Olsson <martin@minimum.se>
+Date:   Mon Jul 9 11:35:55 2012 +0200
+
+    scanner: Plug memory leak in end_element()
+
+commit 00902b38151d6b4373584eb52dc44143825ef88f
+Author: Martin Olsson <martin@minimum.se>
+Date:   Mon Jul 9 11:35:54 2012 +0200
+
+    wayland-cursor: Add error handling for shm_pool_create()
+
+commit 8a023688c07fe2d377c4bc9631ce2fe7a9afee60
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Jul 2 14:34:48 2012 -0400
+
+    protocol: Add a couple of missing allow-null annotations
+    
+    wl_data_device.set_selection() allows NULL to withdraw the previously set
+    selection and wl_surface.attach() allows a NULL buffer to hide the surface.
+
+commit 11db60fe729539315c96745c50ae3160dc16001c
+Author: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+Date:   Mon Jul 2 20:03:31 2012 +1000
+
+    protocol: Explicitly mark requests which allow null arguments
+    
+    Signed-off-by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+
+commit 161c690b558fff9d0f407311ae4e1fbe389775f7
+Author: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+Date:   Mon Jul 2 20:03:30 2012 +1000
+
+    protocol: Add explicit nullable types
+    
+    Most of the time it does not make sense to pass a NULL object, string, or array
+    to a protocol request. This commit adds an explicit “allow-null” attribute
+    to mark the request arguments where NULL makes sense.
+    
+    Passing a NULL object, string, or array to a protocol request which is not
+    marked as allow-null is now an error. An implementation will never receive
+    a NULL value for these arguments from a client.
+    
+    Signed-off-by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+
+commit d2bcffc470cf37dbdeb4d1ed46819360c16d92eb
+Author: Dylan Noblesmith <nobled@dreamwidth.org>
+Date:   Fri Jun 15 22:56:37 2012 +0000
+
+    tests: test that path names longer than 108 bytes are rejected
+    
+    These would either overflow the struct sockaddr_un, or
+    be truncated and leave a non-null-terminated string.
+
+commit b486e3aba5c7618b7f6311e82b5fdb2c93f2beab
+Author: Dylan Noblesmith <nobled@dreamwidth.org>
+Date:   Fri Jun 15 22:44:28 2012 +0000
+
+    tests: fix make check for out-of-tree builds
+    
+    It was failing with missing include files.
+    
+    While here, destroy the ugly "../src/..." include
+    paths used in the tests that was just hacking around
+    this problem in the Makefile:
+    
+    sed -i s/..\\/src\\/// tests/*.c
+
+commit c394b759586e2c20b249d6c48e2435388114d6da
+Author: Dylan Noblesmith <nobled@dreamwidth.org>
+Date:   Fri Jun 15 22:06:58 2012 +0000
+
+    tests: sort list of tests
+
+commit af5f8cc2004ae6a56447614ac9d61ac75115ea7d
+Author: Dylan Noblesmith <nobled@dreamwidth.org>
+Date:   Fri Jun 15 21:39:50 2012 +0000
+
+    wayland-client: reject socket paths longer than 108 bytes
+    
+    Attempting to write anything longer into the embedded char
+    array would create a non-null-terminated string, and all
+    later reads would run off the end into invalid memory.
+    
+    This is a hard limitation of AF_LOCAL/AF_UNIX sockets.
+
+commit 00c25a05656b0bbc3da56383ca2aa9be7f6ebdbf
+Author: Dylan Noblesmith <nobled@dreamwidth.org>
+Date:   Fri Jun 15 21:32:19 2012 +0000
+
+    wayland-server: reject socket paths longer than 108 bytes
+    
+    Attempting to write anything longer into the embedded char
+    array would create a non-null-terminated string, and all
+    later reads would run off the end into invalid memory.
+    
+    This is a hard limitation of AF_LOCAL/AF_UNIX sockets.
+
+commit 4522467268492e64b690d93cf57749c099ce101e
+Author: Dylan Noblesmith <nobled@dreamwidth.org>
+Date:   Sat Jun 16 22:51:35 2012 +0000
+
+    wayland-server: add more logging of errors
+
+commit 30ff420ca9707fbbde7e70e789a8698058b4cb4b
+Author: Dylan Noblesmith <nobled@dreamwidth.org>
+Date:   Sat Jun 30 19:50:09 2012 +0000
+
+    wayland-server: fix socket ownership race condition
+    
+    Always unlink() the lock file before closing the file
+    descriptor for it. Otherwise, there is a race like this:
+    
+    Process A closes fd, releasing the lock
+    Process B opens the same file, taking the lock
+    Process A unlinks the lock file
+    Process C opens the same file, which now no longer exists,
+    and takes the lock on the newly created lock file
+    
+    Process B and C both 'own' the same display socket.
+    
+    unlink()ing while holding the lock is effectively a better
+    way to release the lock atomically.
+
+commit 94752574592a59c74340816063ad12a18433a75d
+Author: Dylan Noblesmith <nobled@dreamwidth.org>
+Date:   Sat Jun 16 22:47:42 2012 +0000
+
+    wayland-server: fix fd leak on error path
+    
+    And restructure get_socket_lock() so it's clearer that it's
+    allocating a new file descriptor.
+    
+    Uncovered by an upcoming test.
+
+commit cadd9992921c92c4cf4c72ee40ff5ab4d44066cd
+Author: Dylan Noblesmith <nobled@dreamwidth.org>
+Date:   Fri Jun 15 22:01:06 2012 +0000
+
+    drop use of strerror()
+    
+    It isn't thread-safe. Use the %m conversion specifier instead,
+    like the rest of the code already does.
+
+commit bb6e48b1b023e7d422fb5d67eef6505f7bdf2d05
+Author: Dylan Noblesmith <nobled@dreamwidth.org>
+Date:   Fri Jun 15 21:09:00 2012 +0000
+
+    wayland-server: reduce use of magic numbers
+    
+    Make it clear what the significance of '5' and '113' actually is.
+    Also drop an unneeded function argument.
+
+commit 9de9e39f87adfce1ea9755e394928756254c0ba2
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Jun 28 22:01:58 2012 -0400
+
+    Allocate client proxy automatically for new objects
+    
+    When the server send a new object ID, the client used to have to allocate
+    the proxy manually and without type-safety.  We now allocate the proxy
+    in a client-side post-processing step on the incoming closure.
+
+commit c30ad0d9da08a95246471483bfc66410a4153564
+Author: Ander Conselvan de Oliveira <ander.conselvan.de.oliveira@intel.com>
+Date:   Thu Jun 28 18:08:03 2012 +0300
+
+    protocol: Change wording of pointer.set_cursor()
+    
+    Change the description of pointer.set_cursor() so that a client without
+    pointer focus but that currently owns the pointer surface can update the
+    hotspot using it.
+
+commit ae6f3001a51cce102422e4ccbeb394fe90945a12
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jun 27 10:30:08 2012 -0400
+
+    wl_shell: Don't require that parent surfaces are wl_shell_surfaces
+    
+    The set_transient and set_popup requests take a wl_shell_surface as
+    the parent surface argument.  We don't need the parent surface to be
+    a shell surface and this restricts the types of surfaces we can use
+    the transient and popup surface types on.
+
+commit 7e71c38b98296843b8f3f24efd507e98f1f10c57
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Jun 25 18:09:00 2012 -0400
+
+    configure.ac: Bump version to 0.94.90
+
+commit 9afb5f61f8e77f33c63e17f54720f12f9c40287c
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jun 22 14:38:12 2012 -0400
+
+    Send modifier event to pointer focus when it changes too
+
+commit 67e16be8aa9408d77dc291d9accb238fb9422c94
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jun 22 12:20:00 2012 -0400
+
+    Send keyboard modifier event using the keyboard resource
+
+commit bcefacb89d14c5f98c0fe2b12e2baf50e216496e
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Jun 22 13:21:26 2012 +0100
+
+    Maintain keyboard modifier state in wayland-server
+    
+    Provide a slot for keyboard modifier state inside wl_keyboard for
+    implementations to update, and use this to send wl_keyboard:;modifier
+    events whenever the keyboard or pointer focus changes.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 226100795309569cc0f101ed6524afc6ac3a9584
+Author: Ander Conselvan de Oliveira <ander.conselvan.de.oliveira@intel.com>
+Date:   Tue Jun 19 13:45:39 2012 +0300
+
+    wayland-cursor: Plug leak of filename on load_all_cursors_from_dir()
+
+commit 61260854ec92a43e4e0f5cf1469eecbe404eac5a
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Mon Jun 18 20:01:05 2012 +0100
+
+    Xcursor: Don't ignore unknown file types
+    
+    XFS doesn't return the file type with opendir(), and instead only
+    returns it when you stat() the file itself.  c66f2602 introduced a check
+    to ensure that only files and symlinks were loaded, while not checking
+    for DT_UNKNOWN.  Properly handle DT_UNKNOWN by just proceeding anyway.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit c806dde7e61f4d06564bd3acf74dbba6cfa328c6
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Jun 18 12:09:47 2012 -0400
+
+    data-device: Fix list corruption when the source goes away
+    
+    If the data source is destroyed, the corresponding offers may stay around for
+    a little longer (until the owning client destroys it).  When the offer is
+    finally destroyed, we have to be careful to only remove the source
+    destroy listener if the source hasn't yet been destroyed.
+    
+    Thanks to Martin Minarik for tracking down where the corruption happened.
+
+commit b576443a0eb848085d0fcdf2b2d2987bcfb58a7f
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jun 15 16:09:39 2012 -0400
+
+    tests: Update test cases to new closure allocate convention
+
+commit c622350fb26d4b8cab3dd30f4a14067a15673823
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Jun 15 11:09:36 2012 -0400
+
+    TODO: Remove cursor-as-regular-surface item
+
+commit 6b861f7b4d7a6669e9496331d80fc2a63ed4bd4b
+Author: Ander Conselvan de Oliveira <ander.conselvan.de.oliveira@intel.com>
+Date:   Fri Jun 15 17:27:33 2012 +0300
+
+    cursor: Add function for calculating current frame in cursor animation
+    
+    Given a pointer to struct wl_cursor and an elapsed time in ms.,
+    wl_cursor_frame() will return the index of the cursor image the should
+    be displayed.
+
+commit b6aa49455e72034760ea852ad4a20b29ec76e7fc
+Author: Ander Conselvan de Oliveira <ander.conselvan.de.oliveira@intel.com>
+Date:   Fri Jun 15 17:27:32 2012 +0300
+
+    protocol: replace pointer.attach with pointer.set_cursor
+
+commit 6e94028c31d06999cb9848b1bd0348ea2f683516
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jun 13 13:33:01 2012 -0400
+
+    TODO: Update to account for changes from Daniel
+
+commit 8dc57f4dda804f50515a7a5366dceef13999ebcd
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jun 12 17:48:19 2012 -0400
+
+    connection: Set closure->start in demarshal too
+
+commit 46f9745c100daa9a05fa00bdc36fafbbb3b431e8
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jun 12 17:45:25 2012 -0400
+
+    connection: Always malloc closure
+    
+    This lets us allocate the closure just big enough and is a first step towards
+    a message queue.
+
+commit 1432bd62df3f30a8a28eba0c5e795113741bade3
+Author: Jonas Ådahl <jadahl@gmail.com>
+Date:   Tue Jun 12 23:57:33 2012 +0200
+
+    wayland-server: Add destroy signal to wl_seat
+    
+    Signed-off-by: Jonas Ådahl <jadahl@gmail.com>
+
+commit f36f32a0e05b4af290862b9d0ec685f6d095786f
+Author: Jonas Ådahl <jadahl@gmail.com>
+Date:   Tue Jun 12 23:57:32 2012 +0200
+
+    wayland-util: wl_list_insert_list() should accept empty lists
+    
+    Signed-off-by: Jonas Ådahl <jadahl@gmail.com>
+
+commit dd8891be36ec208a5e8e5dd32c32426713f16877
+Author: Ander Conselvan de Oliveira <ander.conselvan.de.oliveira@intel.com>
+Date:   Fri Jun 8 11:58:02 2012 +0300
+
+    wayland-cursor: add an option that changes the cursor theme directory
+    
+    Some distros (e.g. gentoo) install cursor themes in non-standard
+    directories. Add option --with-icondir to configure.sh that sets the
+    directory in which to look for cursors.
+
+commit c29020332a7bb56cb9e5c5928ed9a5a2e80b2bef
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Wed Jun 6 14:30:19 2012 +0300
+
+    server: require XDG_RUNTIME_DIR
+    
+    An arbitrary fallback to the current directory is only confusing.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 0c7ca38c7f8b3da5b3dfa44064fe994c80849b71
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Wed Jun 6 14:30:18 2012 +0300
+
+    client: require XDG_RUNTIME_DIR
+    
+    An arbitrary fallback to the current directory is only confusing.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit aa792ad3d657853a24faa5a6d5ae09830490087f
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Jun 5 09:56:42 2012 -0400
+
+    Add a focus change signal for wl_pointer and wl_keyboard
+
+commit 3fd1e128e95770526d2c247aef9544a6abdb7848
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sun Jun 3 23:11:34 2012 -0400
+
+    TODO: Drop clipboard manager item
+    
+    We have a reasonable prototype in weston now and we're going to
+    conclude that the persistent selection functionality is either
+    going to be part of the compositor (as for weston) or use a custom
+    protocol.
+
+commit 68f058ffd3aa485e01354b8cf6ad040169e939fb
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sun Jun 3 17:30:12 2012 -0400
+
+    data-device: Don't implement data source through data offer object
+    
+    The wl_data_source object used to specify the implementation for data
+    offers created for it.  This means you need a data offer to retrieve the
+    data from the source, which makes it awkward to use in-process in a
+    compositor.  Now we instead have three virtual functions that can be
+    connected to a protocol object or in-process data-sources such as an
+    X server proxy or clipboard.
+
+commit dff84e563896566e952f8a6704eadb8c09f27830
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Jun 1 12:13:37 2012 +0100
+
+    Add wl_keyboard::keymap event
+    
+    With this event, the compositor generates one canonical keymap for all
+    clients, and then sends an mmap()able fd over the wire, rather than all
+    the clients generating possibly disparate keymaps.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 0760297633d813c415c068a41558be4ee171d235
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu May 31 23:29:08 2012 -0400
+
+    data-device: Handle setting a NULL selection source
+
+commit 0527ad8f001b9286ff3a5cb40c51345c3b56fd38
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu May 31 23:28:31 2012 -0400
+
+    data-device: Emit selection_signal also when we lose the selection
+
+commit 8f63e8013bba6fea9562339c2ed8b3eb1c8e3138
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu May 31 23:26:50 2012 -0400
+
+    data-device: Only send out NULL selection if we have a resource
+    
+    If the current keyboard focus client doesn't have a resource for the
+    data_device, don't send out the selection event.
+
+commit cfd56ed4bc4ca8d0cd642228aff8c21c4b1a357c
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed May 30 16:31:49 2012 +0100
+
+    Convert wl_pointer::axis to fixed
+    
+    Which allows for smooth scrolling, among other things.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 872d074a431a28ff5dcb09384d07970812432c82
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed May 30 16:31:48 2012 +0100
+
+    Add key_state and button_state enums
+    
+    Rather than hardcoding 0 and 1 everywhere.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 9a1705c5f5e877d4e68bd0e7eb858f517375ba3f
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed May 30 16:31:47 2012 +0100
+
+    wl_keyboard: Add modifier event
+    
+    This event sends the current keyboard modifier/group state from the
+    compositor to the client, allowing all clients to have a consistent view
+    of the keyboard state (e.g. current layout, Caps Lock, et al).  It
+    should be sent after a keyboard enter event, and also immediately after
+    any key event which changes the modifier state.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit f7a39ff69b0b30c95330f6b6647d21707fe38dee
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed May 30 16:31:46 2012 +0100
+
+    Always reset keyboard and pointer focus
+    
+    If wl_pointer_set_focus or wl_keyboard_set_focus have been called before
+    a listener has been established for that seat and client combination,
+    the focus window will be set but the focus resource will be NULL.  This
+    changes these functions to always attempt to search for the relevant
+    focus resource, allowing the resource to be set by calling
+    wl_keyboard_set_focus and wl_pointer_set_focus again when a listener has
+    been established.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 32add9c6e6af10114e583ddcd7b6cf36a39afbdc
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed May 30 16:31:45 2012 +0100
+
+    cursor: Fix warning with objdir != srcdir build
+    
+    Make sure we find the right include paths.
+    
+    krh: Edited to use $(top_builddir)
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 1b6a61d3e94ae3c445974201bad1e5a370f3d82e
+Author: Martin Minarik <minarik11@student.fiit.stuba.sk>
+Date:   Tue May 29 17:38:51 2012 +0200
+
+    Wayland: logging: replace printf by wl_log
+
+commit 8e2a7867038ee6f536a56a0600d9e9bc777e2c31
+Author: Martin Minarik <minarik11@student.fiit.stuba.sk>
+Date:   Tue May 29 17:37:02 2012 +0200
+
+    Wayland: logging
+    
+    The core libwayland libraries should not handle logging, only passing
+    the error messages to subscribed functions.
+    An application linked to libwayland-server or libwayland-client
+    will be able to set own functions (one per library) to handle error
+    messages.
+    
+    Change in this series: make the wl_log return int, because
+    of compatibility with printf. It will return the number of bytes logged.
+
+commit b858a1b87b6301dcad48025dcb54fc931664e068
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Tue May 29 16:53:21 2012 +0300
+
+    tests: update gitignore
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 693e5983f424deee79367db8aba5d9ffb8fa144a
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Tue May 29 16:53:20 2012 +0300
+
+    build: add uninstalled pkg-config files
+    
+    Required for building apps against wayland libraries that have not been
+    installed.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit e4efef869e0ef1313d016d7ecd19f5f820a041a7
+Author: Rob Bradford <rob@linux.intel.com>
+Date:   Tue May 29 14:10:30 2012 +0100
+
+    cursor: Link libwayland-cursor to libwayland-client
+    
+    LDADD is only used when linking programs not libraries.
+    
+    Spotted-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 75a5f7476ad1a84c9bee0f11a90e66a8e93dab27
+Author: Ander Conselvan de Oliveira <ander.conselvan.de.oliveira@intel.com>
+Date:   Tue May 29 10:58:26 2012 +0300
+
+    data-device: implement drags with no data source for self-dnd
+    
+    Properly handle a drag with no data source, i.e., don't crash and send
+    events only to the client that initiated the drag. This way a client can
+    do self drag and drop without offering anything to other clients.
+
+commit d422a733b4c20a65748c8d9e811f672a2d744218
+Author: Ander Conselvan de Oliveira <ander.conselvan.de.oliveira@intel.com>
+Date:   Fri May 25 10:40:28 2012 +0300
+
+    data-device: fix crash when a client dies during a drag with an icon
+    
+    The commit that split wl_input_device into wl_seat and friends changed
+    erroneously the drag icon destroy listener, causing it to operate into
+    an invalid pointer to a wl_seat.
+
+commit c66f26024b8ddc7b4b00b81e37945ad86b1a1fd8
+Author: Ander Conselvan de Oliveira <ander.conselvan.de.oliveira@intel.com>
+Date:   Thu May 24 16:17:48 2012 +0300
+
+    wayland-cursor: load all cursors from a theme on wl_cursor_theme_load
+
+commit f779c57be2264065d4428155bf0066e71bbf33bb
+Author: Ander Conselvan de Oliveira <ander.conselvan.de.oliveira@intel.com>
+Date:   Thu May 24 16:17:47 2012 +0300
+
+    wayland-cursor: remove enum wl_cursor_type
+    
+    Defining a list of all cursors a theme, client or toolkit should have
+    is not the purpose of libwayland-cursor. The cursor type enum existed
+    for making lookups faster, but this kind of optmization belongs in the
+    toolkits.
+
+commit 086b4e2c1a129b55986a67ec0d8be35b29707a95
+Author: Ander Conselvan de Oliveira <ander.conselvan.de.oliveira@intel.com>
+Date:   Wed May 23 16:09:55 2012 +0300
+
+    shm: use mremap on pool resize
+
+commit d860f0cbecbb647b0c91bb1e912af0dd19831615
+Author: Yan Wang <yan.wang@linux.intel.com>
+Date:   Wed May 23 14:14:30 2012 +0800
+
+    Wayland: Add missing extern "C"
+    
+    Add extern "C" macro definition for C++.
+
+commit 00de1e6cce5f3389eb763d80df7135f19ccda1be
+Author: Diego Viola <diego.viola@gmail.com>
+Date:   Wed May 23 02:08:08 2012 -0400
+
+    fix typo
+
+commit 5030af7635fc24b325a22d823ab0f51a4b099762
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue May 22 22:41:21 2012 -0400
+
+    cursor: Fix unsigned/signed comparisons
+
+commit 3cc187c73ef73cd345138fd746344299f94933e8
+Author: Rob Bradford <rob@linux.intel.com>
+Date:   Tue May 22 18:48:14 2012 +0100
+
+    shm: Zero busy count for allocated buffers
+    
+    This avoids a valgrind error like:
+    
+    ==31496== Conditional jump or move depends on uninitialised value(s)
+    ==31496==    at 0x407620: weston_buffer_post_release (compositor.c:928)
+    ==31496==    by 0x406AEB: weston_surface_attach (compositor.c:725)
+    ==31496==    by 0x409EB8: pointer_attach (compositor.c:2009)
+    ==31496==    by 0x34ECE05D63: ffi_call_unix64 (unix64.S:75)
+    ==31496==    by 0x34ECE05784: ffi_call (ffi64.c:486)
+    ==31496==    by 0x5674C4D: wl_closure_invoke (connection.c:770)
+    ==31496==    by 0x566ECCB: wl_client_connection_data (wayland-server.c:255)
+    ==31496==    by 0x56722F9: wl_event_source_fd_dispatch (event-loop.c:79)
+    ==31496==    by 0x5672C99: wl_event_loop_dispatch (event-loop.c:410)
+    ==31496==    by 0x56705FF: wl_display_run (wayland-server.c:1004)
+    ==31496==    by 0x40C775: main (compositor.c:2937)
+    ==31496==  Uninitialised value was created by a heap allocation
+    ==31496==    at 0x4A074CD: malloc (vg_replace_malloc.c:236)
+    ==31496==    by 0x5670EA7: shm_pool_create_buffer (wayland-shm.c:113)
+    ==31496==    by 0x34ECE05D63: ffi_call_unix64 (unix64.S:75)
+    ==31496==    by 0x34ECE05784: ffi_call (ffi64.c:486)
+    ==31496==    by 0x5674C4D: wl_closure_invoke (connection.c:770)
+    ==31496==    by 0x566ECCB: wl_client_connection_data (wayland-server.c:255)
+    ==31496==    by 0x56722F9: wl_event_source_fd_dispatch (event-loop.c:79)
+    ==31496==    by 0x5672C99: wl_event_loop_dispatch (event-loop.c:410)
+    ==31496==    by 0x56705FF: wl_display_run (wayland-server.c:1004)
+    ==31496==    by 0x40C775: main (compositor.c:2937)
+
+commit 1323b074c38182f9682d1f6a8ed07dd66d6ec4b8
+Author: Rob Bradford <rob@linux.intel.com>
+Date:   Tue May 22 18:48:13 2012 +0100
+
+    server: Initialise serial number counter for wl_display
+    
+    This ends up propagating through and creating a valgrind error like:
+    
+    ==22573== Conditional jump or move depends on uninitialised value(s)
+    ==22573==    at 0x409E57: pointer_attach (compositor.c:1999)
+    ==22573==    by 0x34ECE05D63: ffi_call_unix64 (unix64.S:75)
+    ==22573==    by 0x34ECE05784: ffi_call (ffi64.c:486)
+    ==22573==    by 0x5674C45: wl_closure_invoke (connection.c:770)
+    ==22573==    by 0x566ECCB: wl_client_connection_data (wayland-server.c:255)
+    ==22573==    by 0x56722F1: wl_event_source_fd_dispatch (event-loop.c:79)
+    ==22573==    by 0x5672C91: wl_event_loop_dispatch (event-loop.c:410)
+    ==22573==    by 0x56705F4: wl_display_run (wayland-server.c:1003)
+    ==22573==    by 0x40C775: main (compositor.c:2937)
+
+commit 775002c6c0f841a034a286c756899e6a4371962b
+Author: Ander Conselvan de Oliveira <ander.conselvan.de.oliveira@intel.com>
+Date:   Tue May 22 15:39:41 2012 +0300
+
+    Introduce libwayland-cursor, a cursor helper library
+    
+    The purpose of this library is to be the equivalent of libXcursor in
+    the X world. This library is compatible with X cursor themes and loads
+    them directly into an shm pool making it easy for the clients to get
+    buffer for each cursor image.
+    
+    The code for handling the X cursor theme was taken from libXcursor. The
+    files cursor/xcursor.[ch] are a stripped down version of that library
+    containing only the interfaces necessary for implementing the wayland
+    counterpart.
+
+commit ff0d7456742343400b00fa58c77efa51d5ab5d6d
+Author: Ander Conselvan de Oliveira <ander.conselvan.de.oliveira@intel.com>
+Date:   Tue May 22 15:39:40 2012 +0300
+
+    shm: Add request for resizing pools
+
+commit 35a92ef83ba24a0cced3c7c6b9fcde377a88f83b
+Author: Tiago Vignatti <tiago.vignatti@intel.com>
+Date:   Mon May 21 16:47:44 2012 +0300
+
+    protocol: use transient flags for activate or not surfaces
+    
+    Signed-off-by: Tiago Vignatti <tiago.vignatti@intel.com>
+
+commit 94bb47020ae71336be5088824fee38bf3c8d51cc
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed May 16 14:25:45 2012 -0400
+
+    doc: Update docs to refer to wl_seat instead of wl_input_device
+
+commit aa0fb0f49cd1762128a7ef2466b80156adf17429
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed May 16 18:44:40 2012 +0100
+
+    Convert wl_input_device to wl_seat (and friends)
+    
+    wl_input_device has been both renamed and split.  wl_seat is now a
+    virtual object representing a group of logically related input devices
+    with related focus.
+    
+    It now only generates one event: to let clients know that it has new
+    capabilities.  It takes requests which hand back objects for the
+    wl_pointer, wl_keyboard and wl_touch interfaces it exposes which all
+    provide the old input interface, just under different names.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 6d1902b85c87ff2885798f08bb53bfe120b81e2f
+Author: Darxus <darxus@chaosreigns.com>
+Date:   Mon May 14 16:41:10 2012 -0400
+
+    Add missing alt attributes in publican docs.
+    
+    Haven't figured out how to regenerate the html, so it's not tested.
+    Looks like remaining html errors will be fixed in the next publican
+    release:  https://bugzilla.redhat.com/show_bug.cgi?id=788576
+
+commit 32ec041333fd6075e5dfeb7797b6d68f88f5e0aa
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Tue May 15 10:29:12 2012 +0300
+
+    tests: add noop to fixed-benchmark
+    
+    I was just curious of how much the looping takes time without
+    conversion, so I added this.
+    
+    My results on Intel(R) Core(TM) i5-2410M CPU @ 2.30GHz:
+    
+    benchmarked noop:	1.876349827s
+    benchmarked magic:	2.245844470s
+    benchmarked div:	12.709085309s
+    benchmarked mul:	7.504838141s
+    
+    Mul seems to take 15x the time magic does, cool!
+    
+    Btw. the simple default cast of int32_t to double is slower than magic
+    for me, hence the use of union.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit f5df38959b14426f648b3359821457786e43e396
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri May 11 23:36:20 2012 -0400
+
+    Optimize wl_fixed_t to/from double conversion functions
+
+commit fefa8c0fd5fe9b186ca1acffcc077badbd81b5ba
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri May 11 11:27:22 2012 -0400
+
+    TODO: Strike the last xkbcommon issues
+
+commit bd5617772cdd3d31903befaf3f155a49f787efc4
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu May 10 14:13:05 2012 -0400
+
+    protocol: Specify that the fullscreen framerate parameter is also mHz
+
+commit e8aa047259d4a17608f16359cdbef77f9d3c9668
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu May 10 12:09:56 2012 -0400
+
+    protocol: Back out accidentally committed wl_seat changes
+
+commit 0155c28e8cb24e6d4b6585321ea219752b62fdbc
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu May 10 11:56:39 2012 -0400
+
+    protocol: Add documentation for wl_output
+
+commit 68e0eaa2b55db5354fc25d64ef28eca30df1767b
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed May 9 11:26:30 2012 -0400
+
+    TODO: More updates
+
+commit 6b8816bab46172abc975674dcefadcea4edcef08
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue May 8 14:49:44 2012 -0400
+
+    Update TODO
+    
+    Daniel did fixed point coordinates.
+
+commit 0c20496e1ad16a2910b6f6c7afcf3f5a168f2436
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue May 8 17:17:26 2012 +0100
+
+    Input: Convert pointer co-ordinates to signed_24_8
+    
+    This offers more precision when using devices like tablets, and also for
+    transformed surfaces.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit c5aba11accad178a81a373bd5d1de888b2a51101
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue May 8 17:17:25 2012 +0100
+
+    Add support for signed 24.8 decimal numbers
+    
+    'fixed' is a signed decimal type which offers a sign bit, 23 bits of
+    integer precision, and 8 bits of decimal precision.  This is exposed as
+    an opaque struct with conversion helpers to and from double and int on
+    the C API side.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit c49f632dae67ee3055e4874f028f723663486da6
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue May 8 10:42:42 2012 -0400
+
+    event-loop: Delete fd from epoll when removing event source
+    
+    Closing an fd will remove it from the epoll set only if it hasn't been
+    dup'ed.  In other words, the fd is only removed from epoll when all file
+    descriptors referring to the open file has been close.  We now dup
+    fd for fd sources, so we need to use EPOLL_CTL_DEL directly now.
+
+commit f42d763cd0454559a882e88ce071892f071db791
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue May 8 09:58:01 2012 -0400
+
+    tests: prefix event loop tests with event_loop_
+
+commit d8dda50d27fe716b524d1bb39b7a516ac65094bb
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue May 8 09:57:17 2012 -0400
+
+    tests: assert that mask is zero is post_dispatch callback
+
+commit 550e8f3861b70bd9bb4e4b29fd7247627b5476f3
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue May 8 09:55:55 2012 -0400
+
+    tests: Add timerfd test
+
+commit d56af2787efd05e6f8fe06cc8ad9bad433097213
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue May 8 09:37:34 2012 -0400
+
+    tests: Add signal test case
+    
+    Doesn't necessarily catch the signalfd bug just fixed, since that only
+    triggers when an uninitialized int is negative.
+
+commit 3e7bd7362b6841d1862de5af7b71f138b6d70a5d
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue May 8 09:30:49 2012 -0400
+
+    event-loop: Consolidate code for setting up new sources
+
+commit a41fa8b3ec42f8f095ff6b53d30f20554b500c17
+Author: Tiago Vignatti <tiago.vignatti@intel.com>
+Date:   Tue May 8 14:58:02 2012 +0300
+
+    event-loop: fix conditional checking
+    
+    Introduced in:
+        commit 80f4f0d5127ebc8d5e35969a29691cf61a79997d
+        Author: Jonas Ådahl <jadahl@gmail.com>
+        Date:   Wed Mar 21 10:31:24 2012 +0100
+    
+    Signed-off-by: Tiago Vignatti <tiago.vignatti@intel.com>
+
+commit a73c91585e61d474253badaada734a6cd857c4b1
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon May 7 23:45:20 2012 -0400
+
+    TODO: drop scanner namespace item
+    
+    Not worh the trouble.
+
+commit 375cb418f493669c8ffdd3c716b0c8bb11364def
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon May 7 23:41:48 2012 -0400
+
+    scanner: Generalize desc_dump() to handle hanging indents
+
+commit 5b0d8f09af4945dad30ac0374bd617f687774fea
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon May 7 22:43:56 2012 -0400
+
+    scanner: Fix desc_dump() to not extend beyond column 72
+
+commit e4026ff797fbfc743ef7b40ba70d565444a6d113
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon May 7 22:23:05 2012 -0400
+
+    scanner: Use indent() function in desc_dump()
+
+commit 3f7048e0e99af50fe3555ab3f61f0ef1292959e4
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri May 4 11:21:20 2012 +0100
+
+    Use unsigned for key/button up/down state in grabs
+    
+    Since we just use it as a simple boolean flag, might as well convert it
+    to unsigned.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 3de517a09245aacec844c09d5d7fe30b5ebe3dd2
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu May 3 15:41:50 2012 -0400
+
+    Use class_ instead of class in protocol
+    
+    This way we can include the generated code from C++.
+
+commit 0a828e098c83706357894c3433107db2b0d3aaa8
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue May 1 20:30:12 2012 +0100
+
+    tests: Fix out-of-tree builds
+    
+    Make sure we include any generated headers from src/ as well, like
+    wayland-version.h.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 2753904edadbf3ff7b504f29931b8bfce7ad7a6f
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed May 2 09:39:17 2012 -0400
+
+    Add shell_surface set_title and set_class requests
+
+commit c1b6dbbacdb1b54d1521f0952906387b8df14beb
+Author: Nicolas Pouillon <npouillon@freebox.fr>
+Date:   Wed May 2 08:46:47 2012 +0200
+
+    server: Post new globals to current clients
+    
+    Globals are bursted to client on conntect.  Now when new global
+    objects are added to the server state, existing clients also get
+    notified.
+
+commit 5177e7698446619ee229e1c00c04ea34179cc6af
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue May 1 13:50:23 2012 -0400
+
+    protocol: Move ping event down to other events
+
+commit 35fc72eb8b967499332aaf1e3cf20232b7a7efac
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Apr 27 11:31:07 2012 -0400
+
+    Add wl_proxy_get_id()
+
+commit ac73a74f43bada3e6ed8e7e49e9f5e02b22f7d46
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Apr 27 11:28:06 2012 -0400
+
+    Add wl_client_get_object()
+
+commit 4fd3696f98e339a1d8ac763f84fc6621f14b95f6
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Apr 27 11:26:57 2012 -0400
+
+    Drop stale prototype
+
+commit bf1c2f32574f98ccdda5eb6d89cbf23d3f723906
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Apr 26 08:06:43 2012 -0400
+
+    tests: Just list tests under the TESTS variable
+
+commit 5be33520b3416d2b0b138d5d30ddcf6776918007
+Merge: f72c0c2 9f91feb
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Apr 25 10:45:48 2012 -0400
+
+    Merge remote-tracking branch 'pq/for-krh'
+
+commit f72c0c2a241a0cce353761ee0bd7e6809e4bfced
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Apr 25 10:12:21 2012 -0400
+
+    Add COPYING
+
+commit 9f91feb5d9c56d7047dbeac4e1612190ca77ab4d
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Thu Mar 22 14:24:18 2012 +0200
+
+    server: do not create wl_client if accept() failed
+    
+    Spotted during wl_os_accept_cloexec() work.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit ff50f6bfc44bd072aa8806f976718d30468fa2c2
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Thu Mar 22 14:16:10 2012 +0200
+
+    os: wrap accept4(SOCK_CLOEXEC)
+    
+    Some system C libraries do not have SOCK_CLOEXEC, and completely miss
+    accept4(), too. Provide a fallback for this case.
+    
+    This changes the behaviour: no error messages are printed now for
+    failing to set CLOEXEC but the file descriptor is closed.
+    
+    The unit test for this wrapper is NOT included.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit b2eaf870cf8e8cb842ba29ea4718b596101252a6
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Thu Mar 22 15:02:05 2012 +0200
+
+    os: wrap epoll_create
+    
+    Some system C libraries do not have epoll_create1() nor EPOLL_CLOEXEC,
+    provide a fallback.
+    
+    Add tests for the wrapper.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 35d5053c622a2b1502b71230c7755a8005b36301
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Wed Mar 21 16:00:23 2012 +0200
+
+    os: wrap recvmsg(MSG_CMSG_CLOEXEC)
+    
+    Some system C libraries do not have MSG_CMSG_CLOEXEC. This flag would
+    automatically set O_CLOEXEC flag on any received file descriptors.
+    
+    Provide a fallback that does it manually. If setting CLOEXEC fails, the
+    file descriptor is closed immediately, which will lead to failures but
+    avoid leaks. However, setting CLOEXEC is not really expected to fail
+    occasionally.
+    
+    Add tests for the wrapper. The setup is copied from connection-test.c.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 2ccaf918ab4d5185066b84d4dd6050fa76afdd9e
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Mon Apr 23 14:36:32 2012 +0300
+
+    tests: silence warnings from pipe()
+    
+    warning: ignoring return value of ‘pipe’, declared with attribute
+    warn_unused_result
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 1463a41f893b0705c30035182bb070a95f822b1c
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Mon Apr 23 13:55:55 2012 +0300
+
+    os: wrap F_DUPFD_CLOEXEC
+    
+    Some system C libraries do not have F_DUPFD_CLOEXEC. Provide a fallback.
+    
+    Add tests for the new wl_os_dupfd_cloexec() wrapper.
+    
+    Add per-wrapper call counters in os_wrappers-test.c. Makes it easier to
+    determine the minimum required number of wrapped calls.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 3b29783dc8f0e856afce7a9edf10c0ca4d12f284
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Mon Apr 23 12:10:45 2012 +0300
+
+    os: define SOCK_CLOEXEC on Linux
+    
+    If it's not already defined, and we are on Linux, #define it. This gets
+    rid of a load of #ifdefs. This should also allow to use it when the
+    kernel supports it, but the libc does not define it.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 1f827a477607d0a9dc9520fc6c53c936befb663d
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Mon Apr 23 11:37:40 2012 +0300
+
+    os: remove unneeded errno assignment
+    
+    If socket() fails, it will return failure code. No need to reset errno
+    beforehand.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit e7dd32710f3fcff0bbbaf33807fb65b78a43e2fb
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sun Apr 22 14:17:02 2012 -0400
+
+    tests: Test invoking closures built with wl_closure_vmarshal()
+
+commit 243672cd3ca35a6418176fbd16db033f40b92b90
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sun Apr 22 14:16:08 2012 -0400
+
+    connection: Make sure we can invoke closures built with wl_closure_vmarshal()
+
+commit 1901d66ffca2a10a3f24b918e5a4de56646f4f11
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sun Apr 22 13:49:35 2012 -0400
+
+    connection: Move closure object out of wl_connection
+
+commit 0d6dea17b4e25b775dcad44b024137a293fe06bf
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sat Apr 21 23:50:09 2012 -0400
+
+    connection: Dont put fds in the connection until we send the closure
+
+commit 9d37682db32f16eb69a76d21569af6cac0d3d08c
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Apr 20 13:43:08 2012 -0400
+
+    Update TODO
+    
+    Casey did surface.enter/leave.
+
+commit a5df3de101f88f16aa8c3325825501a47525d7d3
+Author: Casey Dahlin <cdahlin@redhat.com>
+Date:   Tue Apr 17 17:22:45 2012 -0400
+
+    Add wl_surface.enter and wl_surface.leave events
+    
+    These events let us track when a surface enters or leaves the scanout region of
+    an output. This way if a surface moves to another output and that output is on
+    a different card, we can suggest the toolkit reallocate its buffers
+    appropriately.
+    
+    Signed-off-by: Casey Dahlin <cdahlin@redhat.com>
+
+commit f52a901f88c842b6cb657e50792050978cb47c50
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Fri Apr 20 14:33:49 2012 +0300
+
+    tests: add .gitignore
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 7134a439c1a028cad51a5160f56c84a961be9f72
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Wed Mar 21 11:11:26 2012 +0200
+
+    os: wrap socket(SOCK_CLOEXEC) calls
+    
+    Some system C libraries do not offer SOCK_CLOEXEC flag.
+    
+    Add a new header for OS compatibility wrappers. Wrap socket() calls into
+    wl_os_socket_cloexec() which makes sure the O_CLOEXEC flag gets set on
+    the file descriptor.
+    
+    On systems having SOCK_CLOEXEC this uses the old socket() call, and
+    falls back if it fails due to the flag (kernel not supporting it).
+    
+    wayland-os.h is private and not exported.
+    
+    Add close-on-exec tests for both normal and forced fallback paths.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit da6b1a8e4774234c2dbdd9f2875de21b41086d00
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Fri Apr 20 14:22:51 2012 +0300
+
+    tests: support testing fd inheritance over exec
+    
+    Add facility for testing how (many) file descriptors survive an exec.
+    This allows implementing O_CLOEXEC tests.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 7c0aa1a4a3aca023cbdad0a97de124a77cb98aa1
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Fri Apr 20 11:21:34 2012 +0300
+
+    tests: plug fd leaks in free_source_with_data
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit e0561ac68d4db23906ca7e61bf191da4451711fd
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Thu Apr 19 16:52:32 2012 +0300
+
+    tests: detect fd leaks
+    
+    Detect file descriptor leaks in tests.
+    
+    Add a sanity test to verify that we catch the leaks.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 2896b6a22040dab70655bc271025f99ba92e6bb1
+Author: Scott Moreau <oreaus@gmail.com>
+Date:   Mon Apr 16 11:25:39 2012 -0600
+
+    protocol: Add ping event and corresponding pong request
+
+commit d44074900d214e1d992c03152f9f43269bea7eba
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Apr 19 12:37:40 2012 -0400
+
+    tests: Add more sanity test to make sure we catch different failure modes
+
+commit 41570a5ed979f8e277b124caa7023abcb726b5f3
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Apr 19 12:07:20 2012 -0400
+
+    tests: Make sure unused malloc() doesn't get optimized away
+
+commit 55489883c4f47e2716270be0085be6b7c99d3b18
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Thu Apr 19 14:46:52 2012 +0300
+
+    tests: add sanity-test
+    
+    Test the testing framework itself, so that it catches the errors we
+    expect it to.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit bb74adbc4d77bd3f787041ad236b6d5a5014b7ba
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Thu Apr 19 14:26:51 2012 +0300
+
+    tests: add support for tests expected to fail
+    
+    Add a new macro FAIL_TEST that can be used to define tests that are
+    supposed to fail. To distinguish the supposed outcome of a test, add a
+    field to 'struct test'.
+    
+    However, simply adding a field to 'struct test' will make all tests past
+    the first one in an executable to be garbage. Apparently, the variables
+    of type 'struct test' have different alignment when put into a special
+    section than otherwise, and the compiler will get the skip from one
+    'struct test' to the next wrong.
+    
+    Explicitly specify the alingment of 'struct test' to be 16 bytes, which
+    is what it seems to be in the special section on x86_64.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 56426d8a4aba52bacec85737db1523d8acfdbbe4
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Thu Apr 19 14:06:08 2012 +0300
+
+    tests: stylish test-runner.c
+    
+    Fix a typo, add a comment, change the print format, and add a variable
+    that will ease implementing tests that are expected to fail.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit b1d4eb24c6079468f57b4706358031461ee44130
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Thu Apr 19 12:14:19 2012 +0300
+
+    tests: fail build if NDEBUG is defined
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 84464a3e9b5f16ab805ee3166901dd264a3898a7
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Thu Apr 19 12:12:13 2012 +0300
+
+    tests: put common test source files in a variable
+    
+    Makes all test targets have the same common make dependencies.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit b7c7963f160f951fbc8ef10923a5264fec28cbd7
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Tue Apr 17 15:16:38 2012 +0300
+
+    Fix printf format warnings
+    
+    connection.c:530: warning: format '%lu' expects type 'long unsigned
+    int', but argument 2 has type 'unsigned int'
+    
+    /connection.c:560: warning: format '%lu' expects type 'long unsigned
+    int', but argument 2 has type 'unsigned int'
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 677c5180e67be18b7a0867fafb7f205b57a6e9ff
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Apr 13 12:51:40 2012 -0400
+
+    data-device: Take away pointer focus when we start a dnd drag
+
+commit a9f951b003e024d1cfaaf79751749c65388c5937
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Apr 13 12:48:38 2012 -0400
+
+    data-device: Record the serial number for the current selection
+    
+    And reject setting a selection that's older than our current selection.
+
+commit 74aec06625adc220f674c526892e9839ecec2db3
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Apr 13 10:39:24 2012 -0400
+
+    data-device: Clear drag focus when we end the drag-and-drop
+    
+    Otherwise we'll see a spurious leave event when we start the next dnd.
+
+commit b68b5e9e0cfb668dd34843656664a01bd304956c
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Apr 13 10:13:49 2012 -0400
+
+    tests: Make leak check work again by setting default visibility for malloc/free
+    
+    We compile the test cases with -fvisibility=hidden which makes
+    our malloc/free wrappers fail to override system malloc/free.
+
+commit d8b66a00f414da3c441258d0ff1972e6120157aa
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Apr 13 10:13:21 2012 -0400
+
+    tests: Fix warning in  memory leak assert
+
+commit ac06144cc94c893b0a8ae53ed7e241f3bd7631e4
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Apr 13 10:11:11 2012 -0400
+
+    tests: Fix signedness warnings
+
+commit fa5f7b11918727a2665e16bcd1a61ad49b0ae195
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Apr 13 09:53:15 2012 -0400
+
+    server: Add client destroy signal
+
+commit 18a770c80d59ef672e54688761bc8d0d9e660e12
+Author: Neil Roberts <neil@linux.intel.com>
+Date:   Wed Apr 11 16:59:05 2012 +0100
+
+    Add a public header for the version number
+    
+    This adds a public header so that applications can get the Wayland
+    version number at compile time. This can be used to make applications
+    that support compiling against multiple versions of Wayland.
+    
+    There is a separate installed header called cogl-version.h which gets
+    included by both wayland-client.h and wayland-server.h
+    
+    The canonical place for the version number is the configure.ac script
+    which splits it into three separate m4 defines for the major, minor
+    and micro version. These are copied into the generated
+    wayland-version.h header using AC_SUBST. There is also a string form
+    of the complete version number.
+    
+    The version number is now also automatically copied into the two .pc
+    files.
+    
+    Because the major, minor and micro parts are required it is no longer
+    possible to leave the version number as 'master' when building from
+    git. Most projects seem to immediately bump the git repo to a fake
+    version number (usually odd) after making a release so that there is
+    always a relative number that can be used for comparison. This patch
+    sets the git version to 0.99.0 under the assumption that the next
+    release will be 1.0.0.
+
+commit 8e5866a54d068bd7d4228cdd257256962744ded0
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Apr 12 17:43:12 2012 -0400
+
+    Update TODO
+
+commit 6802eaa68af90227b6614a84e7d3129e1f7a8303
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Apr 12 15:29:48 2012 -0400
+
+    Introduce wl_signal
+    
+    This is mostly renaming and consolidating the listener_list pattern
+    into something more concise and reusable.
+
+commit 5535f155d8567a07596660a18b6d38a46acfe987
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Apr 11 22:25:51 2012 -0400
+
+    Switch protocol to using serial numbers for ordering events and requests
+    
+    The wayland protocol, as X, uses timestamps to match up certain
+    requests with input events.  The problem is that sometimes we need to
+    send out an event that doesn't have a corresponding timestamped input
+    event.  For example, the pointer focus surface goes away and new
+    surface needs to receive a pointer enter event.  These events are
+    normally timestamped with the evdev event timestamp, but in this case,
+    we don't have a evdev timestamp.  So we have to go to gettimeofday (or
+    clock_gettime()) and then we don't know if it's coming from the same
+    time source etc.
+    
+    However for all these cases we don't need a real time timestamp, we
+    just need a serial number that encodes the order of events inside the
+    server.  So we introduce a serial number mechanism that we can use to
+    order events.  We still need real-time timestamps for actual input
+    device events (motion, buttons, keys, touch), to be able to reason
+    about double-click speed and movement speed so events that correspond to user input carry both a serial number and a timestamp.
+    
+    The serial number also give us a mechanism to key together events that
+    are "logically the same" such as a unicode event and a keycode event,
+    or a motion event and a relative event from a raw device.
+
+commit a13aab4e15f7defe8207dfc18277321166577d7a
+Author: Jørgen Lind <jorgen.lind@nokia.com>
+Date:   Fri Apr 6 13:27:57 2012 +0200
+
+    remove superfluous functions
+
+commit e6a9e1b302ee1f09ea5ed7b54470145419d7b51f
+Author: Benjamin Franzke <benjaminfranzke@googlemail.com>
+Date:   Fri Apr 6 15:54:38 2012 +0200
+
+    wayland-util.h: Include stddef.h for size_t
+
+commit aa777e5b10e17d12c4bb6440f7c659d2a12191f5
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Apr 3 12:08:50 2012 -0400
+
+    shm: Allocate shm buffers through new wl_shm_pool interface
+    
+    There's a big cost to setting up and tearing down a mmap and faulting in
+    the pages to back it.  For cases where we're continuously reallocating
+    shm wl_buffers (resizing a surface, typically) it is a big performance
+    improvement to be able to reuse a mmap area.  This change makes the shm
+    buffer allocation a two step process: first allocate a wl_shm_pool, then
+    allocate a buffer from the pool.  The wl_shm_pool encapsulate the shared
+    memory pool, and lets clients allocate wl_buffers backed by chunks of that
+    memory.  Buffers are allocated at an offset into the pool, so it's possible
+    to create multiple buffers from one pool, for example for icons or cursor
+    images.
+
+commit 68cf7a1a425c986304ae179a58279d43210e790f
+Author: Alex Wu <zhiwen.wu@linux.intel.com>
+Date:   Sun Apr 1 20:13:07 2012 +0800
+
+    wayland-utils: add wl_list_for_each_reverse_safe macro.
+    
+    Add the safe version for wl_list_for_each_reverse
+
+commit 3cddb3c692acd3536a7cc8542a29f0cc3c0ac3d6
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Mar 30 11:27:02 2012 -0400
+
+    Fix remaining signedness errors
+    
+    We can change the data type for 'size' but we have to cast len to size_t
+    for the comparisons with sizeof results.
+
+commit 0ca75a4f3244a657e5583176f4ac521ea71ca0b0
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Mar 30 10:41:38 2012 -0400
+
+    wayland-util: Fix wl_array signedness warnings
+
+commit 3fb304bb3e339ef67764b2d9bd5155bc10905255
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Mar 30 10:36:57 2012 -0400
+
+    connection.c: Fix signedness warnings
+
+commit ba32db95321608b11f9283c0475812e1dc9897a1
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Mar 30 10:28:39 2012 -0400
+
+    Move DIV_ROUNDUP out of public header, remove unused ALIGN
+
+commit 485dd7b6e2691e7bd0016c5363c4444adc429e30
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Mar 30 10:24:29 2012 -0400
+
+    shm: Fix stride signedness in protocol
+    
+    Make stride argument of wl_shm.create_buffer a signed integer.
+
+commit 4560b6b6b4d19a65350591d9bbc83df1cdc7bd13
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Fri Mar 30 16:38:39 2012 +0300
+
+    server: fix button signedness in wl_grab_interface
+    
+    wl_input_device::grab_button is unsigned but the button parameter to
+    wl_grab_interface::button is signed. This lead to a warning in
+    data-device.c.
+    
+    The button number is unsigned in the protocol, so make it unsigned in
+    the wl_grab_interface API, too. Fixes the compiler warning "comparison
+    between signed and unsigned integer expressions".
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 03c40a8c99e1d9c63cb5cb0a70fc2272163e8be6
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Fri Mar 23 14:00:32 2012 +0200
+
+    scanner: fix a signedness warning
+    
+    Trivial fix to a
+    warning: comparison between signed and unsigned integer expressions
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit c2a405be5aeb3b1a320aa50e7049943d7cc09e90
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Thu Mar 22 11:33:35 2012 +0200
+
+    shm: fix cosmetic gcc warnings
+    
+    Fix warning: 'static' is not at beginning of declaration
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 00ea1701f261c256e9d1ed1c4dc2d87b86e624a9
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Thu Mar 22 17:21:58 2012 +0200
+
+    server: fix signedness in wl_client_connection_data
+    
+    The variables opcode and size were unsigned, which lead to warnings
+    about comparisons of signed vs. unsigned.
+    
+    Change these variable to signed. Their usage never relies on being
+    unsigned.
+    
+    This also fixes (an assumed) printf format string problem, where these
+    were printed with %d, not %u.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 0e81a0b157c7c8d7c02a8519ac56f3d601a8b287
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Thu Mar 22 11:30:35 2012 +0200
+
+    configure: add -Wextra -Wno-unused-parameter
+    
+    This adds more gcc warnings that should be useful, and suppresses the
+    unused parameter warnings that are not wanted.
+    
+    Most importantly, this change enables warnings about comparison between
+    signed and unsigned.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 5b72fc7528aa9f7c655dd49a2227cfd1e3feeb76
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Mar 29 14:11:16 2012 -0400
+
+    docs: Touch ouput dir Wayland to update timestamp
+    
+    Prevents rebuild every time.
+
+commit 4fe458346cc8a13c6b46d33620b6697d6f3e2086
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Mar 29 13:34:08 2012 -0400
+
+    Remove unused bits from wayland-server.h
+
+commit 6c57ab016d692ef7ed141689a6b5afa2c8f5d2a5
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Mar 28 23:13:59 2012 -0400
+
+    Update TODO
+
+commit f68e156b8fa2dcebfaf1e00c8a930545317ed785
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Mar 29 10:50:13 2012 +1000
+
+    doc: consistently indent the xml files by 2 spaces
+    
+    2 spaces is enough for xml, otherwise we end up with too little room for the
+    actual text.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 966e8ec9c0f8b46c28935bf3d5e7e84fe09b85ab
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Mar 29 10:50:12 2012 +1000
+
+    doc: rename Procotol to ProtocolSpec and WaylandProtocol to Protocol
+    
+    The former is the actual specification, the latter notes about the protocol.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit adf300dc135bd1467ee89b0145f391a26e4c531e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Mar 29 10:50:11 2012 +1000
+
+    doc: remove unused example files
+    
+    These files were left in as examples, we have real-world examples now.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 3d7f7e2f4aadda84e7a1289f2f19a8be9344e436
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Mar 29 10:50:10 2012 +1000
+
+    doc: move documentation from the tex file to docbook
+    
+    And remove the .tex file
+    
+    Minor changes:
+    - where the .tex file had some interface descriptions, the docbook source
+      now links to the actual protocol. The exception here is the shared object
+      cache which is simply a <programlisting> until the protocol spec exists.
+    - "Implementation" section skipped, this seems in need of an update anyway
+      and may be better documented elsewhere (wiki?)
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 3891c73511bf4e42e2940b65a148e4a1a016bf7f
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Mar 27 16:36:25 2012 -0400
+
+    Fix formatting warning
+
+commit 897a4ec62d1ec531c9868bdef704500b1043c59b
+Author: Ander Conselvan de Oliveira <ander.conselvan.de.oliveira@intel.com>
+Date:   Tue Mar 27 17:36:35 2012 +0300
+
+    data-device: notify the compositor about new drag icons
+    
+    Let the compositor use a listener to be notified when a new drag icon
+    is set up.
+
+commit 83685c506e76212ae4e5cb722205d98d3b0603b9
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Mar 26 16:33:24 2012 -0400
+
+    Remove wl_buffer.damage and simplify shm implementation
+
+commit a0e590a0f3ea87b7616cf197edd240b7b99fcc2e
+Author: U. Artie Eoff <ullysses.a.eoff@intel.com>
+Date:   Fri Mar 23 10:01:23 2012 -0700
+
+    Add simple memory leak check to all tests.
+    
+    Wrap all tests with a memory balance check to detect potential
+    memory leaks.
+    Fixed a few tests that had memory leaks contained in the tests
+    themselves.
+    
+    Signed-off-by: U. Artie Eoff <ullysses.a.eoff@intel.com>
+
+commit 9086b60d81a48f14b6c48b30e307caa053568548
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sat Mar 24 14:34:05 2012 -0400
+
+    connection-test: Add test case to stress connection buffers
+    
+    This catches the bug fixed in cab70c9e5d8c38260a07bb1ddb7618826a120465.
+
+commit b01ae077274e579bd09476086b6dc1f3685fc466
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sat Mar 24 14:27:30 2012 -0400
+
+    connection-test: Test fd transport
+
+commit fa4769cadd1ca8a8c4994d7704f6d9298a627251
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Mar 23 16:57:34 2012 -0400
+
+    connection-test: Add more test cases
+
+commit 33ad8a3315b22a38ddae116314e081488e5f3ee4
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Mar 23 16:56:19 2012 -0400
+
+    connection-test: Store expected result in struct marshal_data
+
+commit 0ca52cce98325b1fdae9046474e70246ae4c87e2
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Mar 23 11:41:34 2012 -0400
+
+    tests: Add marshal+demarshal connection test
+
+commit f67f6395b16a972003d4a9b6034a893932ac63fd
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Mar 23 11:32:17 2012 -0400
+
+    tests: Use different connections for read and write tests
+    
+    The connection tests so far only use one connection at a time, but this
+    prepares for tests that use a connection on both sides of the socket.
+
+commit 1c5578e87fc0fec0cf585c586462b982fa296101
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Mar 23 00:48:19 2012 -0400
+
+    connection: Just look at buffer size and remove redundant n_fds_out
+    
+    Instead of maintaining a count of the fds in the buffer, just compute
+    that from the buffer size.  That way we don't get out of sync.
+
+commit cab70c9e5d8c38260a07bb1ddb7618826a120465
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Mar 23 00:27:04 2012 -0400
+
+    connection: Set n_fds_out to 0 when we send out the fds
+    
+    This needs to happen always, not just when the fd buffer overflows.
+
+commit 75480a1eebdf4bf05349d6d96b9abeea36085b99
+Author: Scott Moreau <oreaus@gmail.com>
+Date:   Tue Mar 20 09:10:18 2012 -0600
+
+    Add protocol for axis events
+
+commit 7746a80e2ab829f16fa328562ec6e5664beb624f
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Mar 21 10:32:06 2012 -0400
+
+    tests: Remove debug printf
+
+commit 80f4f0d5127ebc8d5e35969a29691cf61a79997d
+Author: Jonas Ådahl <jadahl@gmail.com>
+Date:   Wed Mar 21 10:31:24 2012 +0100
+
+    event-loop: Use two-step destruction of event loop sources.
+    
+    Instead of directly freeing an event source upon removal put it in a
+    queue later handled by the event loop; either after a dispatch or upon
+    event loop destruction.
+    
+    This is necessary to avoid already queued up event sources to be freed
+    during some other dispatch callback, causing segmentation faults when
+    the event loop later tries to handle an event from the freed source.
+    
+    Signed-off-by: Jonas Ådahl <jadahl@gmail.com>
+
+commit f48bd0714a9b77935fab679a7f03bb26b309e82b
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Mar 21 10:29:47 2012 -0400
+
+    tests: Add test case for freeing source with pending data
+
+commit 81ffaa04b9c17f868844294aa107155f397650f2
+Author: Bill Spitzak <spitzak@gmail.com>
+Date:   Sun Mar 18 18:54:21 2012 -0700
+
+    Check arguments to wl_resource_post_error in gcc
+    
+    The attached patch turns on printf argument warnings for this function,
+    which I found was being called incorrectly at least once in the wayland
+    source code.
+
+commit ecfb79bd7180da4a053338532fe633d7d70d6ead
+Author: Üstün Ergenoğlu <ego@ustun.fi>
+Date:   Sat Mar 17 19:09:39 2012 +0200
+
+    configure: Add option to disable building documentation.
+    
+    Signed-off-by: Üstün Ergenoğlu <ego@ustun.fi>
+
+commit 707623f0cb21391f0f7e62c79cb0df9cb6329aba
+Author: Ander Conselvan de Oliveira <ander.conselvan.de.oliveira@intel.com>
+Date:   Wed Mar 14 14:47:40 2012 +0200
+
+    test: add a unit test for the event loop post dispatch check
+
+commit 3c5d9694db6f8bcbebc9a8d1ae3afd8e61530089
+Author: Ander Conselvan de Oliveira <ander.conselvan.de.oliveira@intel.com>
+Date:   Tue Mar 13 13:16:13 2012 +0200
+
+    event-loop: always do the post-dispatch check
+    
+    The post-dispatch check on wl_event_loop_dispatch() was not being run
+    if epoll_wait returned 0 events, making the check unreliable.
+
+commit d4ae9fb5f8b64894d59b2e8c91db8076e4b9603e
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Mar 20 12:32:51 2012 -0400
+
+    TODO: Pull in updated TODO list from 1.0 roadmap email
+
+commit ccb78667b9a205fe1804c6b43bf3222b2da52501
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Mar 16 09:26:05 2012 -0400
+
+    doc: Don't list directories in list of files to install
+    
+    The find expression was listing the xml_tmp directory, because it matched
+    the -prune rule.
+
+commit 73d4a53672c66fb2ad9576545a5aae3bad2483ed
+Author: Ander Conselvan de Oliveira <ander.conselvan.de.oliveira@intel.com>
+Date:   Fri Mar 9 12:51:42 2012 +0200
+
+    Flush the connection if we have to many marshaled fds
+    
+    The buffer used by wl_connection_data to receive a cmsg is 128 bytes
+    long. This can hold at most 28 fds but when a cmsg is generated for
+    sending the fds, there is no check for this limitation. The man page
+    for recvmsg does not show any way of recovering from MSG_CTRUNC, that
+    happens when the buffer supplied for cmsg is too short.
+    
+    Fix this by flushing the data to be written instead of generating a
+    cmsg buffer longer than the maximum.
+
+commit 46df9232faa5f2e154ad14b6b10ca2475dbbf83b
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Mar 5 22:29:53 2012 -0500
+
+    test-runner.c: Consolidate test running code
+
+commit 4bc5a0ab2c34c2541148147e6e1be774fc447e53
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Mar 5 22:26:17 2012 -0500
+
+    tests: Add demarshal tests
+
+commit b2afde6f184dfe1c3cca656dc1f9862a45bfa24d
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Mar 5 21:53:38 2012 -0500
+
+    tests: Add more marshal tests
+
+commit d86718fc33d22a8719f0d0773aad5edaa495d36c
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Mar 5 21:40:01 2012 -0500
+
+    tests: Simplify connection tests a bit
+
+commit efab74e956ba7b93a11c708db78fe0e20b578376
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Mar 5 21:38:25 2012 -0500
+
+    tests: Add wl_list tests
+
+commit b4351bc08ef8dca4ebe91b173350e3e8e9b8b14b
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Mar 5 21:14:57 2012 -0500
+
+    tests: More wl_map tests
+
+commit bbebd304fba6567cf3475d5f850d26b16ca516fe
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Mar 5 21:02:53 2012 -0500
+
+    TOOD: Frame based input done
+
+commit c1804b5735f30f87949115ac8739376485df3fdb
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Mar 3 17:32:59 2012 -0500
+
+    tests: makefile error: missing test-runner.h
+    
+    Detected by running distcheck
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 814a626087546387331fd197b62b343dea22907e
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Mon Mar 5 10:31:53 2012 -0500
+
+    scanner: Add since attribute
+    
+    This will help us document when a request or event was added to the protocol.
+
+commit bb4b05bc8d0df6dc119a20bdaad30a0849a028be
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 4 12:15:31 2012 -0500
+
+    check: connection-test fails to link to ffi
+    
+    This prevents distcheck from completing.
+    Moving the -lffi at the end of the command fixes the problem.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7ee21abef0d07df5d74475f63d4b2b5991af4937
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Mar 3 17:32:58 2012 -0500
+
+    publican: support out-of-source tree build
+    
+    When srcdir!=builddir, there is no way to tell publican that the source
+    is in srcdir rather than builldir. The workaround is to copy the source
+    files from srcdir to builddir. To retain the en-US final destination
+    name, the source directory is renamed to en_US.
+    
+    Tested-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit bbddbc482979817d734c0eb46942b1b689b70cb9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Mar 3 17:32:57 2012 -0500
+
+    Fix distcheck where protocol.xsl was missing in the tarball
+    
+    To reproduce, invoke distcheck from an out-of-source tree.
+    
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8e2cac7ae4b36a81324a744d229a3a29690c214b
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sun Mar 4 13:40:49 2012 -0500
+
+    Add wl_array_for_each
+
+commit ab0c7c58b9437f4aacdd039f5885534a575ff60e
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sat Mar 3 00:39:42 2012 -0500
+
+    Add tests subdir to toplevel SUBDIRS variable
+    
+    Artie spotted this.
+
+commit 87a1e599921228ddd5e55d1d71b7b37617348bde
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sat Mar 3 00:29:21 2012 -0500
+
+    tests: Add connection marshalling tests
+
+commit 22834deca72cf8fd87ff689734f1ed4eeb2a3ed6
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Mar 2 23:42:46 2012 -0500
+
+    tests: Add connection tests
+
+commit d2067508c148ba138c352779f6bd51526eaef91f
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Mar 2 23:42:07 2012 -0500
+
+    test-runner: Fix warnings
+
+commit ac80c54f1883779762276c6161bd2a273bac6fe3
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Mar 2 23:38:31 2012 -0500
+
+    connection: Export wl_connection_queue() so we can test it
+
+commit e655059256e70452683d43bbec62e73bc480ff31
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Mar 2 22:45:28 2012 -0500
+
+    tests: Print test status after running test
+    
+    This way assert output will be a line by itself, which is easier to read
+    and lets editors such as emacs step through failed assertions.
+
+commit 62d25699540a71aa42f6414cd51cedfb8d3a3392
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Fri Mar 2 18:03:16 2012 -0500
+
+    tests: Add Unit tests for wl_map and wl_array data structures
+    
+    We use a simple test-runner helper that runs each test in a separate
+    process and reports the pass/fail rate at the end.
+
+commit 214e343311bea0db46810f7ba220405e44397db4
+Author: Ander Conselvan de Oliveira <conselvan2@gmail.com>
+Date:   Fri Mar 2 15:45:56 2012 +0200
+
+    Terminate drag if data source is destroyed
+
+commit 70db367ccc2910e065db4b14039ebe40e13f5181
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Fri Mar 2 18:09:27 2012 +0200
+
+    server: fix event sending type mismatches
+    
+    These were not bugs in practice, because the first (and only) field of
+    struct wl_surface is struct wl_resource.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 5ee70146c60b80fec446d698d0a55dd9211b36b2
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Fri Mar 2 17:08:59 2012 +0200
+
+    server: use the event sending wrappers
+    
+    This exposes some type mismatches that are fixed in the next commit.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 86a5d17afe71626d8a4f48781805c040d97d6c69
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Fri Mar 2 15:16:33 2012 +0200
+
+    scanner: emit event wrapper functions for server
+    
+    Generate typed wrapper functions for sending events in a server.
+    
+    This allows compile time type checking, unlike the existing method of
+    calling the variadic function wl_resource_post_event().
+    
+    The stuff in wayland-server.h had to be slightly reordered to have all
+    (forward) declarations before use.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 0d22d25b8740688a4f243c70cdfd32bc05993778
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Mar 1 22:46:07 2012 -0500
+
+    wayland-server: Destroy resource before sending out delete_id event
+    
+    In some cases, we send out events from the resource destructor and
+    those need to go out before we recycle the object ID.
+
+commit e7f6c509e2bc6437c858f95b37effee619bdfe17
+Author: Ander Conselvan de Oliveira <ander.conselvan.de.oliveira@intel.com>
+Date:   Thu Mar 1 14:09:42 2012 +0200
+
+    Fix server crash when a client dies during a drag with an icon
+    
+    If a client dies during a drag that it started using an icon surface,
+    the server could crash because the icon surface is not valid anymore.
+    
+    Fix this by using a destroy listener to reset device->drag_surface to
+    nil when the surface is destroyed.
+
+commit cb3e102620a4c8c1599b6e98fb1a37989f16f2ae
+Author: Ander Conselvan de Oliveira <ander.conselvan.de.oliveira@intel.com>
+Date:   Thu Mar 1 14:09:41 2012 +0200
+
+    Fix wl_data_offer source destroy listener
+    
+    The listener function implementation was getting a wrong pointer to the
+    wl_data_offer object because the resource parameter is actually the
+    data source and not the data offer.
+
+commit eccc324ca81513c8c007863120ea2302a3133773
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Feb 29 12:49:25 2012 -0500
+
+    configure.ac: Fix test-for-empty bug
+    
+    From Gaetan Nadon:
+    
+    ./configure: line 11662: test: !=: unary operator expected
+    AM_CONDITIONAL([HAVE_XSLTPROC], [test $XSLTPROC != ""])
+    AM_CONDITIONAL([HAVE_PUBLICAN], [test $PUBLICAN != ""])
+    
+    It shows up when you do not have publican. The usual "testing for blank" bug.
+
+commit 089c977a3baf3d005de3d7058e643c8c42976e4f
+Author: Rob Bradford <rob@linux.intel.com>
+Date:   Tue Feb 28 16:48:26 2012 +0000
+
+    protocol: Clarify the documentation for the fullscreen protocol
+
+commit 72f9fd0a57b2244574b94408a59beb6308332a5c
+Merge: b26774d 1070579
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Feb 29 11:54:36 2012 -0500
+
+    Merge remote-tracking branch 'whot/publican'
+
+commit b26774da5b907a71aa7c72ee1feb6dcde92b9fcb
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Feb 29 11:07:48 2012 -0500
+
+    Don't block when flushing a full protocol buffer
+    
+    In case the client isn't responding, this will block the compositor.
+    Instead we flush with MSG_DONTWAIT, which lets us fill up the kernel buffer
+    as much as we can (after not returning EPOLLOUT anymore it still can take
+    80k more), and then disconnect the client if we get EAGAIN.
+
+commit 1070579d4b90c056eb627268ae55bac3fde6a9df
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Feb 29 11:49:16 2012 +1000
+
+    Hack up distcheck for publican
+    
+    Publican requires a read-write source tree, see
+    http://bugzilla.redhat.com/show_bug.cgi?id=798484
+    
+    And it currently cannot build out-of-tree, so we need to copy the sources
+    into the _build tree and generate Protocol.xml into that tree too (we'd have
+    to do this anyway since automake creates a read-only source tree, so we
+    can't just link).
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a678fd53e16b7cb7eb2dbef218e89c649bdaabc7
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Feb 24 17:31:51 2012 +1000
+
+    Generate the docbook description for the protocol from wayland.xml
+    
+    Convert the wayland.xml protocol description to a docbook-compatible format
+    and hook it up to the publican sources.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c3d56a05c6f01c3409ba8ad53765cb9dd84715b6
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Feb 24 09:42:05 2012 +1000
+
+    Hook up autotools for publican
+    
+    automake doesn't seem to provide a sensible method to install a directory of
+    stuff in $(docdir). Do it manually then.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f48355cad31906873baff236cf9b7d3da1c8b0a8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Feb 29 08:42:26 2012 +1000
+
+    doc: Comment out some of the default chapters
+    
+    I'll leave them in for now as a template for how things looked originally,
+    this can be removed later.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 125289a0d7a8675cf9207c26d808f69f24465c49
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Feb 24 11:01:39 2012 +1000
+
+    doc: Add architecture from the website
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 6071b7da94e1fcc24e4f4608aed8d08383916467
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Feb 24 09:47:44 2012 +1000
+
+    doc: Fix up title page with logo and author information
+    
+    Abstract taken from http://wayland.freedesktop.org
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit fcddfbb769a98b77ecd1e0452c6d8f275301cc0b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Feb 24 09:37:02 2012 +1000
+
+    doc: add publican-created doctree
+    
+    $> publican create --name=Wayland
+    unmodified otherwise
+    
+    To build the tree to target formats, use
+    $> publican build --langs=en-US --formats=html,pdf
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit bcafc467c50467026b3ea2c185903dc8775a8fef
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Feb 29 10:40:53 2012 +1000
+
+    protocol: fix make distcheck
+    
+    Distribute all source files that we need for buildling.
+    Plus, remove the html file on make clean.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit bf53f2033d0f39bab59da783f5b13f9e3bfe7073
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Tue Feb 28 16:42:17 2012 -0500
+
+    Update TODO
+
+commit d224714afd087cc73d81a6a13baa72b30928bb6e
+Author: Samuel Rødal <samuel.rodal@nokia.com>
+Date:   Mon Feb 27 16:57:42 2012 +0100
+
+    Allow update function to not be set in wl_display_get_fd
+    
+    Ignore previous patch, here's the correct version.
+    
+    From 4e1bedaaf05b576f5191f8fe3a34904ab9707414 Mon Sep 17 00:00:00 2001
+    From: =?UTF-8?q?Samuel=20R=C3=B8dal?= <samuel.rodal@nokia.com>
+    Date: Mon, 27 Feb 2012 15:17:20 +0100
+    Subject: [PATCH] Allow update function to not be set in wl_display_get_fd
+    
+    The same check is done in connection_update, and now with
+    wl_display_flush() there's less need for the client to need to know the
+    connection mask.
+
+commit bf5a8fbb98282a607ba9120516985d17858b63a4
+Author: Samuel Rødal <samuel.rodal@nokia.com>
+Date:   Mon Feb 27 17:10:03 2012 +0100
+
+    Rename client side wl_display_destroy() to wl_display_disconnect()
+    
+    This avoids the clash with the wayland-server version with the same
+    name, and allows linking against both wayland-client and wayland-server
+    at the same time, which can be useful for unit testing purposes as
+    well as for nested compositing.
+    
+    Without this there will be crashes as the wrong wl_display_destroy()
+    is called.
+
+commit a676b8f2576ff85cbdbcf5b443214c0ebd5a5abd
+Author: Üstün Ergenoğlu <ego@ustun.fi>
+Date:   Sat Feb 25 12:56:32 2012 +0200
+
+    util: Comments before wl_list were a bit off, fixed the example usage.
+    
+    Signed-off-by: Üstün Ergenoğlu <ego@ustun.fi>
+
+commit d0711b27ee64f22be3eabb089c10d19a1173972c
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Feb 23 16:41:46 2012 -0500
+
+    protocol.xsl: Rename stylesheet to wayland-protocol.css
+    
+    Otherwise it clashes with the website stylesheet.
+
+commit 015c42e1b1c758669d8adacf4bd174ce934a43f5
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Feb 23 15:58:37 2012 +1000
+
+    protocol: add xslt stylesheet to prettify the protocol
+    
+    Includes rudimentary styling only.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 50e87a006f50b47ef469255495fe3e4ef0c8a593
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Feb 23 15:55:41 2012 +1000
+
+    protocol: fix missing hyphenation for "client-created"
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a8c9e82c4931a94177c4151eb404f312831f2f6c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Feb 23 15:55:40 2012 +1000
+
+    scanner: Remove unused variable 'len'
+    
+    scanner.c: In function ‘desc_dump’:
+    scanner.c:142:42: warning: unused variable ‘len’ [-Wunused-variable]
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0b54a1442aa9b86fa714ce59a0bc7e4df87b5e26
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Feb 23 15:55:39 2012 +1000
+
+    spec: padding bytes are undefined, state so
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ff562befd8754668accea9c7fe59d6e3eb1c4e59
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Feb 23 15:55:38 2012 +1000
+
+    spec: typo and wording fixes
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c56667bb8323654fa17fa5ac18d9dee68b84bdd5
+Author: Thiago Macieira <thiago.macieira@intel.com>
+Date:   Thu Feb 23 19:50:37 2012 +0100
+
+    Fix compilation: uid_t, gid_t and pid_t are defined in sys/types.h
+    
+    This error shows up in third-party code when including
+    wayland-server.h.
+
+commit 1ba69d26e08e68735d02ceb58ad49138b289b6fc
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Feb 23 14:50:06 2012 -0500
+
+    Add wl_region and surface requests to set opaque and input regions
+
+commit 3c6f42112d0851c9af773d5d4777bd1877574904
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sat Feb 18 01:25:44 2012 -0500
+
+    Split pointer_focus and keyboard_focus into enter and leave events
+
+commit ab3b5cd71ce6dd1a532d9c1fecabb1a6e9d1a055
+Author: Scott Moreau <oreaus@gmail.com>
+Date:   Sat Feb 18 05:05:28 2012 -0700
+
+    server: Implement wl_keyboard_grab_interface.
+
+commit 8134e067423937d9fa1d19a531ababe4f2df19a6
+Author: Scott Moreau <oreaus@gmail.com>
+Date:   Sat Feb 18 05:05:27 2012 -0700
+
+    server: Rename wl_grab_interface.
+    
+    In order to separate pointer and keyboard grabs, we need to
+    introduce a keyboard grab interface but first we must rename
+    some generic types to denote which device is holding the grab.
+    
+    Type renames:
+    
+    wl_grab_interface -> wl_pointer_grab_interface
+    wl_grab -> wl_pointer_grab
+    wl_input_device_start_grab -> wl_input_device_start_pointer_grab
+    wl_input_device_end_grab -> wl_input_device_end_pointer_grab
+
+commit 8503cd6859c3794809c62e1bd867d4f9321d9921
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Sat Feb 18 00:29:25 2012 -0500
+
+    Add wl_client_get_credentials() to get unix credentials for client
+
+commit 5536031bfb7d70b462e65406bcae2a35738a9485
+Author: Pekka Paalanen <ppaalanen@gmail.com>
+Date:   Tue Feb 14 11:00:12 2012 +0200
+
+    protocol: remove absolute coordinates from pointer
+    
+    Remove the absolute coordinate fields from the pointer motion and
+    pointer_focus events. Clients are not supposed to see any global
+    coordinates.
+    
+    Fix wayland-server code accordingly. wayland-client code is unaffected.
+    
+    Signed-off-by: Pekka Paalanen <ppaalanen@gmail.com>
+
+commit 7243062f9346449b4f8657d0d472dc3ffe5b33dc
+Author: Ander Conselvan de Oliveira <ander.conselvan.de.oliveira@intel.com>
+Date:   Wed Feb 15 17:02:52 2012 +0200
+
+    data_device: get rid of attach request
+    
+    In the effort to make everything a regular surface, remove
+    data_device.attach request. To maintan the functionality, add
+    an icon surface parameter to data_device.start_drag.
+    
+    Signed-off-by: Kristian Høgsberg <krh@bitplanet.net>
+    Signed-off-by: Ander Conselvan de Oliveira <ander.conselvan.de.oliveira@intel.com>
+
+commit b3981136a1a501a43b709acef9f145cf977e08b0
+Author: Juan Zhao <juan.j.zhao@linux.intel.com>
+Date:   Tue Feb 7 13:39:36 2012 +0800
+
+    Add fullscreen protocol
+    
+    Map the surface as a fullscreen surface. On the output the
+    surface is assigned to. The client can use different fulllscreen
+    method to fix the size mismatch issue: default, scale, driver
+    and fill.
+    
+    Hints to indicate compositor how to deal with this fullscreen surface.
+    
+    "default" means the client has no preference on fullscreen
+              behavior, policies are determined by compositor.
+    "scale"   means the client prefers scaling by the compositor.
+              Scaling would always preserve surface's aspect ratio.
+              And the surface is centered.
+    "driver"  means the client wants to switch video mode to the
+              smallest mode that can fit the client buffer. If the
+              sizes do not match, black borders are added. And the
+              framerate parameter is used for "driver" method,
+              to indicate the preferred framerate. framerate=0 means
+              that the app does not care about framerate
+    "fill"    means the client wants to add blackborders to the
+              surface. This would be preferring 1:1 pixel mapping
+              in the monitor native video mode. The surface is
+              centered.
+
+commit 2eddfce14bd282e60d2d928fe567f89c448ebd6e
+Author: Juan Zhao <juan.j.zhao@linux.intel.com>
+Date:   Tue Feb 7 09:38:10 2012 +0800
+
+    Add maximized protocol
+    
+    A request from the client to ask the compositor to maximize the surface.
+    The compositor will reply with a configure event telling
+    the expected new surface size.  The operation is completed on the
+    next buffer attach to this surface.
+    
+    A maximized client will fill the fullscreen of the output it is bound
+    to, except the panel area. This is the main difference between
+    a maximized shell surface and a fullscreen shell surface.
 
 commit 7c6dac8740f26f0fd2440016c218a9862fdfc271
 Author: Kristian Høgsberg <krh@bitplanet.net>
