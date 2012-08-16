@@ -10,6 +10,7 @@ wayland (0.95.0-1) UNRELEASED; urgency=low
     mostly API stable now.
   * rules: Drop dh_auto_install override.  dh_auto_install automatically
     installs to debian/tmp whenever there are multiple binary packages.
+  * libwayland*.install: Add missing files.
 
  -- Timo Aaltonen <tjaalton@ubuntu.com>  Thu, 16 Aug 2012 13:04:41 +0300
 
