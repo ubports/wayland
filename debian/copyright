@@ -1,4 +1,3 @@
-Format-Specification: http://dep.debian.net/deps/dep5/
 Upstream-Name: wayland
 Upstream-Contact: Kristian Høgsberg <krh@bitplanet.net>
 Source: http://cgit.freedesktop.org/wayland/wayland
