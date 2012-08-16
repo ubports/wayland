@@ -10,7 +10,7 @@ Build-Depends:
  pkg-config,
  libexpat1-dev,
  libffi-dev,
-Standards-Version: 3.9.2
+Standards-Version: 3.9.3
 Vcs-Git: git://git.debian.org/git/pkg-xorg/wayland/wayland
 Vcs-Browser: http://git.debian.org/?p=pkg-xorg/wayland/wayland.git
 

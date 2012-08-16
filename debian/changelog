@@ -3,6 +3,7 @@ wayland (0.95.0-1) UNRELEASED; urgency=low
   * New upstream release.
   * Migrate to multiarch.
   * copyright: Refresh.
+  * control: Update Standards-Version to 3.9.3, no changes.
 
  -- Timo Aaltonen <tjaalton@ubuntu.com>  Thu, 16 Aug 2012 13:04:41 +0300
 
