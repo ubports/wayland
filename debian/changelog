@@ -14,6 +14,7 @@ wayland (0.95.0-1) UNRELEASED; urgency=low
   * rules: Temporarily disable installing the protocol docs, decide where
     to put them first.
   * Add README.source
+  * Switch to source format 3.0 (quilt) due to the xz tarball.
 
  -- Timo Aaltonen <tjaalton@ubuntu.com>  Thu, 16 Aug 2012 13:04:41 +0300
 
