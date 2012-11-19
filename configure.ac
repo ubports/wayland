@@ -1,7 +1,7 @@
 AC_PREREQ([2.64])
 
-m4_define([wayland_major_version], [0])
-m4_define([wayland_minor_version], [95])
+m4_define([wayland_major_version], [1])
+m4_define([wayland_minor_version], [0])
 m4_define([wayland_micro_version], [0])
 m4_define([wayland_version],
           [wayland_major_version.wayland_minor_version.wayland_micro_version])
@@ -43,7 +43,7 @@ AC_CHECK_FUNCS([accept4 mkostemp])
 
 AC_ARG_ENABLE([scanner],
               [AC_HELP_STRING([--disable-scanner],
-                              [Disable compilation of wayland-scannner])],
+                              [Disable compilation of wayland-scanner])],
               [],
               [enable_scanner=yes])
 
@@ -76,8 +76,28 @@ fi
 AC_PATH_PROG(XSLTPROC, xsltproc)
 AM_CONDITIONAL([HAVE_XSLTPROC], [test "x$XSLTPROC" != "x"])
 
+AM_CONDITIONAL(BUILD_DOCS, [test x$enable_documentation = xyes])
 if test "x$enable_documentation" = "xyes"; then
+	AC_PATH_PROG(DOXYGEN, doxygen)
+
+	if test "x$DOXYGEN" = "x"; then
+		AC_MSG_ERROR([Documentation build requested but doxygen not found. Install doxygen or disable the documentation using --disable-documentation])
+	fi
+
 	AC_PATH_PROG(PUBLICAN, publican)
+
+	if test "x$PUBLICAN" != "x"; then
+		PUBLICAN_VERSION=`$PUBLICAN -v | cut -d'=' -f2`
+
+		if test [ 1 -eq `echo "${PUBLICAN_VERSION} < 2.8" | bc` ]; then
+			AC_MSG_ERROR([Publican version is not supported. Install publican >= 2.8 or disable the documentation using --disable-documentation])
+		fi
+	fi
+
+	AC_CONFIG_FILES([
+	doc/doxygen/wayland.doxygen
+	])
+
 fi
 AM_CONDITIONAL([HAVE_PUBLICAN], [test "x$PUBLICAN" != "x"])
 
@@ -88,6 +108,8 @@ AC_CONFIG_FILES([Makefile
 		 cursor/wayland-cursor-uninstalled.pc
 		 doc/Makefile
 		 doc/Wayland/Makefile
+		 doc/doxygen/Makefile
+		 doc/man/Makefile
 		 src/Makefile
 		 src/wayland-server-uninstalled.pc
 		 src/wayland-client-uninstalled.pc

@@ -34,7 +34,9 @@ extern "C" {
 
 enum {
 	WL_EVENT_READABLE = 0x01,
-	WL_EVENT_WRITABLE = 0x02
+	WL_EVENT_WRITABLE = 0x02,
+	WL_EVENT_HANGUP   = 0x04,
+	WL_EVENT_ERROR    = 0x08
 };
 
 struct wl_event_loop;
@@ -67,6 +69,7 @@ void wl_event_source_check(struct wl_event_source *source);
 
 
 int wl_event_loop_dispatch(struct wl_event_loop *loop, int timeout);
+void wl_event_loop_dispatch_idle(struct wl_event_loop *loop);
 struct wl_event_source *wl_event_loop_add_idle(struct wl_event_loop *loop,
 					       wl_event_loop_idle_func_t func,
 					       void *data);
@@ -87,6 +90,7 @@ struct wl_event_loop *wl_display_get_event_loop(struct wl_display *display);
 int wl_display_add_socket(struct wl_display *display, const char *name);
 void wl_display_terminate(struct wl_display *display);
 void wl_display_run(struct wl_display *display);
+void wl_display_flush_clients(struct wl_display *display);
 
 typedef void (*wl_global_bind_func_t)(struct wl_client *client, void *data,
 				      uint32_t version, uint32_t id);
@@ -222,6 +226,29 @@ struct wl_keyboard_grab {
 	uint32_t key;
 };
 
+struct wl_touch_grab;
+struct wl_touch_grab_interface {
+	void (*down)(struct wl_touch_grab *grab,
+			uint32_t time,
+			int touch_id,
+			wl_fixed_t sx,
+			wl_fixed_t sy);
+	void (*up)(struct wl_touch_grab *grab,
+			uint32_t time,
+			int touch_id);
+	void (*motion)(struct wl_touch_grab *grab,
+			uint32_t time,
+			int touch_id,
+			wl_fixed_t sx,
+			wl_fixed_t sy);
+};
+
+struct wl_touch_grab {
+	const struct wl_touch_grab_interface *interface;
+	struct wl_touch *touch;
+	struct wl_surface *focus;
+};
+
 struct wl_data_offer {
 	struct wl_resource resource;
 	struct wl_data_source *source;
@@ -297,6 +324,13 @@ struct wl_touch {
 	struct wl_resource *focus_resource;
 	struct wl_listener focus_listener;
 	uint32_t focus_serial;
+	struct wl_signal focus_signal;
+
+	struct wl_touch_grab *grab;
+	struct wl_touch_grab default_grab;
+	wl_fixed_t grab_x, grab_y;
+	uint32_t grab_serial;
+	uint32_t grab_time;
 };
 
 struct wl_seat {
@@ -354,7 +388,7 @@ void wl_resource_post_no_memory(struct wl_resource *resource);
 
 #include "wayland-server-protocol.h"
 
-void
+uint32_t
 wl_client_add_resource(struct wl_client *client,
 		       struct wl_resource *resource);
 
@@ -406,6 +440,11 @@ void
 wl_touch_init(struct wl_touch *touch);
 void
 wl_touch_release(struct wl_touch *touch);
+void
+wl_touch_start_grab(struct wl_touch *device,
+		struct wl_touch_grab *grab);
+void
+wl_touch_end_grab(struct wl_touch *touch);
 
 void
 wl_data_device_set_keyboard_focus(struct wl_seat *seat);
@@ -439,6 +478,11 @@ wl_buffer_is_shm(struct wl_buffer *buffer);
 
 int
 wl_display_init_shm(struct wl_display *display);
+
+struct wl_buffer *
+wl_shm_buffer_create(struct wl_client *client,
+		     uint32_t id, int32_t width, int32_t height,
+		     int32_t stride, uint32_t format);
 
 void wl_log_set_handler_server(wl_log_func_t handler);
 

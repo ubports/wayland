@@ -39,12 +39,6 @@ extern "C" {
 #define WL_EXPORT
 #endif
 
-#define ARRAY_LENGTH(a) (sizeof (a) / sizeof (a)[0])
-
-#define container_of(ptr, type, member) ({				\
-	const __typeof__( ((type *)0)->member ) *__mptr = (ptr);	\
-	(type *)( (char *)__mptr - offsetof(type,member) );})
-
 struct wl_message {
 	const char *name;
 	const char *signature;
@@ -116,40 +110,40 @@ int wl_list_empty(struct wl_list *list);
 void wl_list_insert_list(struct wl_list *list, struct wl_list *other);
 
 #ifdef __GNUC__
-#define __wl_container_of(ptr, sample, member)				\
+#define wl_container_of(ptr, sample, member)				\
 	(__typeof__(sample))((char *)(ptr)	-			\
 		 ((char *)&(sample)->member - (char *)(sample)))
 #else
-#define __wl_container_of(ptr, sample, member)				\
+#define wl_container_of(ptr, sample, member)				\
 	(void *)((char *)(ptr)	-				        \
 		 ((char *)&(sample)->member - (char *)(sample)))
 #endif
 
 #define wl_list_for_each(pos, head, member)				\
-	for (pos = 0, pos = __wl_container_of((head)->next, pos, member);	\
+	for (pos = 0, pos = wl_container_of((head)->next, pos, member);	\
 	     &pos->member != (head);					\
-	     pos = __wl_container_of(pos->member.next, pos, member))
+	     pos = wl_container_of(pos->member.next, pos, member))
 
 #define wl_list_for_each_safe(pos, tmp, head, member)			\
 	for (pos = 0, tmp = 0, 						\
-	     pos = __wl_container_of((head)->next, pos, member),		\
-	     tmp = __wl_container_of((pos)->member.next, tmp, member);	\
+	     pos = wl_container_of((head)->next, pos, member),		\
+	     tmp = wl_container_of((pos)->member.next, tmp, member);	\
 	     &pos->member != (head);					\
 	     pos = tmp,							\
-	     tmp = __wl_container_of(pos->member.next, tmp, member))
+	     tmp = wl_container_of(pos->member.next, tmp, member))
 
 #define wl_list_for_each_reverse(pos, head, member)			\
-	for (pos = 0, pos = __wl_container_of((head)->prev, pos, member);	\
+	for (pos = 0, pos = wl_container_of((head)->prev, pos, member);	\
 	     &pos->member != (head);					\
-	     pos = __wl_container_of(pos->member.prev, pos, member))
+	     pos = wl_container_of(pos->member.prev, pos, member))
 
 #define wl_list_for_each_reverse_safe(pos, tmp, head, member)		\
 	for (pos = 0, tmp = 0, 						\
-	     pos = __wl_container_of((head)->prev, pos, member),	\
-	     tmp = __wl_container_of((pos)->member.prev, tmp, member);	\
+	     pos = wl_container_of((head)->prev, pos, member),	\
+	     tmp = wl_container_of((pos)->member.prev, tmp, member);	\
 	     &pos->member != (head);					\
 	     pos = tmp,							\
-	     tmp = __wl_container_of(pos->member.prev, tmp, member))
+	     tmp = wl_container_of(pos->member.prev, tmp, member))
 
 struct wl_array {
 	size_t size;
@@ -165,7 +159,7 @@ struct wl_array {
 void wl_array_init(struct wl_array *array);
 void wl_array_release(struct wl_array *array);
 void *wl_array_add(struct wl_array *array, size_t size);
-void wl_array_copy(struct wl_array *array, struct wl_array *source);
+int wl_array_copy(struct wl_array *array, struct wl_array *source);
 
 typedef int32_t wl_fixed_t;
 

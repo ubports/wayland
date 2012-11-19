@@ -5,6 +5,7 @@ publican_sources = \
 	$(srcdir)/en_US/Book_Info.xml \
 	$(srcdir)/en_US/Wayland.xml \
 	$(srcdir)/en_US/Protocol.xml \
+	$(srcdir)/en_US/Library.xml \
 	$(srcdir)/en_US/Compositors.xml \
 	$(srcdir)/en_US/Overview.xml \
 	$(srcdir)/en_US/images/icon.svg  \
@@ -17,7 +18,8 @@ noinst_DATA = Wayland $(publican_targets)
 pubdir = $(docdir)/Wayland/en-US
 
 publican_targets = $(publican_sources:$(srcdir)/en_US%=$(builddir)/en-US%) \
-	en-US/ProtocolSpec.xml
+	en-US/ProtocolSpec.xml en-US/ProtocolInterfaces.xml \
+	en-US/WaylandClientAPI.xml
 
 # The Protocol.xml is purely generated and required before running publican
 en-US/ProtocolSpec.xml: $(top_srcdir)/protocol/wayland.xml $(srcdir)/protocol-to-docbook.xsl
@@ -25,24 +27,41 @@ en-US/ProtocolSpec.xml: $(top_srcdir)/protocol/wayland.xml $(srcdir)/protocol-to
 	$(AM_V_GEN)$(XSLTPROC) $(srcdir)/protocol-to-docbook.xsl \
 		$(top_srcdir)/protocol/wayland.xml > en-US/ProtocolSpec.xml
 
+en-US/ProtocolInterfaces.xml: $(top_srcdir)/protocol/wayland.xml $(srcdir)/protocol-interfaces-to-docbook.xsl
+	$(AM_V_GEN)$(MKDIR_P) en-US/images
+	$(AM_V_GEN)$(XSLTPROC) $(srcdir)/protocol-interfaces-to-docbook.xsl \
+		$(top_srcdir)/protocol/wayland.xml > en-US/ProtocolInterfaces.xml
+
+en-US/WaylandClientAPI.xml: $(top_builddir)/doc/doxygen/xml/wayland-client_8h.xml $(srcdir)/doxygen-to-publican.xsl
+	$(AM_V_GEN)$(MKDIR_P) en-US/images
+	$(AM_V_GEN)$(XSLTPROC) $(srcdir)/doxygen-to-publican.xsl \
+		$(top_builddir)/doc/doxygen/xml/wayland-client_8h.xml > en-US/WaylandClientAPI.xml
+
 # Copy the en_US source files into en-US destination
 # This is required for out-of-source-tree build as publican does not allow us
 # to specify the location of the source code.
-$(builddir)/en-US/%: $(srcdir)/en_US/% en-US/ProtocolSpec.xml $(publican_sources)
+$(builddir)/en-US/%: $(srcdir)/en_US/% en-US/ProtocolSpec.xml en-US/ProtocolInterfaces.xml en-US/WaylandClientAPI.xml $(publican_sources)
 	$(AM_V_GEN)cp -f $< $@
+	$(AM_V_GEN)chmod a+w $@
 
 # Run publican for the builddir on the generated (or copied) source
-# The output formats are generated in the Wayland sub directory
+# The output formats are generated in the Wayland sub directory. Also, we need
+# to use a tmp publican.cfg cause 'publican rename' modifies the original.
 Wayland: $(publican_targets)
+	$(AM_V_GEN)cp -f $(srcdir)/publican.cfg $(builddir)/publican-copy.cfg
+	$(AM_V_GEN)$(PUBLICAN) rename --name Wayland \
+		--version "$(WAYLAND_VERSION_MAJOR).$(WAYLAND_VERSION_MINOR)" \
+		--config $(builddir)/publican-copy.cfg
 	$(AM_V_GEN)$(PUBLICAN) build --lang en-US --format html,pdf \
-		--config $(srcdir)/publican.cfg
+		--config $(builddir)/publican-copy.cfg
 	@touch Wayland
 
-CLEANFILES = en-US/ProtocolSpec.xml $(publican_targets)
+CLEANFILES = en-US/ProtocolSpec.xml en-US/ProtocolInterfaces.xml en-US/WaylandClientAPI.xml $(publican_targets)
 
 clean-local:
-	$(AM_V_at)rm -fr en-US
-	$(AM_V_at)rm -fr Wayland
+	$(AM_V_at)rm -fr $(builddir)/en-US
+	$(AM_V_at)rm -fr $(builddir)/Wayland
+	$(AM_V_at)rm -fr $(builddir)/publican-copy.cfg
 
 install-data-local:
 	test -z "$(pubdir)/html/Common_Content/css" || $(mkdir_p) "$(DESTDIR)$(pubdir)/html/Common_Content/css"
@@ -68,4 +87,4 @@ uninstall-local:
 
 endif
 
-EXTRA_DIST = $(publican_sources) publican.cfg protocol-to-docbook.xsl
+EXTRA_DIST = $(publican_sources) publican.cfg protocol-to-docbook.xsl protocol-interfaces-to-docbook.xsl doxygen-to-publican.xsl

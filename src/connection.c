@@ -44,7 +44,7 @@
 
 struct wl_buffer {
 	char data[4096];
-	int head, tail;
+	uint32_t head, tail;
 };
 
 #define MASK(i) ((i) & 4095)
@@ -56,10 +56,7 @@ struct wl_connection {
 	struct wl_buffer in, out;
 	struct wl_buffer fds_in, fds_out;
 	int fd;
-	void *data;
-	wl_connection_update_func_t update;
-	struct wl_closure receive_closure, send_closure;
-	int write_signalled;
+	int want_flush;
 };
 
 union wl_value {
@@ -73,7 +70,7 @@ union wl_value {
 static void
 wl_buffer_put(struct wl_buffer *b, const void *data, size_t count)
 {
-	int head, size;
+	uint32_t head, size;
 
 	head = MASK(b->head);
 	if (head + count <= sizeof b->data) {
@@ -90,7 +87,7 @@ wl_buffer_put(struct wl_buffer *b, const void *data, size_t count)
 static void
 wl_buffer_put_iov(struct wl_buffer *b, struct iovec *iov, int *count)
 {
-	int head, tail;
+	uint32_t head, tail;
 
 	head = MASK(b->head);
 	tail = MASK(b->tail);
@@ -114,7 +111,7 @@ wl_buffer_put_iov(struct wl_buffer *b, struct iovec *iov, int *count)
 static void
 wl_buffer_get_iov(struct wl_buffer *b, struct iovec *iov, int *count)
 {
-	int head, tail;
+	uint32_t head, tail;
 
 	head = MASK(b->head);
 	tail = MASK(b->tail);
@@ -138,7 +135,7 @@ wl_buffer_get_iov(struct wl_buffer *b, struct iovec *iov, int *count)
 static void
 wl_buffer_copy(struct wl_buffer *b, void *data, size_t count)
 {
-	int tail, size;
+	uint32_t tail, size;
 
 	tail = MASK(b->tail);
 	if (tail + count <= sizeof b->data) {
@@ -150,16 +147,14 @@ wl_buffer_copy(struct wl_buffer *b, void *data, size_t count)
 	}
 }
 
-static int
+static uint32_t
 wl_buffer_size(struct wl_buffer *b)
 {
 	return b->head - b->tail;
 }
 
 struct wl_connection *
-wl_connection_create(int fd,
-		     wl_connection_update_func_t update,
-		     void *data)
+wl_connection_create(int fd)
 {
 	struct wl_connection *connection;
 
@@ -168,19 +163,34 @@ wl_connection_create(int fd,
 		return NULL;
 	memset(connection, 0, sizeof *connection);
 	connection->fd = fd;
-	connection->update = update;
-	connection->data = data;
-
-	connection->update(connection,
-			   WL_CONNECTION_READABLE,
-			   connection->data);
 
 	return connection;
+}
+
+static void
+close_fds(struct wl_buffer *buffer, int max)
+{
+	int32_t fds[sizeof(buffer->data) / sizeof(int32_t)], i, count;
+	size_t size;
+
+	size = buffer->head - buffer->tail;
+	if (size == 0)
+		return;
+
+	wl_buffer_copy(buffer, fds, size);
+	count = size / sizeof fds[0];
+	if (max > 0 && max < count)
+		count = max;
+	for (i = 0; i < count; i++)
+		close(fds[i]);
+	buffer->tail += size;
 }
 
 void
 wl_connection_destroy(struct wl_connection *connection)
 {
+	close_fds(&connection->fds_out, -1);
+	close_fds(&connection->fds_in, -1);
 	close(connection->fd);
 	free(connection);
 }
@@ -204,6 +214,9 @@ build_cmsg(struct wl_buffer *buffer, char *data, int *clen)
 	size_t size;
 
 	size = buffer->head - buffer->tail;
+	if (size > MAX_FDS_OUT * sizeof(int32_t))
+		size = MAX_FDS_OUT * sizeof(int32_t);
+
 	if (size > 0) {
 		cmsg = (struct cmsghdr *) data;
 		cmsg->cmsg_level = SOL_SOCKET;
@@ -216,48 +229,53 @@ build_cmsg(struct wl_buffer *buffer, char *data, int *clen)
 	}
 }
 
-static void
-close_fds(struct wl_buffer *buffer)
-{
-	int fds[MAX_FDS_OUT], i, count;
-	size_t size;
-
-	size = buffer->head - buffer->tail;
-	if (size == 0)
-		return;
-
-	wl_buffer_copy(buffer, fds, size);
-	count = size / sizeof fds[0];
-	for (i = 0; i < count; i++)
-		close(fds[i]);
-	buffer->tail += size;
-}
-
-static void
+static int
 decode_cmsg(struct wl_buffer *buffer, struct msghdr *msg)
 {
 	struct cmsghdr *cmsg;
-	size_t size;
+	size_t size, max, i;
+	int overflow = 0;
 
 	for (cmsg = CMSG_FIRSTHDR(msg); cmsg != NULL;
 	     cmsg = CMSG_NXTHDR(msg, cmsg)) {
-		if (cmsg->cmsg_level == SOL_SOCKET &&
-		    cmsg->cmsg_type == SCM_RIGHTS) {
-			size = cmsg->cmsg_len - CMSG_LEN(0);
+		if (cmsg->cmsg_level != SOL_SOCKET ||
+		    cmsg->cmsg_type != SCM_RIGHTS)
+			continue;
+
+		size = cmsg->cmsg_len - CMSG_LEN(0);
+		max = sizeof(buffer->data) - wl_buffer_size(buffer);
+		if (size > max || overflow) {
+			overflow = 1;
+			size /= sizeof(int32_t);
+			for (i = 0; i < size; ++i)
+				close(((int*)CMSG_DATA(cmsg))[i]);
+		} else {
 			wl_buffer_put(buffer, CMSG_DATA(cmsg), size);
 		}
 	}
+
+	if (overflow) {
+		errno = EOVERFLOW;
+		return -1;
+	}
+
+	return 0;
 }
 
 int
-wl_connection_data(struct wl_connection *connection, uint32_t mask)
+wl_connection_flush(struct wl_connection *connection)
 {
 	struct iovec iov[2];
 	struct msghdr msg;
 	char cmsg[CLEN];
-	int len, count, clen;
+	int len = 0, count, clen;
+	uint32_t tail;
 
-	if (mask & WL_CONNECTION_WRITABLE) {
+	if (!connection->want_flush)
+		return 0;
+
+	tail = connection->out.tail;
+	while (connection->out.head - connection->out.tail > 0) {
 		wl_buffer_get_iov(&connection->out, iov, &count);
 
 		build_cmsg(&connection->fds_out, cmsg, &clen);
@@ -273,58 +291,56 @@ wl_connection_data(struct wl_connection *connection, uint32_t mask)
 		do {
 			len = sendmsg(connection->fd, &msg,
 				      MSG_NOSIGNAL | MSG_DONTWAIT);
-		} while (len < 0 && errno == EINTR);
+		} while (len == -1 && errno == EINTR);
 
-		if (len == -1 && errno == EPIPE) {
+		if (len == -1)
 			return -1;
-		} else if (len < 0) {
-			fprintf(stderr,
-				"write error for connection %p, fd %d: %m\n",
-				connection, connection->fd);
-			return -1;
-		}
 
-		close_fds(&connection->fds_out);
+		close_fds(&connection->fds_out, MAX_FDS_OUT);
 
 		connection->out.tail += len;
-		if (connection->out.tail == connection->out.head &&
-		    connection->write_signalled) {
-			connection->update(connection,
-					   WL_CONNECTION_READABLE,
-					   connection->data);
-			connection->write_signalled = 0;
-		}
 	}
 
-	if (mask & WL_CONNECTION_READABLE) {
-		wl_buffer_put_iov(&connection->in, iov, &count);
+	connection->want_flush = 0;
 
-		msg.msg_name = NULL;
-		msg.msg_namelen = 0;
-		msg.msg_iov = iov;
-		msg.msg_iovlen = count;
-		msg.msg_control = cmsg;
-		msg.msg_controllen = sizeof cmsg;
-		msg.msg_flags = 0;
+	return connection->out.head - tail;
+}
 
-		do {
-			len = wl_os_recvmsg_cloexec(connection->fd, &msg, 0);
-		} while (len < 0 && errno == EINTR);
+int
+wl_connection_read(struct wl_connection *connection)
+{
+	struct iovec iov[2];
+	struct msghdr msg;
+	char cmsg[CLEN];
+	int len, count, ret;
 
-		if (len < 0) {
-			fprintf(stderr,
-				"read error from connection %p: %m (%d)\n",
-				connection, errno);
-			return -1;
-		} else if (len == 0) {
-			/* FIXME: Handle this better? */
-			return -1;
-		}
+	if (wl_buffer_size(&connection->in) >= sizeof(connection->in.data)) {
+		errno = EOVERFLOW;
+		return -1;
+	}
 
-		decode_cmsg(&connection->fds_in, &msg);
+	wl_buffer_put_iov(&connection->in, iov, &count);
 
-		connection->in.head += len;
-	}	
+	msg.msg_name = NULL;
+	msg.msg_namelen = 0;
+	msg.msg_iov = iov;
+	msg.msg_iovlen = count;
+	msg.msg_control = cmsg;
+	msg.msg_controllen = sizeof cmsg;
+	msg.msg_flags = 0;
+
+	do {
+		len = wl_os_recvmsg_cloexec(connection->fd, &msg, 0);
+	} while (len < 0 && errno == EINTR);
+
+	if (len <= 0)
+		return len;
+
+	ret = decode_cmsg(&connection->fds_in, &msg);
+	if (ret)
+		return -1;
+
+	connection->in.head += len;
 
 	return connection->in.head - connection->in.tail;
 }
@@ -334,19 +350,14 @@ wl_connection_write(struct wl_connection *connection,
 		    const void *data, size_t count)
 {
 	if (connection->out.head - connection->out.tail +
-	    count > ARRAY_LENGTH(connection->out.data))
-		if (wl_connection_data(connection, WL_CONNECTION_WRITABLE))
+	    count > ARRAY_LENGTH(connection->out.data)) {
+		connection->want_flush = 1;
+		if (wl_connection_flush(connection) < 0)
 			return -1;
+	}
 
 	wl_buffer_put(&connection->out, data, count);
-
-	if (!connection->write_signalled) {
-		connection->update(connection,
-				   WL_CONNECTION_READABLE |
-				   WL_CONNECTION_WRITABLE,
-				   connection->data);
-		connection->write_signalled = 1;
-	}
+	connection->want_flush = 1;
 
 	return 0;
 }
@@ -356,9 +367,11 @@ wl_connection_queue(struct wl_connection *connection,
 		    const void *data, size_t count)
 {
 	if (connection->out.head - connection->out.tail +
-	    count > ARRAY_LENGTH(connection->out.data))
-		if (wl_connection_data(connection, WL_CONNECTION_WRITABLE))
+	    count > ARRAY_LENGTH(connection->out.data)) {
+		connection->want_flush = 1;
+		if (wl_connection_flush(connection) < 0)
 			return -1;
+	}
 
 	wl_buffer_put(&connection->out, data, count);
 
@@ -395,9 +408,11 @@ wl_message_size_extra(const struct wl_message *message)
 static int
 wl_connection_put_fd(struct wl_connection *connection, int32_t fd)
 {
-	if (wl_buffer_size(&connection->fds_out) == MAX_FDS_OUT * sizeof fd)
-		if (wl_connection_data(connection, WL_CONNECTION_WRITABLE))
+	if (wl_buffer_size(&connection->fds_out) == MAX_FDS_OUT * sizeof fd) {
+		connection->want_flush = 1;
+		if (wl_connection_flush(connection) < 0)
 			return -1;
+	}
 
 	wl_buffer_put(&connection->fds_out, &fd, sizeof fd);
 
@@ -436,7 +451,7 @@ wl_closure_vmarshal(struct wl_object *sender,
 {
 	struct wl_closure *closure;
 	struct wl_object **objectp, *object;
-	uint32_t length, *p, *start, size, *end;
+	uint32_t length, aligned, *p, *start, size, *end;
 	int dup_fd;
 	struct wl_array **arrayp, *array;
 	const char **sp, *s;
@@ -497,17 +512,19 @@ wl_closure_vmarshal(struct wl_object *sender,
 				goto err_null;
 
 			length = s ? strlen(s) + 1: 0;
-			if (p + DIV_ROUNDUP(length, sizeof *p) + 1 > end)
+			aligned = (length + 3) & ~3;
+			if (p + aligned / sizeof *p + 1 > end)
 				goto err;
 			*p++ = length;
 
-			if (length > 0)
+			if (length > 0) {
+				memcpy(p, s, length);
 				*sp = (const char *) p;
-			else
+			} else
 				*sp = NULL;
 
-			memcpy(p, s, length);
-			p += DIV_ROUNDUP(length, sizeof *p);
+			memset((char *) p + length, 0, aligned - length);
+			p += aligned / sizeof *p;
 			break;
 		case 'o':
 			closure->types[i] = &ffi_type_pointer;
@@ -610,6 +627,7 @@ err:
 	printf("request too big to marshal, maximum size is %zu\n",
 	       sizeof closure->buffer);
 	errno = ENOMEM;
+	free(closure);
 
 	return NULL;
 
@@ -635,7 +653,6 @@ wl_connection_demarshal(struct wl_connection *connection,
 	unsigned int i, count, extra_space;
 	const char *signature = message->signature;
 	struct argument_details arg;
-	struct wl_object **object;
 	struct wl_array **array;
 	struct wl_closure *closure;
 
@@ -719,38 +736,15 @@ wl_connection_demarshal(struct wl_connection *connection,
 			break;
 		case 'o':
 			closure->types[i] = &ffi_type_pointer;
-			object = (struct wl_object **) extra;
-			extra += sizeof *object;
-			closure->args[i] = object;
+			id = (uint32_t **) extra;
+			extra += sizeof *id;
+			closure->args[i] = id;
+			*id = p;
 
-			if (*p == 0 && !arg.nullable) {
-				printf("NULL new ID received on non-nullable "
+			if (**id == 0 && !arg.nullable) {
+				printf("NULL object received on non-nullable "
 				       "type, message %s(%s)\n", message->name,
 				       message->signature);
-				*object = NULL;
-				errno = EINVAL;
-				goto err;
-			}
-
-			*object = wl_map_lookup(objects, *p);
-			if (*object == WL_ZOMBIE_OBJECT) {
-				/* references object we've already
-				 * destroyed client side */
-				*object = NULL;
-			} else if (*object == NULL && *p != 0) {
-				printf("unknown object (%u), message %s(%s)\n",
-				       *p, message->name, message->signature);
-				*object = NULL;
-				errno = EINVAL;
-				goto err;
-			}
-
-			if (*object != NULL && message->types[i-2] != NULL &&
-			    (*object)->interface != message->types[i-2]) {
-				printf("invalid object (%u), type (%s), "
-					"message %s(%s)\n",
-				       *p, (*object)->interface->name,
-				       message->name, message->signature);
 				errno = EINVAL;
 				goto err;
 			}
@@ -764,7 +758,7 @@ wl_connection_demarshal(struct wl_connection *connection,
 			closure->args[i] = id;
 			*id = p;
 
-			if (*id == 0 && !arg.nullable) {
+			if (**id == 0 && !arg.nullable) {
 				printf("NULL new ID received on non-nullable "
 				       "type, message %s(%s)\n", message->name,
 				       message->signature);
@@ -839,6 +833,67 @@ wl_connection_demarshal(struct wl_connection *connection,
 	wl_connection_consume(connection, size);
 
 	return NULL;
+}
+
+static int
+interface_equal(const struct wl_interface *a, const struct wl_interface *b)
+{
+	/* In most cases the pointer equality test is sufficient.
+	 * However, in some cases, depending on how things are split
+	 * across shared objects, we can end up with multiple
+	 * instances of the interface metadata constants.  So if the
+	 * pointers match, the interfaces are equal, if they don't
+	 * match we have to compare the interface names. */
+
+	return a == b || strcmp(a->name, b->name) == 0;
+}
+
+int
+wl_closure_lookup_objects(struct wl_closure *closure, struct wl_map *objects)
+{
+	struct wl_object **object;
+	const struct wl_message *message;
+	const char *signature;
+	struct argument_details arg;
+	int i, count;
+	uint32_t id;
+
+	message = closure->message;
+	signature = message->signature;
+	count = arg_count_for_signature(signature) + 2;
+	for (i = 2; i < count; i++) {
+		signature = get_next_argument(signature, &arg);
+		switch (arg.type) {
+		case 'o':
+			id = **(uint32_t **) closure->args[i];
+			object = closure->args[i];
+			*object = wl_map_lookup(objects, id);
+			if (*object == WL_ZOMBIE_OBJECT) {
+				/* references object we've already
+				 * destroyed client side */
+				*object = NULL;
+			} else if (*object == NULL && id != 0) {
+				printf("unknown object (%u), message %s(%s)\n",
+				       id, message->name, message->signature);
+				*object = NULL;
+				errno = EINVAL;
+				return -1;
+			}
+
+			if (*object != NULL && message->types[i-2] != NULL &&
+			    !interface_equal((*object)->interface,
+					     message->types[i-2])) {
+				printf("invalid object (%u), type (%s), "
+				       "message %s(%s)\n",
+				       id, (*object)->interface->name,
+				       message->name, message->signature);
+				errno = EINVAL;
+				return -1;
+			}
+		}
+	}
+
+	return 0;
 }
 
 void
@@ -963,8 +1018,7 @@ wl_closure_print(struct wl_closure *closure, struct wl_object *target, int send)
 			if (send && value->new_id != 0)
 				fprintf(stderr, "%u", value->new_id);
 			else if (!send && value->object != NULL)
-				fprintf(stderr, "%u",
-					*((uint32_t *)value->object));
+				fprintf(stderr, "%u", value->object->id);
 			else
 				fprintf(stderr, "nil");
 			break;

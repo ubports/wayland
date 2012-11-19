@@ -606,7 +606,7 @@ XcursorFileLoadImages (FILE *file, int size)
 #endif
 
 #ifndef XCURSORPATH
-#define XCURSORPATH "~/.icons:/usr/share/icons:/usr/share/pixmaps:"ICONDIR
+#define XCURSORPATH "~/.icons:/usr/share/icons:/usr/share/pixmaps:~/.cursors:/usr/share/cursors/xorg-x11:"ICONDIR
 #endif
 
 static const char *
@@ -757,7 +757,7 @@ _XcursorThemeInherits (const char *full)
 		if (*l != '=') continue;
 		l++;
 		while (*l == ' ') l++;
-		result = malloc (strlen (l));
+		result = malloc (strlen (l) + 1);
 		if (result)
 		{
 		    r = result;
@@ -870,7 +870,6 @@ load_all_cursors_from_dir(const char *path, int size,
 	if (!dir)
 		return;
 
-	ent = readdir(dir);
 	for(ent = readdir(dir); ent; ent = readdir(dir)) {
 #ifdef _DIRENT_HAVE_D_TYPE
 		if (ent->d_type != DT_UNKNOWN &&

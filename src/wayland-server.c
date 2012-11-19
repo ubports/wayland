@@ -86,6 +86,7 @@ struct wl_display {
 	uint32_t id;
 	uint32_t serial;
 
+	struct wl_list registry_resource_list;
 	struct wl_list global_list;
 	struct wl_list socket_list;
 	struct wl_list client_list;
@@ -205,8 +206,6 @@ deref_new_objects(struct wl_closure *closure)
 	}
 }
 
-
-
 static int
 wl_client_connection_data(int fd, uint32_t mask, void *data)
 {
@@ -218,18 +217,31 @@ wl_client_connection_data(int fd, uint32_t mask, void *data)
 	const struct wl_message *message;
 	uint32_t p[2];
 	int opcode, size;
-	uint32_t cmask = 0;
 	int len;
 
-	if (mask & WL_EVENT_READABLE)
-		cmask |= WL_CONNECTION_READABLE;
-	if (mask & WL_EVENT_WRITABLE)
-		cmask |= WL_CONNECTION_WRITABLE;
-
-	len = wl_connection_data(connection, cmask);
-	if (len < 0) {
+	if (mask & (WL_EVENT_ERROR | WL_EVENT_HANGUP)) {
 		wl_client_destroy(client);
 		return 1;
+	}
+
+	if (mask & WL_EVENT_WRITABLE) {
+		len = wl_connection_flush(connection);
+		if (len < 0 && errno != EAGAIN) {
+			wl_client_destroy(client);
+			return 1;
+		} else if (len >= 0) {
+			wl_event_source_fd_update(client->source,
+						  WL_EVENT_READABLE);
+		}
+	}
+
+	len = 0;
+	if (mask & WL_EVENT_READABLE) {
+		len = wl_connection_read(connection);
+		if (len < 0 && errno != EAGAIN) {
+			wl_client_destroy(client);
+			return 1;
+		}
 	}
 
 	while ((size_t) len >= sizeof p) {
@@ -263,10 +275,8 @@ wl_client_connection_data(int fd, uint32_t mask, void *data)
 						  &client->objects, message);
 		len -= size;
 
-		if (wl_debug)
-			wl_closure_print(closure, object, false);
-
-		if (closure == NULL && errno == EINVAL) {
+		if ((closure == NULL && errno == EINVAL) ||
+		    wl_closure_lookup_objects(closure, &client->objects) < 0) {
 			wl_resource_post_error(client->display_resource,
 					       WL_DISPLAY_ERROR_INVALID_METHOD,
 					       "invalid arguments for %s@%u.%s",
@@ -278,6 +288,9 @@ wl_client_connection_data(int fd, uint32_t mask, void *data)
 			wl_resource_post_no_memory(resource);
 			break;
 		}
+
+		if (wl_debug)
+			wl_closure_print(closure, object, false);
 
 		deref_new_objects(closure);
 
@@ -296,27 +309,10 @@ wl_client_connection_data(int fd, uint32_t mask, void *data)
 	return 1;
 }
 
-static int
-wl_client_connection_update(struct wl_connection *connection,
-			    uint32_t mask, void *data)
-{
-	struct wl_client *client = data;
-	uint32_t emask = 0;
-
-	client->mask = mask;
-	if (mask & WL_CONNECTION_READABLE)
-		emask |= WL_EVENT_READABLE;
-	if (mask & WL_CONNECTION_WRITABLE)
-		emask |= WL_EVENT_WRITABLE;
-
-	return wl_event_source_fd_update(client->source, emask);
-}
-
 WL_EXPORT void
 wl_client_flush(struct wl_client *client)
 {
-	if (client->mask & WL_CONNECTION_WRITABLE)
-		wl_connection_data(client->connection, WL_CONNECTION_WRITABLE);
+	wl_connection_flush(client->connection);
 }
 
 WL_EXPORT struct wl_display *
@@ -345,34 +341,41 @@ wl_client_create(struct wl_display *display, int fd)
 					      WL_EVENT_READABLE,
 					      wl_client_connection_data, client);
 
+	if (!client->source)
+		goto err_client;
+
 	len = sizeof client->ucred;
 	if (getsockopt(fd, SOL_SOCKET, SO_PEERCRED,
-		       &client->ucred, &len) < 0) {
-		free(client);
-		return NULL;
-	}
+		       &client->ucred, &len) < 0)
+		goto err_source;
 
-	client->connection =
-		wl_connection_create(fd, wl_client_connection_update, client);
-	if (client->connection == NULL) {
-		free(client);
-		return NULL;
-	}
+	client->connection = wl_connection_create(fd);
+	if (client->connection == NULL)
+		goto err_source;
 
 	wl_map_init(&client->objects);
 
-	if (wl_map_insert_at(&client->objects, 0, NULL) < 0) {
-		wl_map_release(&client->objects);
-		free(client);
-		return NULL;
-	}
+	if (wl_map_insert_at(&client->objects, 0, NULL) < 0)
+		goto err_map;
 
 	wl_signal_init(&client->destroy_signal);
 	bind_display(client, display, 1, 1);
 
+	if (!client->display_resource)
+		goto err_map;
+
 	wl_list_insert(display->client_list.prev, &client->link);
 
 	return client;
+
+err_map:
+	wl_map_release(&client->objects);
+	wl_connection_destroy(client->connection);
+err_source:
+	wl_event_source_remove(client->source);
+err_client:
+	free(client);
+	return NULL;
 }
 
 WL_EXPORT void
@@ -387,23 +390,27 @@ wl_client_get_credentials(struct wl_client *client,
 		*gid = client->ucred.gid;
 }
 
-WL_EXPORT void
+WL_EXPORT uint32_t
 wl_client_add_resource(struct wl_client *client,
 		       struct wl_resource *resource)
 {
-	if (resource->object.id == 0)
+	if (resource->object.id == 0) {
 		resource->object.id =
 			wl_map_insert_new(&client->objects,
 					  WL_MAP_SERVER_SIDE, resource);
-	else if (wl_map_insert_at(&client->objects,
-				  resource->object.id, resource) < 0)
+	} else if (wl_map_insert_at(&client->objects,
+				  resource->object.id, resource) < 0) {
 		wl_resource_post_error(client->display_resource,
 				       WL_DISPLAY_ERROR_INVALID_OBJECT,
 				       "invalid new id %d",
 				       resource->object.id);
+		return 0;
+	}
 
 	resource->client = client;
 	wl_signal_init(&resource->destroy_signal);
+
+	return resource->object.id;
 }
 
 WL_EXPORT struct wl_resource *
@@ -560,6 +567,55 @@ static const struct wl_pointer_grab_interface
 	default_grab_button
 };
 
+static void default_grab_touch_down(struct wl_touch_grab *grab,
+		uint32_t time,
+		int touch_id,
+		wl_fixed_t sx,
+		wl_fixed_t sy)
+{
+	struct wl_touch *touch = grab->touch;
+	uint32_t serial;
+
+	if (touch->focus_resource && touch->focus) {
+		serial = wl_display_next_serial(touch->focus_resource->client->display);
+		wl_touch_send_down(touch->focus_resource, serial, time,
+				&touch->focus->resource, touch_id, sx, sy);
+	}
+}
+
+static void default_grab_touch_up(struct wl_touch_grab *grab,
+		uint32_t time,
+		int touch_id)
+{
+	struct wl_touch *touch = grab->touch;
+	uint32_t serial;
+
+	if (touch->focus_resource) {
+		serial = wl_display_next_serial(touch->focus_resource->client->display);
+		wl_touch_send_up(touch->focus_resource, serial, time, touch_id);
+	}
+}
+
+static void default_grab_touch_motion(struct wl_touch_grab *grab,
+		uint32_t time,
+		int touch_id,
+		wl_fixed_t sx,
+		wl_fixed_t sy)
+{
+	struct wl_touch *touch = grab->touch;
+
+	if (touch->focus_resource) {
+		wl_touch_send_motion(touch->focus_resource, time,
+				touch_id, sx, sy);
+	}
+}
+
+static const struct wl_touch_grab_interface default_touch_grab_interface = {
+	default_grab_touch_down,
+	default_grab_touch_up,
+	default_grab_touch_motion
+};
+
 static void
 default_grab_key(struct wl_keyboard_grab *grab,
 		 uint32_t time, uint32_t key, uint32_t state)
@@ -679,6 +735,10 @@ wl_touch_init(struct wl_touch *touch)
 	memset(touch, 0, sizeof *touch);
 	wl_list_init(&touch->resource_list);
 	touch->focus_listener.notify = lose_touch_focus;
+	touch->default_grab.interface = &default_touch_grab_interface;
+	touch->default_grab.touch = touch;
+	touch->grab = &touch->default_grab;
+	wl_signal_init(&touch->focus_signal);
 }
 
 WL_EXPORT void
@@ -903,10 +963,23 @@ wl_pointer_end_grab(struct wl_pointer *pointer)
 			 pointer->current_x, pointer->current_y);
 }
 
+WL_EXPORT void
+wl_touch_start_grab(struct wl_touch *touch, struct wl_touch_grab *grab)
+{
+	touch->grab = grab;
+	grab->touch = touch;
+}
+
+WL_EXPORT void
+wl_touch_end_grab(struct wl_touch *touch)
+{
+	touch->grab = &touch->default_grab;
+}
+
 static void
-display_bind(struct wl_client *client,
-	     struct wl_resource *resource, uint32_t name,
-	     const char *interface, uint32_t version, uint32_t id)
+registry_bind(struct wl_client *client,
+	      struct wl_resource *resource, uint32_t name,
+	      const char *interface, uint32_t version, uint32_t id)
 {
 	struct wl_global *global;
 	struct wl_display *display = resource->data;
@@ -923,6 +996,10 @@ display_bind(struct wl_client *client,
 		global->bind(client, global->data, version, id);
 }
 
+static const struct wl_registry_interface registry_interface = {
+	registry_bind
+};
+
 static void
 display_sync(struct wl_client *client,
 	     struct wl_resource *resource, uint32_t id)
@@ -937,9 +1014,40 @@ display_sync(struct wl_client *client,
 	wl_resource_destroy(callback);
 }
 
-struct wl_display_interface display_interface = {
-	display_bind,
+static void
+unbind_resource(struct wl_resource *resource)
+{
+	wl_list_remove(&resource->link);
+	free(resource);
+}
+
+static void
+display_get_registry(struct wl_client *client,
+		     struct wl_resource *resource, uint32_t id)
+{
+	struct wl_display *display = resource->data;
+	struct wl_resource *registry_resource;
+	struct wl_global *global;
+
+	registry_resource =
+		wl_client_add_object(client, &wl_registry_interface,
+				     &registry_interface, id, display);
+	registry_resource->destroy = unbind_resource;
+
+	wl_list_insert(&display->registry_resource_list,
+		       &registry_resource->link);
+
+	wl_list_for_each(global, &display->global_list, link)
+		wl_resource_post_event(registry_resource,
+				       WL_REGISTRY_GLOBAL,
+				       global->name,
+				       global->interface->name,
+				       global->interface->version);
+}
+
+static const struct wl_display_interface display_interface = {
 	display_sync,
+	display_get_registry
 };
 
 static void
@@ -954,19 +1062,13 @@ bind_display(struct wl_client *client,
 	     void *data, uint32_t version, uint32_t id)
 {
 	struct wl_display *display = data;
-	struct wl_global *global;
 
 	client->display_resource =
 		wl_client_add_object(client, &wl_display_interface,
 				     &display_interface, id, display);
-	client->display_resource->destroy = destroy_client_display_resource;
 
-	wl_list_for_each(global, &display->global_list, link)
-		wl_resource_post_event(client->display_resource,
-				       WL_DISPLAY_GLOBAL,
-				       global->name,
-				       global->interface->name,
-				       global->interface->version);
+	if(client->display_resource)
+		client->display_resource->destroy = destroy_client_display_resource;
 }
 
 WL_EXPORT struct wl_display *
@@ -992,6 +1094,7 @@ wl_display_create(void)
 	wl_list_init(&display->global_list);
 	wl_list_init(&display->socket_list);
 	wl_list_init(&display->client_list);
+	wl_list_init(&display->registry_resource_list);
 
 	display->id = 1;
 	display->serial = 0;
@@ -1034,7 +1137,7 @@ wl_display_add_global(struct wl_display *display,
 		      void *data, wl_global_bind_func_t bind)
 {
 	struct wl_global *global;
-	struct wl_client *client;
+	struct wl_resource *resource;
 
 	global = malloc(sizeof *global);
 	if (global == NULL)
@@ -1046,9 +1149,9 @@ wl_display_add_global(struct wl_display *display,
 	global->bind = bind;
 	wl_list_insert(display->global_list.prev, &global->link);
 
-	wl_list_for_each(client, &display->client_list, link)
-		wl_resource_post_event(client->display_resource,
-				       WL_DISPLAY_GLOBAL,
+	wl_list_for_each(resource, &display->registry_resource_list, link)
+		wl_resource_post_event(resource,
+				       WL_REGISTRY_GLOBAL,
 				       global->name,
 				       global->interface->name,
 				       global->interface->version);
@@ -1059,11 +1162,11 @@ wl_display_add_global(struct wl_display *display,
 WL_EXPORT void
 wl_display_remove_global(struct wl_display *display, struct wl_global *global)
 {
-	struct wl_client *client;
+	struct wl_resource *resource;
 
-	wl_list_for_each(client, &display->client_list, link)
-		wl_resource_post_event(client->display_resource,
-				       WL_DISPLAY_GLOBAL_REMOVE, global->name);
+	wl_list_for_each(resource, &display->registry_resource_list, link)
+		wl_resource_post_event(resource, WL_REGISTRY_GLOBAL_REMOVE,
+				       global->name);
 	wl_list_remove(&global->link);
 	free(global);
 }
@@ -1099,8 +1202,28 @@ wl_display_run(struct wl_display *display)
 {
 	display->run = 1;
 
-	while (display->run)
+	while (display->run) {
+		wl_display_flush_clients(display);
 		wl_event_loop_dispatch(display->loop, -1);
+	}
+}
+
+WL_EXPORT void
+wl_display_flush_clients(struct wl_display *display)
+{
+	struct wl_client *client, *next;
+	int ret;
+
+	wl_list_for_each_safe(client, next, &display->client_list, link) {
+		ret = wl_connection_flush(client->connection);
+		if (ret < 0 && errno == EAGAIN) {
+			wl_event_source_fd_update(client->source,
+						  WL_EVENT_WRITABLE |
+						  WL_EVENT_READABLE);
+		} else if (ret < 0) {
+			wl_client_destroy(client);
+		}
+	}
 }
 
 static int
@@ -1117,7 +1240,8 @@ socket_data(int fd, uint32_t mask, void *data)
 	if (client_fd < 0)
 		wl_log("failed to accept: %m\n");
 	else
-		wl_client_create(display, client_fd);
+		if (!wl_client_create(display, client_fd))
+			close(client_fd);
 
 	return 1;
 }

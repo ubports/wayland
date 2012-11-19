@@ -28,6 +28,12 @@
 #include <ffi.h>
 #include "wayland-util.h"
 
+#define ARRAY_LENGTH(a) (sizeof (a) / sizeof (a)[0])
+
+#define container_of(ptr, type, member) ({				\
+	const __typeof__( ((type *)0)->member ) *__mptr = (ptr);	\
+	(type *)( (char *)__mptr - offsetof(type,member) );})
+
 #define WL_ZOMBIE_OBJECT ((void *) 2)
 
 #define WL_MAP_SERVER_SIDE 0
@@ -54,19 +60,14 @@ void wl_map_for_each(struct wl_map *map, wl_iterator_func_t func, void *data);
 struct wl_connection;
 struct wl_closure;
 
-#define WL_CONNECTION_READABLE 0x01
-#define WL_CONNECTION_WRITABLE 0x02
-
-typedef int (*wl_connection_update_func_t)(struct wl_connection *connection,
-					   uint32_t mask, void *data);
-
-struct wl_connection *wl_connection_create(int fd,
-					   wl_connection_update_func_t update,
-					   void *data);
+struct wl_connection *wl_connection_create(int fd);
 void wl_connection_destroy(struct wl_connection *connection);
 void wl_connection_copy(struct wl_connection *connection, void *data, size_t size);
 void wl_connection_consume(struct wl_connection *connection, size_t size);
-int wl_connection_data(struct wl_connection *connection, uint32_t mask);
+
+int wl_connection_flush(struct wl_connection *connection);
+int wl_connection_read(struct wl_connection *connection);
+
 int wl_connection_write(struct wl_connection *connection, const void *data, size_t count);
 int wl_connection_queue(struct wl_connection *connection,
 			const void *data, size_t count);
@@ -78,6 +79,7 @@ struct wl_closure {
 	ffi_cif cif;
 	void *args[20];
 	uint32_t *start;
+	struct wl_list link;
 	uint32_t buffer[0];
 };
 
@@ -102,6 +104,9 @@ wl_connection_demarshal(struct wl_connection *connection,
 			uint32_t size,
 			struct wl_map *objects,
 			const struct wl_message *message);
+
+int
+wl_closure_lookup_objects(struct wl_closure *closure, struct wl_map *objects);
 
 void
 wl_closure_invoke(struct wl_closure *closure,

@@ -127,6 +127,18 @@ struct parse_context {
 	unsigned int character_data_length;
 };
 
+static int
+list_length(struct wl_list *list)
+{
+	struct wl_list *l;
+	int i;
+
+	for (i = 0, l = list->next; l != list; i++, l = l->next)
+		;
+
+	return i;
+}
+
 static char *
 uppercase_dup(const char *src)
 {
@@ -158,15 +170,17 @@ static const char *indent(int n)
 }
 
 static void
-desc_dump(const char *fmt, ...)
+desc_dump(char *desc, const char *fmt, ...) __attribute__((format(printf,2,3)));
+
+static void
+desc_dump(char *desc, const char *fmt, ...)
 {
 	va_list ap;
-	char buf[128], *desc, hang;
-	int col, i, j, k, startcol;
+	char buf[128], hang;
+	int col, i, j, k, startcol, newlines;
 
 	va_start(ap, fmt);
 	vsnprintf(buf, sizeof buf, fmt, ap);
-	desc = va_arg(ap, char *);
 	va_end(ap);
 
 	for (i = 0, col = 0; buf[i] != '*'; i++) {
@@ -192,8 +206,12 @@ desc_dump(const char *fmt, ...)
 
 	for (i = 0; desc[i]; ) {
 		k = i;
-		while (desc[i] && isspace(desc[i]))
+		newlines = 0;
+		while (desc[i] && isspace(desc[i])) {
+			if (desc[i] == '\n')
+				newlines++;
 			i++;
+		}
 		if (!desc[i])
 			break;
 
@@ -201,7 +219,9 @@ desc_dump(const char *fmt, ...)
 		while (desc[i] && !isspace(desc[i]))
 			i++;
 
-		if (col + i - j > 72) {
+		if (newlines > 1)
+			printf("\n%s*", indent(startcol));
+		if (newlines > 1 || col + i - j > 72) {
 			printf("\n%s*%c", indent(startcol), hang);
 			col = startcol;
 		}
@@ -348,6 +368,9 @@ start_element(void *data, const char *element_name, const char **atts)
 
 		ctx->message = message;
 	} else if (strcmp(element_name, "arg") == 0) {
+		if (name == NULL)
+			fail(ctx, "no argument name given");
+
 		arg = malloc(sizeof *arg);
 		arg->name = strdup(name);
 
@@ -374,9 +397,10 @@ start_element(void *data, const char *element_name, const char **atts)
 		switch (arg->type) {
 		case NEW_ID:
 		case OBJECT:
-			if (interface_name == NULL)
-				fail(ctx, "no interface name given");
-			arg->interface_name = strdup(interface_name);
+			if (interface_name)
+				arg->interface_name = strdup(interface_name);
+			else
+				arg->interface_name = NULL;
 			break;
 		default:
 			if (interface_name != NULL)
@@ -433,10 +457,7 @@ start_element(void *data, const char *element_name, const char **atts)
 			fail(ctx, "description without summary");
 
 		description = malloc(sizeof *description);
-		if (summary)
-			description->summary = strdup(summary);
-		else
-			description->summary = NULL;
+		description->summary = strdup(summary);
 
 		if (ctx->message)
 			ctx->message->description = description;
@@ -460,10 +481,9 @@ end_element(void *data, const XML_Char *name)
 			strndup(ctx->character_data,
 				ctx->character_data_length);
 	} else if (strcmp(name, "description") == 0) {
-		char *text = strndup(ctx->character_data,
-				     ctx->character_data_length);
-		if (text)
-			ctx->description->text = text;
+		ctx->description->text =
+			strndup(ctx->character_data,
+				ctx->character_data_length);
 		ctx->description = NULL;
 	} else if (strcmp(name, "request") == 0 ||
 		   strcmp(name, "event") == 0) {
@@ -539,10 +559,6 @@ emit_stubs(struct wl_list *message_list, struct interface *interface)
 	struct arg *a, *ret;
 	int has_destructor, has_destroy;
 
-	/* We provide a hand written functions for the display object */
-	if (strcmp(interface->name, "wl_display") == 0)
-		return;
-
 	printf("static inline void\n"
 	       "%s_set_user_data(struct %s *%s, void *user_data)\n"
 	       "{\n"
@@ -575,7 +591,7 @@ emit_stubs(struct wl_list *message_list, struct interface *interface)
 		exit(EXIT_FAILURE);
 	}
 
-	if (!has_destructor)
+	if (!has_destructor && strcmp(interface->name, "wl_display") != 0)
 		printf("static inline void\n"
 		       "%s_destroy(struct %s *%s)\n"
 		       "{\n"
@@ -595,7 +611,9 @@ emit_stubs(struct wl_list *message_list, struct interface *interface)
 				ret = a;
 		}
 
-		if (ret)
+		if (ret && ret->interface_name == NULL)
+			printf("static inline void *\n");
+		else if (ret)
 			printf("static inline struct %s *\n",
 			       ret->interface_name);
 		else
@@ -606,7 +624,11 @@ emit_stubs(struct wl_list *message_list, struct interface *interface)
 		       interface->name, interface->name);
 
 		wl_list_for_each(a, &m->arg_list, link) {
-			if (a->type == NEW_ID)
+			if (a->type == NEW_ID && a->interface_name == NULL) {
+				printf(", const struct wl_interface *interface"
+				       ", uint32_t version");
+				continue;
+			} else if (a->type == NEW_ID)
 				continue;
 			printf(", ");
 			emit_type(a);
@@ -615,17 +637,21 @@ emit_stubs(struct wl_list *message_list, struct interface *interface)
 
 		printf(")\n"
 		       "{\n");
-		if (ret)
+		if (ret) {
 			printf("\tstruct wl_proxy *%s;\n\n"
 			       "\t%s = wl_proxy_create("
-			       "(struct wl_proxy *) %s,\n"
-			       "\t\t\t     &%s_interface);\n"
-			       "\tif (!%s)\n"
+			       "(struct wl_proxy *) %s,\n",
+			       ret->name, ret->name, interface->name);
+			if (ret->interface_name == NULL)
+				printf("\t\t\t     interface);\n");
+			else
+				printf("\t\t\t     &%s_interface);\n",
+				       ret->interface_name);
+
+			printf("\tif (!%s)\n"
 			       "\t\treturn NULL;\n\n",
-			       ret->name,
-			       ret->name,
-			       interface->name, ret->interface_name,
 			       ret->name);
+		}
 
 		printf("\twl_proxy_marshal((struct wl_proxy *) %s,\n"
 		       "\t\t\t %s_%s",
@@ -634,8 +660,10 @@ emit_stubs(struct wl_list *message_list, struct interface *interface)
 		       m->uppercase_name);
 
 		wl_list_for_each(a, &m->arg_list, link) {
+			if (a->type == NEW_ID && a->interface_name == NULL)
+				printf(", interface->name, version");
 			printf(", ");
-				printf("%s", a->name);
+			printf("%s", a->name);
 		}
 		printf(");\n");
 
@@ -644,7 +672,9 @@ emit_stubs(struct wl_list *message_list, struct interface *interface)
 			       "(struct wl_proxy *) %s);\n",
 			       interface->name);
 
-		if (ret)
+		if (ret && ret->interface_name == NULL)
+			printf("\n\treturn (void *) %s;\n", ret->name);
+		else if (ret)
 			printf("\n\treturn (struct %s *) %s;\n",
 			       ret->interface_name, ret->name);
 
@@ -709,18 +739,19 @@ emit_enumerations(struct interface *interface)
 
 		if (desc) {
 			printf("/**\n");
-			desc_dump(" * %s_%s - ",
-				  interface->name, e->name, desc->summary);
+			desc_dump(desc->summary,
+				  " * %s_%s - ",
+				  interface->name, e->name);
 			wl_list_for_each(entry, &e->entry_list, link) {
-				desc_dump(" * @%s_%s_%s: ",
+				desc_dump(entry->summary,
+					  " * @%s_%s_%s: ",
 					  interface->uppercase_name,
 					  e->uppercase_name,
-					  entry->uppercase_name,
-					  entry->summary);
+					  entry->uppercase_name);
 			}
 			if (desc->text) {
 				printf(" *\n");
-				desc_dump(" * ", desc->text);
+				desc_dump(desc->text, " * ");
 			}
 			printf(" */\n");
 		}
@@ -750,14 +781,15 @@ emit_structs(struct wl_list *message_list, struct interface *interface)
 	if (interface->description) {
 		struct description *desc = interface->description;
 		printf("/**\n");
-		desc_dump(" * %s - ", interface->name, desc->summary);
+		desc_dump(desc->summary, " * %s - ", interface->name);
 		wl_list_for_each(m, message_list, link) {
 			struct description *mdesc = m->description;
-			desc_dump(" * @%s: ",
-				  m->name, mdesc ? mdesc->summary : "(none)");
+			desc_dump(mdesc ? mdesc->summary : "(none)",
+				  " * @%s: ",
+				  m->name);
 		}
 		printf(" *\n");
-		desc_dump(" * ", desc->text);
+		desc_dump(desc->text, " * ");
 		printf(" */\n");
 	}
 	printf("struct %s_%s {\n", interface->name,
@@ -767,15 +799,22 @@ emit_structs(struct wl_list *message_list, struct interface *interface)
 		struct description *mdesc = m->description;
 
 		printf("\t/**\n");
-		desc_dump("\t * %s - ",
-			  m->name, mdesc ? mdesc->summary : "(none)");
+		desc_dump(mdesc ? mdesc->summary : "(none)",
+			  "\t * %s - ", m->name);
 		wl_list_for_each(a, &m->arg_list, link) {
-			desc_dump("\t * @%s: ",
-				  a->name, a->summary ? a->summary : "(none)");
+
+			if (is_interface && a->type == NEW_ID &&
+			    a->interface_name == NULL)
+				printf("\t * @interface: name of the objects interface\n"
+				       "\t * @version: version of the objects interface\n");
+
+
+			desc_dump(a->summary ? a->summary : "(none)",
+				  "\t * @%s: ", a->name);
 		}
 		if (mdesc) {
 			printf("\t *\n");
-			desc_dump("\t * ", mdesc->text, 8, 0);
+			desc_dump(mdesc->text, "\t * ");
 		}
 		if (m->since > 1) {
 			printf("\t * @since: %d\n", m->since);
@@ -799,6 +838,11 @@ emit_structs(struct wl_list *message_list, struct interface *interface)
 
 			if (is_interface && a->type == OBJECT)
 				printf("struct wl_resource *");
+			else if (is_interface && a->type == NEW_ID && a->interface_name == NULL)
+				printf("const char *interface, uint32_t version, uint32_t ");
+			else if (!is_interface && a->type == OBJECT && a->interface_name == NULL)
+				printf("struct wl_object *");
+
 			else if (!is_interface && a->type == NEW_ID)
 				printf("struct %s *", a->interface_name);
 			else
@@ -925,6 +969,9 @@ emit_types_forward_declarations(struct protocol *protocol,
 			switch (a->type) {
 			case NEW_ID:
 			case OBJECT:
+				if (!a->interface_name)
+					continue;
+
 				m->all_null = 0;
 				printf("extern const struct wl_interface %s_interface;\n",
 				       a->interface_name);
@@ -968,8 +1015,7 @@ emit_types(struct protocol *protocol, struct wl_list *message_list)
 			switch (a->type) {
 			case NEW_ID:
 			case OBJECT:
-				if (strcmp(a->interface_name,
-					   "wl_object") != 0)
+				if (a->interface_name)
 					printf("\t&%s_interface,\n",
 					       a->interface_name);
 				else
@@ -1009,6 +1055,8 @@ emit_messages(struct wl_list *message_list,
 				printf("i");
 				break;
 			case NEW_ID:
+				if (a->interface_name == NULL)
+					printf("su");
 				printf("n");
 				break;
 			case UNSIGNED:
@@ -1074,14 +1122,14 @@ emit_code(struct protocol *protocol)
 		       i->name, i->name, i->version);
 
 		if (!wl_list_empty(&i->request_list))
-			printf("\tARRAY_LENGTH(%s_requests), %s_requests,\n",
-			       i->name, i->name);
+			printf("\t%d, %s_requests,\n",
+			       list_length(&i->request_list), i->name);
 		else
 			printf("\t0, NULL,\n");
 
 		if (!wl_list_empty(&i->event_list))
-			printf("\tARRAY_LENGTH(%s_events), %s_events,\n",
-			       i->name, i->name);
+			printf("\t%d, %s_events,\n",
+			       list_length(&i->event_list), i->name);
 		else
 			printf("\t0, NULL,\n");
 
@@ -1103,6 +1151,7 @@ int main(int argc, char *argv[])
 	protocol.type_index = 0;
 	protocol.null_run_length = 0;
 	protocol.copyright = NULL;
+	memset(&ctx, 0, sizeof ctx);
 	ctx.protocol = &protocol;
 
 	ctx.filename = "<stdin>";
