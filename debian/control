@@ -8,6 +8,8 @@ Build-Depends:
  quilt,
  dh-autoreconf,
  pkg-config,
+ doxygen,
+ xsltproc,
  libexpat1-dev,
  libffi-dev,
 Standards-Version: 3.9.3

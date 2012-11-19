@@ -4,6 +4,9 @@ usr/bin/wayland-scanner
 # Headers:
 usr/include
 
+# Man pages
+usr/share/man/man3
+
 # Use no wildcards to ensure we spot any update:
 usr/lib/*/libwayland-client.a
 usr/lib/*/libwayland-client.so
