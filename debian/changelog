@@ -1,4 +1,4 @@
-wayland (1.0.0-1) UNRELEASED; urgency=low
+wayland (1.0.1-1) UNRELEASED; urgency=low
 
   * New upstream release
   * debian/libwayland-dev.install:
