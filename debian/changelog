@@ -1,16 +1,13 @@
 wayland (1.0.1-1) UNRELEASED; urgency=low
 
-  * New upstream release
+  [ Robert Ancell ]
   * debian/libwayland-dev.install:
     - Install development man pages
   * debian/control:
     - Build-depend on doxygen
     - Build-depend on xsltproc
 
- -- Robert Ancell <robert.ancell@canonical.com>  Fri, 16 Nov 2012 10:07:08 +1300
-
-wayland (0.95.0-1) UNRELEASED; urgency=low
-
+  [ Timo Aaltonen ]
   * New upstream release.
   * Migrate to multiarch.
   * copyright: Refresh.
