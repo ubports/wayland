@@ -298,11 +298,11 @@ wl_proxy_destroy(struct wl_proxy *proxy)
  * \return 0 on success or -1 on failure
  *
  * Set proxy's listener to \c implementation and its user data to
- * \c data. Ifa listener has already been set, this functions
+ * \c data. If a listener has already been set, this function
  * fails and nothing is changed.
  *
  * \c implementation is a vector of function pointers. For an opcode
- * \c n, \c implemention[n] should point to the handler of \c n for
+ * \c n, \c implementation[n] should point to the handler of \c n for
  * the given object.
  *
  * \memberof wl_proxy
@@ -502,7 +502,7 @@ wl_display_connect_to_fd(int fd)
 	const char *debug;
 
 	debug = getenv("WAYLAND_DEBUG");
-	if (debug)
+	if (debug && (strstr(debug, "client") || strstr(debug, "1")))
 		wl_debug = 1;
 
 	display = malloc(sizeof *display);
@@ -649,8 +649,11 @@ wl_display_roundtrip(struct wl_display *display)
 	done = 0;
 	callback = wl_display_sync(display);
 	wl_callback_add_listener(callback, &sync_listener, &done);
-	while (!done && !ret)
+	while (!done && ret >= 0)
 		ret = wl_display_dispatch(display);
+
+	if (ret == -1 && !done)
+		wl_callback_destroy(callback);
 
 	return ret;
 }
@@ -924,6 +927,26 @@ wl_display_dispatch_queue(struct wl_display *display,
 			  struct wl_event_queue *queue)
 {
 	return dispatch_queue(display, queue, 1);
+}
+
+/** Dispatch pending events in an event queue
+ *
+ * \param display The display context object
+ * \param queue The event queue to dispatch
+ * \return The number of dispatched events on success or -1 on failure
+ *
+ * Dispatch all incoming events for objects assigned to the given
+ * event queue. On failure -1 is returned and errno set appropriately.
+ * If there are no events queued, this functions return immediately.
+ *
+ * \memberof wl_display
+ * \since 1.0.2
+ */
+WL_EXPORT int
+wl_display_dispatch_queue_pending(struct wl_display *display,
+				  struct wl_event_queue *queue)
+{
+	return dispatch_queue(display, queue, 0);
 }
 
 /** Process incoming events
