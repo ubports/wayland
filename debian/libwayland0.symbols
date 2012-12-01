@@ -1,4 +1,4 @@
-libwayland-client.so.0 libwayland0 @@currentversion@@
+libwayland-client.so.0 libwayland0 #MINVER#
  wl_array_add@Base 0.1.0~0
  wl_array_copy@Base 0.1.0~0
  wl_array_init@Base 0.1.0~0
@@ -49,7 +49,7 @@ libwayland-client.so.0 libwayland0 @@currentversion@@
  wl_shm_interface@Base 0.1.0~0
  wl_surface_interface@Base 0.1.0~0
 
-libwayland-server.so.0 libwayland0 @@currentversion@@
+libwayland-server.so.0 libwayland0 #MINVER#
  wl_array_add@Base 0.1.0~0
  wl_array_copy@Base 0.1.0~0
  wl_array_init@Base 0.1.0~0
