@@ -22,7 +22,6 @@ wayland (1.0.2-1) UNRELEASED; urgency=low
   * rules: Temporarily disable installing the protocol docs, decide where
     to put them first.
   * Add README.source
-  * Switch to source format 3.0 (quilt) due to the xz tarball.
 
   [ Sven Joachim ]
   * Update symbols file, bumping minver of all symbols to 1.0.2.
