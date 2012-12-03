@@ -6,8 +6,6 @@ PACKAGE=libwayland0
 # Kill *.la files, and forget no-one:
 override_dh_install:
 	find debian/tmp -name '*.la' -delete
-	# temporary, decide where to put these
-	rm -rf debian/tmp/usr/share/doc/wayland
 	dh_install --fail-missing
 
 override_dh_makeshlibs:
