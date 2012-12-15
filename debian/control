@@ -10,6 +10,7 @@ Build-Depends:
  pkg-config,
  doxygen,
  xsltproc,
+ docbook-xsl,
  libexpat1-dev,
  libffi-dev,
 Standards-Version: 3.9.3

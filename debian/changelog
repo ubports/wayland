@@ -25,6 +25,7 @@ wayland (1.0.3-1) UNRELEASED; urgency=low
 
   [ Sven Joachim ]
   * Update symbols file, bumping minver of all symbols to 1.0.2.
+  * Add docbook-xsl to Build-Depends.
   * Add Homepage field to debian/control.
   * Update debian/copyright.
 
