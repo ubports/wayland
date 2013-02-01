@@ -11,7 +11,7 @@ wayland (1.0.4-1) UNRELEASED; urgency=low
   * New upstream release.
   * Migrate to multiarch (Closes: #690081).
   * copyright: Refresh.
-  * control: Update Standards-Version to 3.9.3, no changes.
+  * control: Update Standards-Version to 3.9.4, no changes.
   * rules: Make it non-fatal to fail the tests, which don't all succeed
     when ran in headless mode.
   * rules: Drop the creation of hard dependencies, wayland should be
