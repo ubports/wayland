@@ -31,6 +31,7 @@ wayland (1.0.5-1) UNRELEASED; urgency=low
 
   [ Emilio Pozuelo Monfort ]
   * Split the shared libraries into separate packages.
+  * Add Build-Depends-Package to symbol files.
 
  -- Timo Aaltonen <tjaalton@ubuntu.com>  Thu, 16 Aug 2012 13:04:41 +0300
 

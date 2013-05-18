@@ -1,4 +1,5 @@
 libwayland-client.so.0 libwayland-client0 #MINVER#
+* Build-Depends-Package: libwayland-dev
  wl_array_add@Base 1.0.2
  wl_array_copy@Base 1.0.2
  wl_array_init@Base 1.0.2
