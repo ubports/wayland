@@ -1,4 +1,6 @@
-wayland (1.0.5-1) UNRELEASED; urgency=low
+wayland (1.0.5-1) experimental; urgency=low
+
+  * Team upload.
 
   [ Robert Ancell ]
   * debian/libwayland-dev.install:
@@ -33,7 +35,7 @@ wayland (1.0.5-1) UNRELEASED; urgency=low
   * Split the shared libraries into separate packages.
   * Add Build-Depends-Package to symbol files.
 
- -- Timo Aaltonen <tjaalton@ubuntu.com>  Thu, 16 Aug 2012 13:04:41 +0300
+ -- Emilio Pozuelo Monfort <pochu@debian.org>  Tue, 21 May 2013 00:34:22 +0200
 
 wayland (0.85.0-2) unstable; urgency=low
 
