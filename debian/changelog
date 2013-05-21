@@ -1,3 +1,9 @@
+wayland (1.0.5-2) UNRELEASED; urgency=low
+
+  * Add missing conflict/replaces for the library split.
+
+ -- Emilio Pozuelo Monfort <pochu@debian.org>  Tue, 21 May 2013 09:33:31 +0200
+
 wayland (1.0.5-1) experimental; urgency=low
 
   * Team upload.
