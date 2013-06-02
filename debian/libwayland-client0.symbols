@@ -46,6 +46,7 @@ libwayland-client.so.0 libwayland-client0 #MINVER#
  wl_proxy_add_listener@Base 1.0.2
  wl_proxy_create@Base 1.0.2
  wl_proxy_destroy@Base 1.0.2
+ wl_proxy_get_class@Base 1.1.0
  wl_proxy_get_id@Base 1.0.2
  wl_proxy_get_user_data@Base 1.0.2
  wl_proxy_marshal@Base 1.0.2

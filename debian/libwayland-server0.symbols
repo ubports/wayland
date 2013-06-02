@@ -81,6 +81,7 @@ libwayland-server.so.0 libwayland-server0 #MINVER#
  wl_pointer_init@Base 1.0.2
  wl_pointer_interface@Base 1.0.2
  wl_pointer_release@Base 1.0.2
+ wl_pointer_set_current@Base 1.1.0
  wl_pointer_set_focus@Base 1.0.2
  wl_pointer_start_grab@Base 1.0.2
  wl_region_interface@Base 1.0.2
