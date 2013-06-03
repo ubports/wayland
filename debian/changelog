@@ -1,5 +1,6 @@
-wayland (1.1.0-1) UNRELEASED; urgency=low
+wayland (1.1.0-1) experimental; urgency=low
 
+  * Team upload.
   * New upstream release.
   * debian/libwayland-client0.symbols
     debian/libwayland-server0.symbols:
@@ -7,7 +8,7 @@ wayland (1.1.0-1) UNRELEASED; urgency=low
   * debian/rules:
     + Bump SHVER accordingly.
 
- -- Emilio Pozuelo Monfort <pochu@debian.org>  Sun, 02 Jun 2013 17:20:51 +0200
+ -- Emilio Pozuelo Monfort <pochu@debian.org>  Mon, 03 Jun 2013 08:44:14 +0200
 
 wayland (1.0.5-2) experimental; urgency=low
 
