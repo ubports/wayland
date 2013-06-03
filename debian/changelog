@@ -4,6 +4,8 @@ wayland (1.1.0-1) UNRELEASED; urgency=low
   * debian/libwayland-client0.symbols
     debian/libwayland-server0.symbols:
     + Add a couple of new symbols.
+  * debian/rules:
+    + Bump SHVER accordingly.
 
  -- Emilio Pozuelo Monfort <pochu@debian.org>  Sun, 02 Jun 2013 17:20:51 +0200
 
