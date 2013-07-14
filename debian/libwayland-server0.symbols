@@ -5,7 +5,6 @@ libwayland-server.so.0 libwayland-server0 #MINVER#
  wl_array_init@Base 1.0.2
  wl_array_release@Base 1.0.2
  wl_buffer_interface@Base 1.0.2
- wl_buffer_is_shm@Base 1.0.2
  wl_callback_interface@Base 1.0.2
  wl_client_add_destroy_listener@Base 1.0.2
  wl_client_add_object@Base 1.0.2
@@ -18,11 +17,10 @@ libwayland-server.so.0 libwayland-server0 #MINVER#
  wl_client_get_display@Base 1.0.2
  wl_client_get_object@Base 1.0.2
  wl_client_new_object@Base 1.0.2
+ wl_client_post_no_memory@Base 1.2.0
  wl_compositor_interface@Base 1.0.2
  wl_data_device_interface@Base 1.0.2
- wl_data_device_manager_init@Base 1.0.2
  wl_data_device_manager_interface@Base 1.0.2
- wl_data_device_set_keyboard_focus@Base 1.0.2
  wl_data_offer_interface@Base 1.0.2
  wl_data_source_interface@Base 1.0.2
  wl_display_add_destroy_listener@Base 1.0.4
@@ -55,12 +53,9 @@ libwayland-server.so.0 libwayland-server0 #MINVER#
  wl_event_source_fd_update@Base 1.0.2
  wl_event_source_remove@Base 1.0.2
  wl_event_source_timer_update@Base 1.0.2
- wl_keyboard_end_grab@Base 1.0.2
- wl_keyboard_init@Base 1.0.2
+ wl_global_create@Base 1.2.0
+ wl_global_destroy@Base 1.2.0
  wl_keyboard_interface@Base 1.0.2
- wl_keyboard_release@Base 1.0.2
- wl_keyboard_set_focus@Base 1.0.2
- wl_keyboard_start_grab@Base 1.0.2
  wl_list_empty@Base 1.0.2
  wl_list_init@Base 1.0.2
  wl_list_insert@Base 1.0.2
@@ -73,34 +68,38 @@ libwayland-server.so.0 libwayland-server0 #MINVER#
  wl_map_insert_at@Base 1.0.2
  wl_map_insert_new@Base 1.0.2
  wl_map_lookup@Base 1.0.2
+ wl_map_lookup_flags@Base 1.2.0
  wl_map_release@Base 1.0.2
  wl_map_remove@Base 1.0.2
  wl_map_reserve_new@Base 1.0.2
  wl_output_interface@Base 1.0.2
- wl_pointer_end_grab@Base 1.0.2
- wl_pointer_init@Base 1.0.2
  wl_pointer_interface@Base 1.0.2
- wl_pointer_release@Base 1.0.2
- wl_pointer_set_current@Base 1.1.0
- wl_pointer_set_focus@Base 1.0.2
- wl_pointer_start_grab@Base 1.0.2
  wl_region_interface@Base 1.0.2
  wl_registry_interface@Base 1.0.2
+ wl_resource_add_destroy_listener@Base 1.2.0
+ wl_resource_create@Base 1.2.0
  wl_resource_destroy@Base 1.0.2
+ wl_resource_find_for_client@Base 1.2.0
+ wl_resource_from_link@Base 1.2.0
+ wl_resource_get_client@Base 1.2.0
+ wl_resource_get_destroy_listener@Base 1.2.0
+ wl_resource_get_id@Base 1.2.0
+ wl_resource_get_link@Base 1.2.0
+ wl_resource_get_user_data@Base 1.2.0
+ wl_resource_get_version@Base 1.2.0
+ wl_resource_instance_of@Base 1.2.0
  wl_resource_post_error@Base 1.0.2
  wl_resource_post_event@Base 1.0.2
  wl_resource_post_no_memory@Base 1.0.2
  wl_resource_queue_event@Base 1.0.2
- wl_seat_init@Base 1.0.2
+ wl_resource_set_destructor@Base 1.2.0
+ wl_resource_set_implementation@Base 1.2.0
+ wl_resource_set_user_data@Base 1.2.0
  wl_seat_interface@Base 1.0.2
- wl_seat_release@Base 1.0.2
- wl_seat_set_keyboard@Base 1.0.2
- wl_seat_set_pointer@Base 1.0.2
- wl_seat_set_selection@Base 1.0.2
- wl_seat_set_touch@Base 1.0.2
  wl_shell_interface@Base 1.0.2
  wl_shell_surface_interface@Base 1.0.2
  wl_shm_buffer_create@Base 1.0.2
+ wl_shm_buffer_get@Base 1.2.0
  wl_shm_buffer_get_data@Base 1.0.2
  wl_shm_buffer_get_format@Base 1.0.2
  wl_shm_buffer_get_height@Base 1.0.2
@@ -109,8 +108,4 @@ libwayland-server.so.0 libwayland-server0 #MINVER#
  wl_shm_interface@Base 1.0.2
  wl_shm_pool_interface@Base 1.0.2
  wl_surface_interface@Base 1.0.2
- wl_touch_end_grab@Base 1.0.2
- wl_touch_init@Base 1.0.2
  wl_touch_interface@Base 1.0.2
- wl_touch_release@Base 1.0.2
- wl_touch_start_grab@Base 1.0.2

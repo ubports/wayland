@@ -11,6 +11,7 @@ libwayland-client.so.0 libwayland-client0 #MINVER#
  wl_data_device_manager_interface@Base 1.0.2
  wl_data_offer_interface@Base 1.0.2
  wl_data_source_interface@Base 1.0.2
+ wl_display_cancel_read@Base 1.2.0
  wl_display_connect@Base 1.0.2
  wl_display_connect_to_fd@Base 1.0.2
  wl_display_create_queue@Base 1.0.2
@@ -23,6 +24,9 @@ libwayland-client.so.0 libwayland-client0 #MINVER#
  wl_display_get_error@Base 1.0.2
  wl_display_get_fd@Base 1.0.2
  wl_display_interface@Base 1.0.2
+ wl_display_prepare_read@Base 1.2.0
+ wl_display_prepare_read_queue@Base 1.2.0
+ wl_display_read_events@Base 1.2.0
  wl_display_roundtrip@Base 1.0.2
  wl_event_queue_destroy@Base 1.0.2
  wl_keyboard_interface@Base 1.0.2
@@ -38,6 +42,7 @@ libwayland-client.so.0 libwayland-client0 #MINVER#
  wl_map_insert_at@Base 1.0.2
  wl_map_insert_new@Base 1.0.2
  wl_map_lookup@Base 1.0.2
+ wl_map_lookup_flags@Base 1.2.0
  wl_map_release@Base 1.0.2
  wl_map_remove@Base 1.0.2
  wl_map_reserve_new@Base 1.0.2
