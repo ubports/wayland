@@ -1,3 +1,9 @@
+wayland (1.2.0-1) UNRELEASED; urgency=low
+
+  * New upstream release.
+
+ -- Sven Joachim <svenjoac@gmx.de>  Sun, 14 Jul 2013 18:00:05 +0200
+
 wayland (1.1.0-2) unstable; urgency=low
 
   * Team upload.
