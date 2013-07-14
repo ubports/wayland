@@ -26,6 +26,9 @@
 #define WAYLAND_PRIVATE_H
 
 #include <stdarg.h>
+
+#define WL_HIDE_DEPRECATED 1
+
 #include "wayland-util.h"
 
 #define ARRAY_LENGTH(a) (sizeof (a) / sizeof (a)[0])
@@ -34,33 +37,53 @@
 	const __typeof__( ((type *)0)->member ) *__mptr = (ptr);	\
 	(type *)( (char *)__mptr - offsetof(type,member) );})
 
-#define WL_ZOMBIE_OBJECT ((void *) 2)
-
 #define WL_MAP_SERVER_SIDE 0
 #define WL_MAP_CLIENT_SIDE 1
 #define WL_SERVER_ID_START 0xff000000
 #define WL_CLOSURE_MAX_ARGS 20
 
+struct wl_object {
+	const struct wl_interface *interface;
+	const void *implementation;
+	uint32_t id;
+};
+
+extern struct wl_object global_zombie_object;
+#define WL_ZOMBIE_OBJECT ((void*)&global_zombie_object)
+
+/* Flags for wl_map_insert_new and wl_map_insert_at.  Flags can be queried with
+ * wl_map_lookup_flags.  The current implementation has room for 1 bit worth of
+ * flags.  If more flags are ever added, the implementation of wl_map will have
+ * to change to allow for new flags */
+enum wl_map_entry_flags {
+	WL_MAP_ENTRY_LEGACY = (1 << 0)
+};
+
 struct wl_map {
 	struct wl_array client_entries;
 	struct wl_array server_entries;
+	uint32_t side;
 	uint32_t free_list;
 };
 
 typedef void (*wl_iterator_func_t)(void *element, void *data);
 
-void wl_map_init(struct wl_map *map);
+void wl_map_init(struct wl_map *map, uint32_t side);
 void wl_map_release(struct wl_map *map);
-uint32_t wl_map_insert_new(struct wl_map *map, uint32_t side, void *data);
-int wl_map_insert_at(struct wl_map *map, uint32_t i, void *data);
+uint32_t wl_map_insert_new(struct wl_map *map, uint32_t flags, void *data);
+int wl_map_insert_at(struct wl_map *map, uint32_t flags, uint32_t i, void *data);
 int wl_map_reserve_new(struct wl_map *map, uint32_t i);
 void wl_map_remove(struct wl_map *map, uint32_t i);
 void *wl_map_lookup(struct wl_map *map, uint32_t i);
+uint32_t wl_map_lookup_flags(struct wl_map *map, uint32_t i);
 void wl_map_for_each(struct wl_map *map, wl_iterator_func_t func, void *data);
 
 struct wl_connection;
 struct wl_closure;
 struct wl_proxy;
+
+int wl_interface_equal(const struct wl_interface *iface1,
+		       const struct wl_interface *iface2);
 
 struct wl_connection *wl_connection_create(int fd);
 void wl_connection_destroy(struct wl_connection *connection);
@@ -106,6 +129,9 @@ get_next_argument(const char *signature, struct argument_details *details);
 
 int
 arg_count_for_signature(const char *signature);
+
+int
+wl_message_get_since(const struct wl_message *message);
 
 void
 wl_argument_from_va_list(const char *signature, union wl_argument *args,

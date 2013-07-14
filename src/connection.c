@@ -324,7 +324,7 @@ wl_connection_read(struct wl_connection *connection)
 	msg.msg_flags = 0;
 
 	do {
-		len = wl_os_recvmsg_cloexec(connection->fd, &msg, 0);
+		len = wl_os_recvmsg_cloexec(connection->fd, &msg, MSG_DONTWAIT);
 	} while (len < 0 && errno == EINTR);
 
 	if (len <= 0)
@@ -402,26 +402,58 @@ wl_connection_put_fd(struct wl_connection *connection, int32_t fd)
 const char *
 get_next_argument(const char *signature, struct argument_details *details)
 {
-	if (*signature == '?') {
-		details->nullable = 1;
-		signature++;
-	} else
-		details->nullable = 0;
-
-	details->type = *signature;
-	return signature + 1;
+	details->nullable = 0;
+	for(; *signature; ++signature) {
+		switch(*signature) {
+		case 'i':
+		case 'u':
+		case 'f':
+		case 's':
+		case 'o':
+		case 'n':
+		case 'a':
+		case 'h':
+			details->type = *signature;
+			return signature + 1;
+		case '?':
+			details->nullable = 1;
+		}
+	}
+	details->type = '\0';
+	return signature;
 }
 
 int
 arg_count_for_signature(const char *signature)
 {
 	int count = 0;
-	while (*signature) {
-		if (*signature != '?')
-			count++;
-		signature++;
+	for(; *signature; ++signature) {
+		switch(*signature) {
+		case 'i':
+		case 'u':
+		case 'f':
+		case 's':
+		case 'o':
+		case 'n':
+		case 'a':
+		case 'h':
+			++count;
+		}
 	}
 	return count;
+}
+
+int
+wl_message_get_since(const struct wl_message *message)
+{
+	int since;
+
+	since = atoi(message->signature);
+
+	if (since == 0)
+		since = 1;
+
+	return since;
 }
 
 void
@@ -737,8 +769,8 @@ wl_connection_demarshal(struct wl_connection *connection,
 	return NULL;
 }
 
-static int
-interface_equal(const struct wl_interface *a, const struct wl_interface *b)
+int
+wl_interface_equal(const struct wl_interface *a, const struct wl_interface *b)
 {
 	/* In most cases the pointer equality test is sufficient.
 	 * However, in some cases, depending on how things are split
@@ -784,8 +816,8 @@ wl_closure_lookup_objects(struct wl_closure *closure, struct wl_map *objects)
 			}
 
 			if (object != NULL && message->types[i] != NULL &&
-			    !interface_equal((object)->interface,
-					     message->types[i])) {
+			    !wl_interface_equal((object)->interface,
+						message->types[i])) {
 				printf("invalid object (%u), type (%s), "
 				       "message %s(%s)\n",
 				       id, (object)->interface->name,

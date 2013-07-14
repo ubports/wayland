@@ -39,6 +39,13 @@ extern "C" {
 #define WL_EXPORT
 #endif
 
+/* Deprecated attribute */
+#if defined(__GNUC__) && __GNUC__ >= 4
+#define WL_DEPRECATED __attribute__ ((deprecated))
+#else
+#define WL_DEPRECATED
+#endif
+
 struct wl_message {
 	const char *name;
 	const char *signature;
@@ -52,12 +59,6 @@ struct wl_interface {
 	const struct wl_message *methods;
 	int event_count;
 	const struct wl_message *events;
-};
-
-struct wl_object {
-	const struct wl_interface *interface;
-	const void *implementation;
-	uint32_t id;
 };
 
 /**

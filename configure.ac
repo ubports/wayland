@@ -1,7 +1,7 @@
 AC_PREREQ([2.64])
 
 m4_define([wayland_major_version], [1])
-m4_define([wayland_minor_version], [1])
+m4_define([wayland_minor_version], [2])
 m4_define([wayland_micro_version], [0])
 m4_define([wayland_version],
           [wayland_major_version.wayland_minor_version.wayland_micro_version])
@@ -40,6 +40,17 @@ fi
 AC_SUBST(GCC_CFLAGS)
 
 AC_CHECK_FUNCS([accept4 mkostemp])
+
+AC_CHECK_DECL(SFD_CLOEXEC,[],
+	      [AC_MSG_ERROR("SFD_CLOEXEC is needed to compile wayland")],
+	      [[#include <sys/signalfd.h>]])
+AC_CHECK_DECL(TFD_CLOEXEC,[],
+	      [AC_MSG_ERROR("TFD_CLOEXEC is needed to compile wayland")],
+	      [[#include <sys/timerfd.h>]])
+AC_CHECK_DECL(CLOCK_MONOTONIC,[],
+	      [AC_MSG_ERROR("CLOCK_MONOTONIC is needed to compile wayland")],
+	      [[#include <time.h>]])
+AC_CHECK_HEADERS([execinfo.h])
 
 AC_ARG_ENABLE([scanner],
               [AC_HELP_STRING([--disable-scanner],
@@ -116,7 +127,6 @@ fi
 AM_CONDITIONAL([HAVE_PUBLICAN], [test "x$PUBLICAN" != "x"])
 
 AC_CONFIG_FILES([Makefile
-		 wayland-scanner.m4
 		 cursor/Makefile
 		 cursor/wayland-cursor.pc
 		 cursor/wayland-cursor-uninstalled.pc
@@ -127,8 +137,10 @@ AC_CONFIG_FILES([Makefile
 		 src/Makefile
 		 src/wayland-server-uninstalled.pc
 		 src/wayland-client-uninstalled.pc
+		 src/wayland-scanner-uninstalled.pc
 		 src/wayland-server.pc
 		 src/wayland-client.pc
+		 src/wayland-scanner.pc
 		 src/wayland-version.h
 		 protocol/Makefile
 		 tests/Makefile])

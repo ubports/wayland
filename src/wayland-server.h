@@ -77,11 +77,9 @@ int wl_event_loop_get_fd(struct wl_event_loop *loop);
 
 struct wl_client;
 struct wl_display;
-struct wl_seat;
-struct wl_pointer;
-struct wl_keyboard;
-struct wl_touch;
 struct wl_listener;
+struct wl_resource;
+struct wl_global;
 typedef void (*wl_notify_func_t)(struct wl_listener *listener, void *data);
 
 void wl_event_loop_add_destroy_listener(struct wl_event_loop *loop,
@@ -101,14 +99,6 @@ void wl_display_flush_clients(struct wl_display *display);
 typedef void (*wl_global_bind_func_t)(struct wl_client *client, void *data,
 				      uint32_t version, uint32_t id);
 
-struct wl_global *wl_display_add_global(struct wl_display *display,
-					const struct wl_interface *interface,
-					void *data,
-					wl_global_bind_func_t bind);
-
-void wl_display_remove_global(struct wl_display *display,
-			      struct wl_global *global);
-
 uint32_t wl_display_get_serial(struct wl_display *display);
 uint32_t wl_display_next_serial(struct wl_display *display);
 
@@ -116,6 +106,12 @@ void wl_display_add_destroy_listener(struct wl_display *display,
 				     struct wl_listener *listener);
 struct wl_listener *wl_display_get_destroy_listener(struct wl_display *display,
 						    wl_notify_func_t notify);
+
+struct wl_global *wl_global_create(struct wl_display *display,
+				   const struct wl_interface *interface,
+				   int version,
+				   void *data, wl_global_bind_func_t bind);
+void wl_global_destroy(struct wl_global *global);
 
 struct wl_client *wl_client_create(struct wl_display *display, int fd);
 void wl_client_destroy(struct wl_client *client);
@@ -129,15 +125,9 @@ struct wl_listener *wl_client_get_destroy_listener(struct wl_client *client,
 						   wl_notify_func_t notify);
 
 struct wl_resource *
-wl_client_add_object(struct wl_client *client,
-		     const struct wl_interface *interface,
-		     const void *implementation, uint32_t id, void *data);
-struct wl_resource *
-wl_client_new_object(struct wl_client *client,
-		     const struct wl_interface *interface,
-		     const void *implementation, void *data);
-struct wl_resource *
 wl_client_get_object(struct wl_client *client, uint32_t id);
+void
+wl_client_post_no_memory(struct wl_client *client);
 
 struct wl_listener {
 	struct wl_list link;
@@ -181,211 +171,57 @@ wl_signal_emit(struct wl_signal *signal, void *data)
 		l->notify(l, data);
 }
 
+typedef void (*wl_resource_destroy_func_t)(struct wl_resource *resource);
+
+#ifndef WL_HIDE_DEPRECATED
+
+struct wl_object {
+	const struct wl_interface *interface;
+	const void *implementation;
+	uint32_t id;
+};
+
 struct wl_resource {
 	struct wl_object object;
-	void (*destroy)(struct wl_resource *resource);
+	wl_resource_destroy_func_t destroy;
 	struct wl_list link;
 	struct wl_signal destroy_signal;
 	struct wl_client *client;
 	void *data;
 };
 
-static inline void
-wl_resource_init(struct wl_resource *resource,
-		 const struct wl_interface *interface,
-		 const void *implementation, uint32_t id, void *data)
-{
-	resource->object.id = id;
-	resource->object.interface = interface;
-	resource->object.implementation = implementation;
-
-	wl_signal_init(&resource->destroy_signal);
-
-	resource->destroy = NULL;
-	resource->client = NULL;
-	resource->data = data;
-}
-
 struct wl_buffer {
 	struct wl_resource resource;
 	int32_t width, height;
 	uint32_t busy_count;
-};
+} WL_DEPRECATED;
 
-struct wl_surface {
-	struct wl_resource resource;
-};
 
-struct wl_pointer_grab;
-struct wl_pointer_grab_interface {
-	void (*focus)(struct wl_pointer_grab *grab,
-		      struct wl_surface *surface,
-		      wl_fixed_t x,
-		      wl_fixed_t y);
-	void (*motion)(struct wl_pointer_grab *grab,
-		       uint32_t time,
-		       wl_fixed_t x,
-		       wl_fixed_t y);
-	void (*button)(struct wl_pointer_grab *grab,
-		       uint32_t time, uint32_t button, uint32_t state);
-};
+uint32_t
+wl_client_add_resource(struct wl_client *client,
+		       struct wl_resource *resource) WL_DEPRECATED;
 
-struct wl_pointer_grab {
-	const struct wl_pointer_grab_interface *interface;
-	struct wl_pointer *pointer;
-	struct wl_surface *focus;
-	wl_fixed_t x, y;
-};
+struct wl_resource *
+wl_client_add_object(struct wl_client *client,
+		     const struct wl_interface *interface,
+		     const void *implementation,
+		     uint32_t id, void *data) WL_DEPRECATED;
+struct wl_resource *
+wl_client_new_object(struct wl_client *client,
+		     const struct wl_interface *interface,
+		     const void *implementation, void *data) WL_DEPRECATED;
 
-struct wl_keyboard_grab;
-struct wl_keyboard_grab_interface {
-	void (*key)(struct wl_keyboard_grab *grab, uint32_t time,
-		    uint32_t key, uint32_t state);
-	void (*modifiers)(struct wl_keyboard_grab *grab, uint32_t serial,
-			  uint32_t mods_depressed, uint32_t mods_latched,
-			  uint32_t mods_locked, uint32_t group);
-};
+struct wl_global *
+wl_display_add_global(struct wl_display *display,
+		      const struct wl_interface *interface,
+		      void *data,
+		      wl_global_bind_func_t bind) WL_DEPRECATED;
 
-struct wl_keyboard_grab {
-	const struct wl_keyboard_grab_interface *interface;
-	struct wl_keyboard *keyboard;
-	struct wl_surface *focus;
-	uint32_t key;
-};
+void
+wl_display_remove_global(struct wl_display *display,
+			 struct wl_global *global) WL_DEPRECATED;
 
-struct wl_touch_grab;
-struct wl_touch_grab_interface {
-	void (*down)(struct wl_touch_grab *grab,
-			uint32_t time,
-			int touch_id,
-			wl_fixed_t sx,
-			wl_fixed_t sy);
-	void (*up)(struct wl_touch_grab *grab,
-			uint32_t time,
-			int touch_id);
-	void (*motion)(struct wl_touch_grab *grab,
-			uint32_t time,
-			int touch_id,
-			wl_fixed_t sx,
-			wl_fixed_t sy);
-};
-
-struct wl_touch_grab {
-	const struct wl_touch_grab_interface *interface;
-	struct wl_touch *touch;
-	struct wl_surface *focus;
-};
-
-struct wl_data_offer {
-	struct wl_resource resource;
-	struct wl_data_source *source;
-	struct wl_listener source_destroy_listener;
-};
-
-struct wl_data_source {
-	struct wl_resource resource;
-	struct wl_array mime_types;
-
-	void (*accept)(struct wl_data_source *source,
-		       uint32_t serial, const char *mime_type);
-	void (*send)(struct wl_data_source *source,
-		     const char *mime_type, int32_t fd);
-	void (*cancel)(struct wl_data_source *source);
-};
-
-struct wl_pointer {
-	struct wl_seat *seat;
-
-	struct wl_list resource_list;
-	struct wl_surface *focus;
-	struct wl_resource *focus_resource;
-	struct wl_listener focus_listener;
-	uint32_t focus_serial;
-	struct wl_signal focus_signal;
-
-	struct wl_pointer_grab *grab;
-	struct wl_pointer_grab default_grab;
-	wl_fixed_t grab_x, grab_y;
-	uint32_t grab_button;
-	uint32_t grab_serial;
-	uint32_t grab_time;
-
-	wl_fixed_t x, y;
-	struct wl_surface *current;
-	struct wl_listener current_listener;
-	wl_fixed_t current_x, current_y;
-
-	uint32_t button_count;
-};
-
-struct wl_keyboard {
-	struct wl_seat *seat;
-
-	struct wl_list resource_list;
-	struct wl_surface *focus;
-	struct wl_resource *focus_resource;
-	struct wl_listener focus_listener;
-	uint32_t focus_serial;
-	struct wl_signal focus_signal;
-
-	struct wl_keyboard_grab *grab;
-	struct wl_keyboard_grab default_grab;
-	uint32_t grab_key;
-	uint32_t grab_serial;
-	uint32_t grab_time;
-
-	struct wl_array keys;
-
-	struct {
-		uint32_t mods_depressed;
-		uint32_t mods_latched;
-		uint32_t mods_locked;
-		uint32_t group;
-	} modifiers;
-};
-
-struct wl_touch {
-	struct wl_seat *seat;
-
-	struct wl_list resource_list;
-	struct wl_surface *focus;
-	struct wl_resource *focus_resource;
-	struct wl_listener focus_listener;
-	uint32_t focus_serial;
-	struct wl_signal focus_signal;
-
-	struct wl_touch_grab *grab;
-	struct wl_touch_grab default_grab;
-	wl_fixed_t grab_x, grab_y;
-	uint32_t grab_serial;
-	uint32_t grab_time;
-};
-
-struct wl_seat {
-	struct wl_list base_resource_list;
-	struct wl_signal destroy_signal;
-
-	struct wl_pointer *pointer;
-	struct wl_keyboard *keyboard;
-	struct wl_touch *touch;
-
-	uint32_t selection_serial;
-	struct wl_data_source *selection_data_source;
-	struct wl_listener selection_data_source_listener;
-	struct wl_signal selection_signal;
-
-	struct wl_list drag_resource_list;
-	struct wl_client *drag_client;
-	struct wl_data_source *drag_data_source;
-	struct wl_listener drag_data_source_listener;
-	struct wl_surface *drag_focus;
-	struct wl_resource *drag_focus_resource;
-	struct wl_listener drag_focus_listener;
-	struct wl_pointer_grab drag_grab;
-	struct wl_surface *drag_surface;
-	struct wl_listener drag_icon_listener;
-	struct wl_signal drag_icon_signal;
-};
+#endif
 
 /*
  * Post an event to the client's object referred to by 'resource'.
@@ -416,100 +252,76 @@ void wl_resource_post_no_memory(struct wl_resource *resource);
 
 #include "wayland-server-protocol.h"
 
-uint32_t
-wl_client_add_resource(struct wl_client *client,
-		       struct wl_resource *resource);
-
 struct wl_display *
 wl_client_get_display(struct wl_client *client);
 
+struct wl_resource *
+wl_resource_create(struct wl_client *client,
+		   const struct wl_interface *interface,
+		   int version, uint32_t id);
+void
+wl_resource_set_implementation(struct wl_resource *resource,
+			       const void *implementation,
+			       void *data,
+			       wl_resource_destroy_func_t destroy);
+
 void
 wl_resource_destroy(struct wl_resource *resource);
-
+uint32_t
+wl_resource_get_id(struct wl_resource *resource);
+struct wl_list *
+wl_resource_get_link(struct wl_resource *resource);
+struct wl_resource *
+wl_resource_from_link(struct wl_list *resource);
+struct wl_resource *
+wl_resource_find_for_client(struct wl_list *list, struct wl_client *client);
+struct wl_client *
+wl_resource_get_client(struct wl_resource *resource);
 void
-wl_seat_init(struct wl_seat *seat);
-
-void
-wl_seat_release(struct wl_seat *seat);
-
-void
-wl_seat_set_pointer(struct wl_seat *seat, struct wl_pointer *pointer);
-void
-wl_seat_set_keyboard(struct wl_seat *seat, struct wl_keyboard *keyboard);
-void
-wl_seat_set_touch(struct wl_seat *seat, struct wl_touch *touch);
-
-void
-wl_pointer_init(struct wl_pointer *pointer);
-void
-wl_pointer_release(struct wl_pointer *pointer);
-void
-wl_pointer_set_focus(struct wl_pointer *pointer, struct wl_surface *surface,
-		     wl_fixed_t sx, wl_fixed_t sy);
-void
-wl_pointer_start_grab(struct wl_pointer *pointer,
-		      struct wl_pointer_grab *grab);
-void
-wl_pointer_end_grab(struct wl_pointer *pointer);
-void
-wl_pointer_set_current(struct wl_pointer *pointer, struct wl_surface *surface);
-
-void
-wl_keyboard_init(struct wl_keyboard *keyboard);
-void
-wl_keyboard_release(struct wl_keyboard *keyboard);
-void
-wl_keyboard_set_focus(struct wl_keyboard *keyboard, struct wl_surface *surface);
-void
-wl_keyboard_start_grab(struct wl_keyboard *device,
-		       struct wl_keyboard_grab *grab);
-void
-wl_keyboard_end_grab(struct wl_keyboard *keyboard);
-
-void
-wl_touch_init(struct wl_touch *touch);
-void
-wl_touch_release(struct wl_touch *touch);
-void
-wl_touch_start_grab(struct wl_touch *device,
-		struct wl_touch_grab *grab);
-void
-wl_touch_end_grab(struct wl_touch *touch);
-
-void
-wl_data_device_set_keyboard_focus(struct wl_seat *seat);
-
+wl_resource_set_user_data(struct wl_resource *resource, void *data);
+void *
+wl_resource_get_user_data(struct wl_resource *resource);
 int
-wl_data_device_manager_init(struct wl_display *display);
-
+wl_resource_get_version(struct wl_resource *resource);
+void
+wl_resource_set_destructor(struct wl_resource *resource,
+			   wl_resource_destroy_func_t destroy);
+int
+wl_resource_instance_of(struct wl_resource *resource,
+			const struct wl_interface *interface,
+			const void *implementation);
 
 void
-wl_seat_set_selection(struct wl_seat *seat,
-		      struct wl_data_source *source, uint32_t serial);
+wl_resource_add_destroy_listener(struct wl_resource *resource,
+				 struct wl_listener * listener);
+struct wl_listener *
+wl_resource_get_destroy_listener(struct wl_resource *resource,
+				 wl_notify_func_t notify);
 
+struct wl_shm_buffer;
+
+struct wl_shm_buffer *
+wl_shm_buffer_get(struct wl_resource *resource);
 
 void *
-wl_shm_buffer_get_data(struct wl_buffer *buffer);
+wl_shm_buffer_get_data(struct wl_shm_buffer *buffer);
 
 int32_t
-wl_shm_buffer_get_stride(struct wl_buffer *buffer);
+wl_shm_buffer_get_stride(struct wl_shm_buffer *buffer);
 
 uint32_t
-wl_shm_buffer_get_format(struct wl_buffer *buffer);
+wl_shm_buffer_get_format(struct wl_shm_buffer *buffer);
 
 int32_t
-wl_shm_buffer_get_width(struct wl_buffer *buffer);
+wl_shm_buffer_get_width(struct wl_shm_buffer *buffer);
 
 int32_t
-wl_shm_buffer_get_height(struct wl_buffer *buffer);
-
-int
-wl_buffer_is_shm(struct wl_buffer *buffer);
+wl_shm_buffer_get_height(struct wl_shm_buffer *buffer);
 
 int
 wl_display_init_shm(struct wl_display *display);
 
-struct wl_buffer *
+struct wl_shm_buffer *
 wl_shm_buffer_create(struct wl_client *client,
 		     uint32_t id, int32_t width, int32_t height,
 		     int32_t stride, uint32_t format);

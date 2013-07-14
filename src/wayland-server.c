@@ -95,11 +95,23 @@ struct wl_display {
 };
 
 struct wl_global {
+	struct wl_display *display;
 	const struct wl_interface *interface;
 	uint32_t name;
+	uint32_t version;
 	void *data;
 	wl_global_bind_func_t bind;
 	struct wl_list link;
+};
+
+struct wl_resource {
+	struct wl_object object;
+	wl_resource_destroy_func_t destroy;
+	struct wl_list link;
+	struct wl_signal destroy_signal;
+	struct wl_client *client;
+	void *data;
+	int version;
 };
 
 static int wl_debug = 0;
@@ -201,6 +213,7 @@ wl_client_connection_data(int fd, uint32_t mask, void *data)
 	struct wl_closure *closure;
 	const struct wl_message *message;
 	uint32_t p[2];
+	uint32_t resource_flags;
 	int opcode, size;
 	int len;
 
@@ -237,6 +250,7 @@ wl_client_connection_data(int fd, uint32_t mask, void *data)
 			break;
 
 		resource = wl_map_lookup(&client->objects, p[0]);
+		resource_flags = wl_map_lookup_flags(&client->objects, p[0]);
 		if (resource == NULL) {
 			wl_resource_post_error(client->display_resource,
 					       WL_DISPLAY_ERROR_INVALID_OBJECT,
@@ -256,6 +270,19 @@ wl_client_connection_data(int fd, uint32_t mask, void *data)
 		}
 
 		message = &object->interface->methods[opcode];
+		if (!(resource_flags & WL_MAP_ENTRY_LEGACY) &&
+		    resource->version > 0 &&
+		    resource->version < wl_message_get_since(message)) {
+			wl_resource_post_error(client->display_resource,
+					       WL_DISPLAY_ERROR_INVALID_METHOD,
+					       "invalid method %d, object %s@%u",
+					       opcode,
+					       object->interface->name,
+					       object->id);
+			break;
+		}
+
+
 		closure = wl_connection_demarshal(client->connection, size,
 						  &client->objects, message);
 		len -= size;
@@ -336,9 +363,9 @@ wl_client_create(struct wl_display *display, int fd)
 	if (client->connection == NULL)
 		goto err_source;
 
-	wl_map_init(&client->objects);
+	wl_map_init(&client->objects, WL_MAP_SERVER_SIDE);
 
-	if (wl_map_insert_at(&client->objects, 0, NULL) < 0)
+	if (wl_map_insert_at(&client->objects, 0, 0, NULL) < 0)
 		goto err_map;
 
 	wl_signal_init(&client->destroy_signal);
@@ -373,33 +400,17 @@ wl_client_get_credentials(struct wl_client *client,
 		*gid = client->ucred.gid;
 }
 
-WL_EXPORT uint32_t
-wl_client_add_resource(struct wl_client *client,
-		       struct wl_resource *resource)
-{
-	if (resource->object.id == 0) {
-		resource->object.id =
-			wl_map_insert_new(&client->objects,
-					  WL_MAP_SERVER_SIDE, resource);
-	} else if (wl_map_insert_at(&client->objects,
-				  resource->object.id, resource) < 0) {
-		wl_resource_post_error(client->display_resource,
-				       WL_DISPLAY_ERROR_INVALID_OBJECT,
-				       "invalid new id %d",
-				       resource->object.id);
-		return 0;
-	}
-
-	resource->client = client;
-	wl_signal_init(&resource->destroy_signal);
-
-	return resource->object.id;
-}
-
 WL_EXPORT struct wl_resource *
 wl_client_get_object(struct wl_client *client, uint32_t id)
 {
 	return wl_map_lookup(&client->objects, id);
+}
+
+WL_EXPORT void
+wl_client_post_no_memory(struct wl_client *client)
+{
+	wl_resource_post_error(client->display_resource,
+			       WL_DISPLAY_ERROR_NO_MEMORY, "no memory");
 }
 
 WL_EXPORT void
@@ -413,11 +424,17 @@ static void
 destroy_resource(void *element, void *data)
 {
 	struct wl_resource *resource = element;
+	struct wl_client *client = resource->client;
+	uint32_t flags;
 
 	wl_signal_emit(&resource->destroy_signal, resource);
 
+	flags = wl_map_lookup_flags(&client->objects, resource->object.id);
 	if (resource->destroy)
 		resource->destroy(resource);
+
+	if (!(flags & WL_MAP_ENTRY_LEGACY))
+		free(resource);
 }
 
 WL_EXPORT void
@@ -434,10 +451,100 @@ wl_resource_destroy(struct wl_resource *resource)
 			wl_resource_queue_event(client->display_resource,
 						WL_DISPLAY_DELETE_ID, id);
 		}
-		wl_map_insert_at(&client->objects, id, NULL);
+		wl_map_insert_at(&client->objects, 0, id, NULL);
 	} else {
 		wl_map_remove(&client->objects, id);
 	}
+}
+
+WL_EXPORT uint32_t
+wl_resource_get_id(struct wl_resource *resource)
+{
+	return resource->object.id;
+}
+
+WL_EXPORT struct wl_list *
+wl_resource_get_link(struct wl_resource *resource)
+{
+	return &resource->link;
+}
+
+WL_EXPORT struct wl_resource *
+wl_resource_from_link(struct wl_list *link)
+{
+	struct wl_resource *resource;
+
+	return wl_container_of(link, resource, link);
+}
+
+WL_EXPORT struct wl_resource *
+wl_resource_find_for_client(struct wl_list *list, struct wl_client *client)
+{
+	struct wl_resource *resource;
+
+	if (client == NULL)
+		return NULL;
+
+        wl_list_for_each(resource, list, link) {
+                if (resource->client == client)
+                        return resource;
+        }
+
+        return NULL;
+}
+
+WL_EXPORT struct wl_client *
+wl_resource_get_client(struct wl_resource *resource)
+{
+	return resource->client;
+}
+
+WL_EXPORT void
+wl_resource_set_user_data(struct wl_resource *resource, void *data)
+{
+	resource->data = data;
+}
+
+WL_EXPORT void *
+wl_resource_get_user_data(struct wl_resource *resource)
+{
+	return resource->data;
+}
+
+WL_EXPORT int
+wl_resource_get_version(struct wl_resource *resource)
+{
+	return resource->version;
+}
+
+WL_EXPORT void
+wl_resource_set_destructor(struct wl_resource *resource,
+			   wl_resource_destroy_func_t destroy)
+{
+	resource->destroy = destroy;
+}
+
+WL_EXPORT int
+wl_resource_instance_of(struct wl_resource *resource,
+			const struct wl_interface *interface,
+			const void *implementation)
+{
+	return wl_interface_equal(resource->object.interface, interface) &&
+		resource->object.implementation == implementation;
+}
+
+WL_EXPORT void
+wl_resource_add_destroy_listener(struct wl_resource *resource,
+				 struct wl_listener * listener)
+{
+	wl_signal_add(&resource->destroy_signal, listener);
+}
+
+WL_EXPORT struct wl_listener *
+wl_resource_get_destroy_listener(struct wl_resource *resource,
+				 wl_notify_func_t notify)
+{
+	return wl_signal_get(&resource->destroy_signal, notify);
 }
 
 WL_EXPORT void
@@ -473,518 +580,6 @@ wl_client_destroy(struct wl_client *client)
 }
 
 static void
-lose_pointer_focus(struct wl_listener *listener, void *data)
-{
-	struct wl_pointer *pointer =
-		container_of(listener, struct wl_pointer, focus_listener);
-
-	pointer->focus_resource = NULL;
-}
-
-static void
-lose_keyboard_focus(struct wl_listener *listener, void *data)
-{
-	struct wl_keyboard *keyboard =
-		container_of(listener, struct wl_keyboard, focus_listener);
-
-	keyboard->focus_resource = NULL;
-}
-
-static void
-lose_touch_focus(struct wl_listener *listener, void *data)
-{
-	struct wl_touch *touch =
-		container_of(listener, struct wl_touch, focus_listener);
-
-	touch->focus_resource = NULL;
-}
-
-static void
-default_grab_focus(struct wl_pointer_grab *grab,
-		   struct wl_surface *surface, wl_fixed_t x, wl_fixed_t y)
-{
-	struct wl_pointer *pointer = grab->pointer;
-
-	if (pointer->button_count > 0)
-		return;
-
-	wl_pointer_set_focus(pointer, surface, x, y);
-}
-
-static void
-default_grab_motion(struct wl_pointer_grab *grab,
-		    uint32_t time, wl_fixed_t x, wl_fixed_t y)
-{
-	struct wl_resource *resource;
-
-	resource = grab->pointer->focus_resource;
-	if (resource)
-		wl_pointer_send_motion(resource, time, x, y);
-}
-
-static void
-default_grab_button(struct wl_pointer_grab *grab,
-		    uint32_t time, uint32_t button, uint32_t state_w)
-{
-	struct wl_pointer *pointer = grab->pointer;
-	struct wl_resource *resource;
-	uint32_t serial;
-	enum wl_pointer_button_state state = state_w;
-
-	resource = pointer->focus_resource;
-	if (resource) {
-		serial = wl_display_next_serial(resource->client->display);
-		wl_pointer_send_button(resource, serial, time, button, state_w);
-	}
-
-	if (pointer->button_count == 0 &&
-	    state == WL_POINTER_BUTTON_STATE_RELEASED)
-		wl_pointer_set_focus(pointer, pointer->current,
-				     pointer->current_x, pointer->current_y);
-}
-
-static const struct wl_pointer_grab_interface
-				default_pointer_grab_interface = {
-	default_grab_focus,
-	default_grab_motion,
-	default_grab_button
-};
-
-static void default_grab_touch_down(struct wl_touch_grab *grab,
-		uint32_t time,
-		int touch_id,
-		wl_fixed_t sx,
-		wl_fixed_t sy)
-{
-	struct wl_touch *touch = grab->touch;
-	uint32_t serial;
-
-	if (touch->focus_resource && touch->focus) {
-		serial = wl_display_next_serial(touch->focus_resource->client->display);
-		wl_touch_send_down(touch->focus_resource, serial, time,
-				&touch->focus->resource, touch_id, sx, sy);
-	}
-}
-
-static void default_grab_touch_up(struct wl_touch_grab *grab,
-		uint32_t time,
-		int touch_id)
-{
-	struct wl_touch *touch = grab->touch;
-	uint32_t serial;
-
-	if (touch->focus_resource) {
-		serial = wl_display_next_serial(touch->focus_resource->client->display);
-		wl_touch_send_up(touch->focus_resource, serial, time, touch_id);
-	}
-}
-
-static void default_grab_touch_motion(struct wl_touch_grab *grab,
-		uint32_t time,
-		int touch_id,
-		wl_fixed_t sx,
-		wl_fixed_t sy)
-{
-	struct wl_touch *touch = grab->touch;
-
-	if (touch->focus_resource) {
-		wl_touch_send_motion(touch->focus_resource, time,
-				touch_id, sx, sy);
-	}
-}
-
-static const struct wl_touch_grab_interface default_touch_grab_interface = {
-	default_grab_touch_down,
-	default_grab_touch_up,
-	default_grab_touch_motion
-};
-
-static void
-default_grab_key(struct wl_keyboard_grab *grab,
-		 uint32_t time, uint32_t key, uint32_t state)
-{
-	struct wl_keyboard *keyboard = grab->keyboard;
-	struct wl_resource *resource;
-	uint32_t serial;
-
-	resource = keyboard->focus_resource;
-	if (resource) {
-		serial = wl_display_next_serial(resource->client->display);
-		wl_keyboard_send_key(resource, serial, time, key, state);
-	}
-}
-
-static struct wl_resource *
-find_resource_for_surface(struct wl_list *list, struct wl_surface *surface)
-{
-	struct wl_resource *r;
-
-	if (!surface)
-		return NULL;
-
-	wl_list_for_each(r, list, link) {
-		if (r->client == surface->resource.client)
-			return r;
-	}
-
-	return NULL;
-}
-
-static void
-default_grab_modifiers(struct wl_keyboard_grab *grab, uint32_t serial,
-		       uint32_t mods_depressed, uint32_t mods_latched,
-		       uint32_t mods_locked, uint32_t group)
-{
-	struct wl_keyboard *keyboard = grab->keyboard;
-	struct wl_pointer *pointer = keyboard->seat->pointer;
-	struct wl_resource *resource, *pr;
-
-	resource = keyboard->focus_resource;
-	if (!resource)
-		return;
-
-	wl_keyboard_send_modifiers(resource, serial, mods_depressed,
-				   mods_latched, mods_locked, group);
-
-	if (pointer && pointer->focus && pointer->focus != keyboard->focus) {
-		pr = find_resource_for_surface(&keyboard->resource_list,
-					       pointer->focus);
-		if (pr) {
-			wl_keyboard_send_modifiers(pr,
-						   serial,
-						   keyboard->modifiers.mods_depressed,
-						   keyboard->modifiers.mods_latched,
-						   keyboard->modifiers.mods_locked,
-						   keyboard->modifiers.group);
-		}
-	}
-}
-
-static const struct wl_keyboard_grab_interface
-				default_keyboard_grab_interface = {
-	default_grab_key,
-	default_grab_modifiers,
-};
-
-WL_EXPORT void
-wl_pointer_init(struct wl_pointer *pointer)
-{
-	memset(pointer, 0, sizeof *pointer);
-	wl_list_init(&pointer->resource_list);
-	pointer->focus_listener.notify = lose_pointer_focus;
-	pointer->default_grab.interface = &default_pointer_grab_interface;
-	pointer->default_grab.pointer = pointer;
-	pointer->grab = &pointer->default_grab;
-	wl_signal_init(&pointer->focus_signal);
-
-	/* FIXME: Pick better co-ords. */
-	pointer->x = wl_fixed_from_int(100);
-	pointer->y = wl_fixed_from_int(100);
-}
-
-WL_EXPORT void
-wl_pointer_release(struct wl_pointer *pointer)
-{
-	/* XXX: What about pointer->resource_list? */
-	if (pointer->focus_resource)
-		wl_list_remove(&pointer->focus_listener.link);
-}
-
-WL_EXPORT void
-wl_keyboard_init(struct wl_keyboard *keyboard)
-{
-	memset(keyboard, 0, sizeof *keyboard);
-	wl_list_init(&keyboard->resource_list);
-	wl_array_init(&keyboard->keys);
-	keyboard->focus_listener.notify = lose_keyboard_focus;
-	keyboard->default_grab.interface = &default_keyboard_grab_interface;
-	keyboard->default_grab.keyboard = keyboard;
-	keyboard->grab = &keyboard->default_grab;
-	wl_signal_init(&keyboard->focus_signal);
-}
-
-WL_EXPORT void
-wl_keyboard_release(struct wl_keyboard *keyboard)
-{
-	/* XXX: What about keyboard->resource_list? */
-	if (keyboard->focus_resource)
-		wl_list_remove(&keyboard->focus_listener.link);
-	wl_array_release(&keyboard->keys);
-}
-
-WL_EXPORT void
-wl_touch_init(struct wl_touch *touch)
-{
-	memset(touch, 0, sizeof *touch);
-	wl_list_init(&touch->resource_list);
-	touch->focus_listener.notify = lose_touch_focus;
-	touch->default_grab.interface = &default_touch_grab_interface;
-	touch->default_grab.touch = touch;
-	touch->grab = &touch->default_grab;
-	wl_signal_init(&touch->focus_signal);
-}
-
-WL_EXPORT void
-wl_touch_release(struct wl_touch *touch)
-{
-	/* XXX: What about touch->resource_list? */
-	if (touch->focus_resource)
-		wl_list_remove(&touch->focus_listener.link);
-}
-
-WL_EXPORT void
-wl_seat_init(struct wl_seat *seat)
-{
-	memset(seat, 0, sizeof *seat);
-
-	wl_signal_init(&seat->destroy_signal);
-
-	seat->selection_data_source = NULL;
-	wl_list_init(&seat->base_resource_list);
-	wl_signal_init(&seat->selection_signal);
-	wl_list_init(&seat->drag_resource_list);
-	wl_signal_init(&seat->drag_icon_signal);
-}
-
-WL_EXPORT void
-wl_seat_release(struct wl_seat *seat)
-{
-	wl_signal_emit(&seat->destroy_signal, seat);
-
-	if (seat->pointer)
-		wl_pointer_release(seat->pointer);
-	if (seat->keyboard)
-		wl_keyboard_release(seat->keyboard);
-	if (seat->touch)
-		wl_touch_release(seat->touch);
-}
-
-static void
-seat_send_updated_caps(struct wl_seat *seat)
-{
-	struct wl_resource *r;
-	enum wl_seat_capability caps = 0;
-
-	if (seat->pointer)
-		caps |= WL_SEAT_CAPABILITY_POINTER;
-	if (seat->keyboard)
-		caps |= WL_SEAT_CAPABILITY_KEYBOARD;
-	if (seat->touch)
-		caps |= WL_SEAT_CAPABILITY_TOUCH;
-
-	wl_list_for_each(r, &seat->base_resource_list, link)
-		wl_seat_send_capabilities(r, caps);
-}
-
-WL_EXPORT void
-wl_seat_set_pointer(struct wl_seat *seat, struct wl_pointer *pointer)
-{
-	if (pointer && (seat->pointer || pointer->seat))
-		return; /* XXX: error? */
-	if (!pointer && !seat->pointer)
-		return;
-
-	seat->pointer = pointer;
-	if (pointer)
-		pointer->seat = seat;
-
-	seat_send_updated_caps(seat);
-}
-
-WL_EXPORT void
-wl_seat_set_keyboard(struct wl_seat *seat, struct wl_keyboard *keyboard)
-{
-	if (keyboard && (seat->keyboard || keyboard->seat))
-		return; /* XXX: error? */
-	if (!keyboard && !seat->keyboard)
-		return;
-
-	seat->keyboard = keyboard;
-	if (keyboard)
-		keyboard->seat = seat;
-
-	seat_send_updated_caps(seat);
-}
-
-WL_EXPORT void
-wl_seat_set_touch(struct wl_seat *seat, struct wl_touch *touch)
-{
-	if (touch && (seat->touch || touch->seat))
-		return; /* XXX: error? */
-	if (!touch && !seat->touch)
-		return;
-
-	seat->touch = touch;
-	if (touch)
-		touch->seat = seat;
-
-	seat_send_updated_caps(seat);
-}
-
-WL_EXPORT void
-wl_pointer_set_focus(struct wl_pointer *pointer, struct wl_surface *surface,
-		     wl_fixed_t sx, wl_fixed_t sy)
-{
-	struct wl_keyboard *kbd = pointer->seat->keyboard;
-	struct wl_resource *resource, *kr;
-	uint32_t serial;
-
-	resource = pointer->focus_resource;
-	if (resource && pointer->focus != surface) {
-		serial = wl_display_next_serial(resource->client->display);
-		wl_pointer_send_leave(resource, serial,
-				      &pointer->focus->resource);
-		wl_list_remove(&pointer->focus_listener.link);
-	}
-
-	resource = find_resource_for_surface(&pointer->resource_list,
-					     surface);
-	if (resource &&
-	    (pointer->focus != surface ||
-	     pointer->focus_resource != resource)) {
-		serial = wl_display_next_serial(resource->client->display);
-		if (kbd) {
-			kr = find_resource_for_surface(&kbd->resource_list,
-						       surface);
-			if (kr) {
-				wl_keyboard_send_modifiers(kr,
-							   serial,
-							   kbd->modifiers.mods_depressed,
-							   kbd->modifiers.mods_latched,
-							   kbd->modifiers.mods_locked,
-							   kbd->modifiers.group);
-			}
-		}
-		wl_pointer_send_enter(resource, serial, &surface->resource,
-				      sx, sy);
-		wl_signal_add(&resource->destroy_signal,
-			      &pointer->focus_listener);
-		pointer->focus_serial = serial;
-	}
-
-	pointer->focus_resource = resource;
-	pointer->focus = surface;
-	pointer->default_grab.focus = surface;
-	wl_signal_emit(&pointer->focus_signal, pointer);
-}
-
-WL_EXPORT void
-wl_keyboard_set_focus(struct wl_keyboard *keyboard, struct wl_surface *surface)
-{
-	struct wl_resource *resource;
-	uint32_t serial;
-
-	if (keyboard->focus_resource && keyboard->focus != surface) {
-		resource = keyboard->focus_resource;
-		serial = wl_display_next_serial(resource->client->display);
-		wl_keyboard_send_leave(resource, serial,
-				       &keyboard->focus->resource);
-		wl_list_remove(&keyboard->focus_listener.link);
-	}
-
-	resource = find_resource_for_surface(&keyboard->resource_list,
-					     surface);
-	if (resource &&
-	    (keyboard->focus != surface ||
-	     keyboard->focus_resource != resource)) {
-		serial = wl_display_next_serial(resource->client->display);
-		wl_keyboard_send_modifiers(resource, serial,
-					   keyboard->modifiers.mods_depressed,
-					   keyboard->modifiers.mods_latched,
-					   keyboard->modifiers.mods_locked,
-					   keyboard->modifiers.group);
-		wl_keyboard_send_enter(resource, serial, &surface->resource,
-				       &keyboard->keys);
-		wl_signal_add(&resource->destroy_signal,
-			      &keyboard->focus_listener);
-		keyboard->focus_serial = serial;
-	}
-
-	keyboard->focus_resource = resource;
-	keyboard->focus = surface;
-	wl_signal_emit(&keyboard->focus_signal, keyboard);
-}
-
-WL_EXPORT void
-wl_keyboard_start_grab(struct wl_keyboard *keyboard,
-		       struct wl_keyboard_grab *grab)
-{
-	keyboard->grab = grab;
-	grab->keyboard = keyboard;
-
-	/* XXX focus? */
-}
-
-WL_EXPORT void
-wl_keyboard_end_grab(struct wl_keyboard *keyboard)
-{
-	keyboard->grab = &keyboard->default_grab;
-}
-
-WL_EXPORT void
-wl_pointer_start_grab(struct wl_pointer *pointer, struct wl_pointer_grab *grab)
-{
-	const struct wl_pointer_grab_interface *interface;
-
-	pointer->grab = grab;
-	interface = pointer->grab->interface;
-	grab->pointer = pointer;
-
-	if (pointer->current)
-		interface->focus(pointer->grab, pointer->current,
-				 pointer->current_x, pointer->current_y);
-}
-
-WL_EXPORT void
-wl_pointer_end_grab(struct wl_pointer *pointer)
-{
-	const struct wl_pointer_grab_interface *interface;
-
-	pointer->grab = &pointer->default_grab;
-	interface = pointer->grab->interface;
-	interface->focus(pointer->grab, pointer->current,
-			 pointer->current_x, pointer->current_y);
-}
-
-static void
-current_surface_destroy(struct wl_listener *listener, void *data)
-{
-	struct wl_pointer *pointer =
-		container_of(listener, struct wl_pointer, current_listener);
-
-	pointer->current = NULL;
-}
-
-WL_EXPORT void
-wl_pointer_set_current(struct wl_pointer *pointer, struct wl_surface *surface)
-{
-	if (pointer->current)
-		wl_list_remove(&pointer->current_listener.link);
-
-	pointer->current = surface;
-
-	if (!surface)
-		return;
-	
-	wl_signal_add(&surface->resource.destroy_signal,
-		      &pointer->current_listener);
-	pointer->current_listener.notify = current_surface_destroy;
-}
-
-WL_EXPORT void
-wl_touch_start_grab(struct wl_touch *touch, struct wl_touch_grab *grab)
-{
-	touch->grab = grab;
-	grab->touch = touch;
-}
-
-WL_EXPORT void
-wl_touch_end_grab(struct wl_touch *touch)
-{
-	touch->grab = &touch->default_grab;
-}
-
-static void
 registry_bind(struct wl_client *client,
 	      struct wl_resource *resource, uint32_t name,
 	      const char *interface, uint32_t version, uint32_t id)
@@ -996,7 +591,8 @@ registry_bind(struct wl_client *client,
 		if (global->name == name)
 			break;
 
-	if (&global->link == &display->global_list)
+	if (&global->link == &display->global_list ||
+	    global->version < version)
 		wl_resource_post_error(resource,
 				       WL_DISPLAY_ERROR_INVALID_OBJECT,
 				       "invalid global %d", name);
@@ -1015,8 +611,12 @@ display_sync(struct wl_client *client,
 	struct wl_resource *callback;
 	uint32_t serial;
 
-	callback = wl_client_add_object(client,
-					&wl_callback_interface, NULL, id, NULL);
+	callback = wl_resource_create(client, &wl_callback_interface, 1, id);
+	if (callback == NULL) {
+		wl_client_post_no_memory(client);
+		return;
+	}
+
 	serial = wl_display_get_serial(client->display);
 	wl_callback_send_done(callback, serial);
 	wl_resource_destroy(callback);
@@ -1026,7 +626,6 @@ static void
 unbind_resource(struct wl_resource *resource)
 {
 	wl_list_remove(&resource->link);
-	free(resource);
 }
 
 static void
@@ -1038,9 +637,15 @@ display_get_registry(struct wl_client *client,
 	struct wl_global *global;
 
 	registry_resource =
-		wl_client_add_object(client, &wl_registry_interface,
-				     &registry_interface, id, display);
-	registry_resource->destroy = unbind_resource;
+		wl_resource_create(client, &wl_registry_interface, 1, id);
+	if (registry_resource == NULL) {
+		wl_client_post_no_memory(client);
+		return;
+	}
+
+	wl_resource_set_implementation(registry_resource,
+				       &registry_interface,
+				       display, unbind_resource);
 
 	wl_list_insert(&display->registry_resource_list,
 		       &registry_resource->link);
@@ -1050,7 +655,7 @@ display_get_registry(struct wl_client *client,
 				       WL_REGISTRY_GLOBAL,
 				       global->name,
 				       global->interface->name,
-				       global->interface->version);
+				       global->version);
 }
 
 static const struct wl_display_interface display_interface = {
@@ -1062,7 +667,6 @@ static void
 destroy_client_display_resource(struct wl_resource *resource)
 {
 	resource->client->display_resource = NULL;
-	free(resource);
 }
 
 static void
@@ -1072,11 +676,15 @@ bind_display(struct wl_client *client,
 	struct wl_display *display = data;
 
 	client->display_resource =
-		wl_client_add_object(client, &wl_display_interface,
-				     &display_interface, id, display);
+		wl_resource_create(client, &wl_display_interface, 1, id);
+	if (client->display_resource == NULL) {
+		wl_client_post_no_memory(client);
+		return;
+	}
 
-	if(client->display_resource)
-		client->display_resource->destroy = destroy_client_display_resource;
+	wl_resource_set_implementation(client->display_resource,
+				       &display_interface, display,
+				       destroy_client_display_resource);
 }
 
 WL_EXPORT struct wl_display *
@@ -1109,8 +717,8 @@ wl_display_create(void)
 	display->id = 1;
 	display->serial = 0;
 
-	if (!wl_display_add_global(display, &wl_display_interface, 
-				   display, bind_display)) {
+	if (!wl_global_create(display, &wl_display_interface, 1,
+			      display, bind_display)) {
 		wl_event_loop_destroy(display->loop);
 		free(display);
 		return NULL;
@@ -1144,19 +752,27 @@ wl_display_destroy(struct wl_display *display)
 }
 
 WL_EXPORT struct wl_global *
-wl_display_add_global(struct wl_display *display,
-		      const struct wl_interface *interface,
-		      void *data, wl_global_bind_func_t bind)
+wl_global_create(struct wl_display *display,
+		 const struct wl_interface *interface, int version,
+		 void *data, wl_global_bind_func_t bind)
 {
 	struct wl_global *global;
 	struct wl_resource *resource;
+
+	if (interface->version < version) {
+		wl_log("wl_global_create: implemented version higher "
+		       "than interface version%m\n");
+		return NULL;
+	}
 
 	global = malloc(sizeof *global);
 	if (global == NULL)
 		return NULL;
 
+	global->display = display;
 	global->name = display->id++;
 	global->interface = interface;
+	global->version = version;
 	global->data = data;
 	global->bind = bind;
 	wl_list_insert(display->global_list.prev, &global->link);
@@ -1166,14 +782,15 @@ wl_display_add_global(struct wl_display *display,
 				       WL_REGISTRY_GLOBAL,
 				       global->name,
 				       global->interface->name,
-				       global->interface->version);
+				       global->version);
 
 	return global;
 }
 
 WL_EXPORT void
-wl_display_remove_global(struct wl_display *display, struct wl_global *global)
+wl_global_destroy(struct wl_global *global)
 {
+	struct wl_display *display = global->display;
 	struct wl_resource *resource;
 
 	wl_list_for_each(resource, &display->registry_resource_list, link)
@@ -1407,25 +1024,43 @@ wl_display_get_destroy_listener(struct wl_display *display,
 	return wl_signal_get(&display->destroy_signal, notify);
 }
 
+WL_EXPORT void
+wl_resource_set_implementation(struct wl_resource *resource,
+			       const void *implementation,
+			       void *data, wl_resource_destroy_func_t destroy)
+{
+	resource->object.implementation = implementation;
+	resource->data = data;
+	resource->destroy = destroy;
+}
+
+
 WL_EXPORT struct wl_resource *
-wl_client_add_object(struct wl_client *client,
-		     const struct wl_interface *interface,
-		     const void *implementation,
-		     uint32_t id, void *data)
+wl_resource_create(struct wl_client *client,
+		   const struct wl_interface *interface,
+		   int version, uint32_t id)
 {
 	struct wl_resource *resource;
 
 	resource = malloc(sizeof *resource);
-	if (resource == NULL) {
-		wl_resource_post_no_memory(client->display_resource);
+	if (resource == NULL)
 		return NULL;
-	}
 
-	wl_resource_init(resource, interface, implementation, id, data);
+	if (id == 0)
+		id = wl_map_insert_new(&client->objects, 0, NULL);
+
+	resource->object.id = id;
+	resource->object.interface = interface;
+	resource->object.implementation = NULL;
+
+	wl_signal_init(&resource->destroy_signal);
+
+	resource->destroy = NULL;
 	resource->client = client;
-	resource->destroy = (void *) free;
+	resource->data = NULL;
+	resource->version = version;
 
-	if (wl_map_insert_at(&client->objects, resource->object.id, resource) < 0) {
+	if (wl_map_insert_at(&client->objects, 0, resource->object.id, resource) < 0) {
 		wl_resource_post_error(client->display_resource,
 				       WL_DISPLAY_ERROR_INVALID_OBJECT,
 				       "invalid new id %d",
@@ -1437,21 +1072,105 @@ wl_client_add_object(struct wl_client *client,
 	return resource;
 }
 
+WL_EXPORT void
+wl_log_set_handler_server(wl_log_func_t handler)
+{
+	wl_log_handler = handler;
+}
+
+/* Deprecated functions below. */
+
+uint32_t
+wl_client_add_resource(struct wl_client *client,
+		       struct wl_resource *resource) WL_DEPRECATED;
+
+WL_EXPORT uint32_t
+wl_client_add_resource(struct wl_client *client,
+		       struct wl_resource *resource)
+{
+	if (resource->object.id == 0) {
+		resource->object.id =
+			wl_map_insert_new(&client->objects,
+					  WL_MAP_ENTRY_LEGACY, resource);
+	} else if (wl_map_insert_at(&client->objects, WL_MAP_ENTRY_LEGACY,
+				  resource->object.id, resource) < 0) {
+		wl_resource_post_error(client->display_resource,
+				       WL_DISPLAY_ERROR_INVALID_OBJECT,
+				       "invalid new id %d",
+				       resource->object.id);
+		return 0;
+	}
+
+	resource->client = client;
+	wl_signal_init(&resource->destroy_signal);
+
+	return resource->object.id;
+}
+
+struct wl_resource *
+wl_client_add_object(struct wl_client *client,
+		     const struct wl_interface *interface,
+		     const void *implementation,
+		     uint32_t id, void *data) WL_DEPRECATED;
+
+WL_EXPORT struct wl_resource *
+wl_client_add_object(struct wl_client *client,
+		     const struct wl_interface *interface,
+		     const void *implementation, uint32_t id, void *data)
+{
+	struct wl_resource *resource;
+
+	resource = wl_resource_create(client, interface, -1, id);
+	if (resource == NULL)
+		wl_client_post_no_memory(client);
+	else
+		wl_resource_set_implementation(resource,
+					       implementation, data, NULL);
+
+	return resource;
+}
+
+struct wl_resource *
+wl_client_new_object(struct wl_client *client,
+		     const struct wl_interface *interface,
+		     const void *implementation, void *data) WL_DEPRECATED;
+
 WL_EXPORT struct wl_resource *
 wl_client_new_object(struct wl_client *client,
 		     const struct wl_interface *interface,
 		     const void *implementation, void *data)
 {
-	uint32_t id;
+	struct wl_resource *resource;
 
-	id = wl_map_insert_new(&client->objects, WL_MAP_SERVER_SIDE, NULL);
-	return wl_client_add_object(client,
-				    interface, implementation, id, data);
+	resource = wl_resource_create(client, interface, -1, 0);
+	if (resource == NULL)
+		wl_client_post_no_memory(client);
+	else
+		wl_resource_set_implementation(resource,
+					       implementation, data, NULL);
 
+	return resource;
 }
 
-WL_EXPORT void
-wl_log_set_handler_server(wl_log_func_t handler)
+struct wl_global *
+wl_display_add_global(struct wl_display *display,
+		      const struct wl_interface *interface,
+		      void *data, wl_global_bind_func_t bind) WL_DEPRECATED;
+
+WL_EXPORT struct wl_global *
+wl_display_add_global(struct wl_display *display,
+		      const struct wl_interface *interface,
+		      void *data, wl_global_bind_func_t bind)
 {
-	wl_log_handler = handler;
+	return wl_global_create(display, interface, interface->version, data, bind);
+}
+
+void
+wl_display_remove_global(struct wl_display *display,
+			 struct wl_global *global) WL_DEPRECATED;
+
+WL_EXPORT void
+wl_display_remove_global(struct wl_display *display, struct wl_global *global)
+{
+	wl_global_destroy(global);
 }

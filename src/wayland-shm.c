@@ -37,14 +37,15 @@
 #include "wayland-server.h"
 
 struct wl_shm_pool {
-	struct wl_resource resource;
+	struct wl_resource *resource;
 	int refcount;
 	char *data;
 	int size;
 };
 
 struct wl_shm_buffer {
-	struct wl_buffer buffer;
+	struct wl_resource *resource;
+	int32_t width, height;
 	int32_t stride;
 	uint32_t format;
 	int offset;
@@ -65,8 +66,7 @@ shm_pool_unref(struct wl_shm_pool *pool)
 static void
 destroy_buffer(struct wl_resource *resource)
 {
-	struct wl_shm_buffer *buffer =
-		container_of(resource, struct wl_shm_buffer, buffer.resource);
+	struct wl_shm_buffer *buffer = wl_resource_get_user_data(resource);
 
 	if (buffer->pool)
 		shm_pool_unref(buffer->pool);
@@ -89,7 +89,7 @@ shm_pool_create_buffer(struct wl_client *client, struct wl_resource *resource,
 		       int32_t width, int32_t height,
 		       int32_t stride, uint32_t format)
 {
-	struct wl_shm_pool *pool = resource->data;
+	struct wl_shm_pool *pool = wl_resource_get_user_data(resource);
 	struct wl_shm_buffer *buffer;
 
 	switch (format) {
@@ -115,31 +115,36 @@ shm_pool_create_buffer(struct wl_client *client, struct wl_resource *resource,
 
 	buffer = malloc(sizeof *buffer);
 	if (buffer == NULL) {
-		wl_resource_post_no_memory(resource);
+		wl_client_post_no_memory(client);
 		return;
 	}
 
-	buffer->buffer.width = width;
-	buffer->buffer.height = height;
-	buffer->buffer.busy_count = 0;
+	buffer->width = width;
+	buffer->height = height;
 	buffer->format = format;
 	buffer->stride = stride;
 	buffer->offset = offset;
 	buffer->pool = pool;
 	pool->refcount++;
 
-	wl_resource_init(&buffer->buffer.resource, &wl_buffer_interface,
-			 &shm_buffer_interface, id, buffer);
-	buffer->buffer.resource.client = resource->client;
-	buffer->buffer.resource.destroy = destroy_buffer;
+	buffer->resource =
+		wl_resource_create(client, &wl_buffer_interface, 1, id);
+	if (buffer->resource == NULL) {
+		wl_client_post_no_memory(client);
+		shm_pool_unref(pool);
+		free(buffer);
+		return;
+	}
 
-	wl_client_add_resource(client, &buffer->buffer.resource);
+	wl_resource_set_implementation(buffer->resource,
+				       &shm_buffer_interface,
+				       buffer, destroy_buffer);
 }
 
 static void
 destroy_pool(struct wl_resource *resource)
 {
-	struct wl_shm_pool *pool = resource->data;
+	struct wl_shm_pool *pool = wl_resource_get_user_data(resource);
 
 	shm_pool_unref(pool);
 }
@@ -154,7 +159,7 @@ static void
 shm_pool_resize(struct wl_client *client, struct wl_resource *resource,
 		int32_t size)
 {
-	struct wl_shm_pool *pool = resource->data;
+	struct wl_shm_pool *pool = wl_resource_get_user_data(resource);
 	void *data;
 
 	data = mremap(pool->data, pool->size, size, MREMAP_MAYMOVE);
@@ -184,7 +189,7 @@ shm_create_pool(struct wl_client *client, struct wl_resource *resource,
 
 	pool = malloc(sizeof *pool);
 	if (pool == NULL) {
-		wl_resource_post_no_memory(resource);
+		wl_client_post_no_memory(client);
 		goto err_close;
 	}
 
@@ -207,12 +212,18 @@ shm_create_pool(struct wl_client *client, struct wl_resource *resource,
 	}
 	close(fd);
 
-	wl_resource_init(&pool->resource, &wl_shm_pool_interface,
-			 &shm_pool_interface, id, pool);
-	pool->resource.client = client;
-	pool->resource.destroy = destroy_pool;
+	pool->resource =
+		wl_resource_create(client, &wl_shm_pool_interface, 1, id);
+	if (!pool->resource) {
+		wl_client_post_no_memory(client);
+		munmap(pool->data, pool->size);
+		free(pool);
+		return;
+	}
 
-	wl_client_add_resource(client, &pool->resource);
+	wl_resource_set_implementation(pool->resource,
+				       &shm_pool_interface,
+				       pool, destroy_pool);
 
 	return;
 
@@ -232,8 +243,13 @@ bind_shm(struct wl_client *client,
 {
 	struct wl_resource *resource;
 
-	resource = wl_client_add_object(client, &wl_shm_interface,
-					&shm_interface, id, data);
+	resource = wl_resource_create(client, &wl_shm_interface, 1, id);
+	if (!resource) {
+		wl_client_post_no_memory(client);
+		return;
+	}
+
+	wl_resource_set_implementation(resource, &shm_interface, data, NULL);
 
 	wl_shm_send_format(resource, WL_SHM_FORMAT_ARGB8888);
 	wl_shm_send_format(resource, WL_SHM_FORMAT_XRGB8888);
@@ -242,13 +258,13 @@ bind_shm(struct wl_client *client,
 WL_EXPORT int
 wl_display_init_shm(struct wl_display *display)
 {
-	if (!wl_display_add_global(display, &wl_shm_interface, NULL, bind_shm))
+	if (!wl_global_create(display, &wl_shm_interface, 1, NULL, bind_shm))
 		return -1;
 
 	return 0;
 }
 
-WL_EXPORT struct wl_buffer *
+WL_EXPORT struct wl_shm_buffer *
 wl_shm_buffer_create(struct wl_client *client,
 		     uint32_t id, int32_t width, int32_t height,
 		     int32_t stride, uint32_t format)
@@ -267,50 +283,49 @@ wl_shm_buffer_create(struct wl_client *client,
 	if (buffer == NULL)
 		return NULL;
 
-	buffer->buffer.width = width;
-	buffer->buffer.height = height;
-	buffer->buffer.busy_count = 0;
+	buffer->width = width;
+	buffer->height = height;
 	buffer->format = format;
 	buffer->stride = stride;
 	buffer->offset = 0;
 	buffer->pool = NULL;
 
-	wl_resource_init(&buffer->buffer.resource, &wl_buffer_interface,
-			 &shm_buffer_interface, id, buffer);
-	buffer->buffer.resource.client = client;
-	buffer->buffer.resource.destroy = destroy_buffer;
+	buffer->resource =
+		wl_resource_create(client, &wl_buffer_interface, 1, id);
+	if (buffer->resource == NULL) {
+		free(buffer);
+		return NULL;
+	}
 
-	wl_client_add_resource(client, &buffer->buffer.resource);
+	wl_resource_set_implementation(buffer->resource,
+				       &shm_buffer_interface,
+				       buffer, destroy_buffer);
 
-	return &buffer->buffer;
+	return buffer;
 }
 
-WL_EXPORT int
-wl_buffer_is_shm(struct wl_buffer *buffer)
+WL_EXPORT struct wl_shm_buffer *
+wl_shm_buffer_get(struct wl_resource *resource)
 {
-	return buffer->resource.object.implementation == 
-		(void (**)(void)) &shm_buffer_interface;
+	if (resource == NULL)
+		return NULL;
+
+	if (wl_resource_instance_of(resource, &wl_buffer_interface,
+				    &shm_buffer_interface))
+		return wl_resource_get_user_data(resource);
+	else
+		return NULL;
 }
 
 WL_EXPORT int32_t
-wl_shm_buffer_get_stride(struct wl_buffer *buffer_base)
+wl_shm_buffer_get_stride(struct wl_shm_buffer *buffer)
 {
-	struct wl_shm_buffer *buffer = (struct wl_shm_buffer *) buffer_base;
-
-	if (!wl_buffer_is_shm(buffer_base))
-		return 0;
-
 	return buffer->stride;
 }
 
 WL_EXPORT void *
-wl_shm_buffer_get_data(struct wl_buffer *buffer_base)
+wl_shm_buffer_get_data(struct wl_shm_buffer *buffer)
 {
-	struct wl_shm_buffer *buffer = (struct wl_shm_buffer *) buffer_base;
-
-	if (!wl_buffer_is_shm(buffer_base))
-		return NULL;
-
 	if (buffer->pool)
 		return buffer->pool->data + buffer->offset;
 	else
@@ -318,25 +333,19 @@ wl_shm_buffer_get_data(struct wl_buffer *buffer_base)
 }
 
 WL_EXPORT uint32_t
-wl_shm_buffer_get_format(struct wl_buffer *buffer_base)
+wl_shm_buffer_get_format(struct wl_shm_buffer *buffer)
 {
-	struct wl_shm_buffer *buffer = (struct wl_shm_buffer *) buffer_base;
-
 	return buffer->format;
 }
 
 WL_EXPORT int32_t
-wl_shm_buffer_get_width(struct wl_buffer *buffer_base)
+wl_shm_buffer_get_width(struct wl_shm_buffer *buffer)
 {
-	struct wl_shm_buffer *buffer = (struct wl_shm_buffer *) buffer_base;
-
-	return buffer->buffer.width;
+	return buffer->width;
 }
 
 WL_EXPORT int32_t
-wl_shm_buffer_get_height(struct wl_buffer *buffer_base)
+wl_shm_buffer_get_height(struct wl_shm_buffer *buffer)
 {
-	struct wl_shm_buffer *buffer = (struct wl_shm_buffer *) buffer_base;
-
-	return buffer->buffer.height;
+	return buffer->height;
 }
