@@ -1,7 +1,7 @@
 wayland (1.2.0-1) UNRELEASED; urgency=low
 
   * New upstream release.
-  * Update symbols files.
+  * Update symbols files and bump shlibs of libwayland-{client,server}0.
     - ABI break: libwayland-server0 removed several symbols used by
       weston releases prior to 1.2, add a Breaks to accommodate that.
 
