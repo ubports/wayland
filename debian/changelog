@@ -8,6 +8,7 @@ wayland (1.2.1-1) UNRELEASED; urgency=low
 
   [ Emilio Pozuelo Monfort ]
   * New upstream stable release (1.2.1).
+  * Add myself to Uploaders.
 
  -- Sven Joachim <svenjoac@gmx.de>  Sun, 14 Jul 2013 18:00:05 +0200
 
