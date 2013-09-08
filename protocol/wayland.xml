@@ -521,7 +521,7 @@
       <description summary="initiate drag-and-drop session">
 	This event is sent when an active drag-and-drop pointer enters
 	a surface owned by the client.  The position of the pointer at
-	enter time is provided by the x an y arguments, in surface
+	enter time is provided by the x and y arguments, in surface
 	local coordinates.
       </description>
 
@@ -544,7 +544,7 @@
       <description summary="drag-and-drop session motion">
 	This event is sent when the drag-and-drop pointer moves within
 	the currently focused surface. The new position of the pointer
-	is provided by the x an y arguments, in surface local
+	is provided by the x and y arguments, in surface local
 	coordinates.
       </description>
       <arg name="time" type="uint" summary="timestamp with millisecond granularity"/>
@@ -577,7 +577,7 @@
 
   <interface name="wl_data_device_manager" version="1">
     <description summary="data transfer interface">
-      The wl_data_device_manager is a a singleton global object that
+      The wl_data_device_manager is a singleton global object that
       provides access to inter-client data transfer mechanisms such as
       copy-and-paste and drag-and-drop.  These mechanisms are tied to
       a wl_seat and this interface lets a client get a wl_data_device
@@ -846,9 +846,9 @@
 	Set a class for the surface.
 
 	The surface class identifies the general class of applications
-	to which the surface belongs. A common convention is to use
-	the file name (full path if non-standard location) of the
-	applications .desktop file as the class.
+	to which the surface belongs. A common convention is to use the
+	file name (or the full path if it is a non-standard location) of
+	the application's .desktop file as the class.
       </description>
       <arg name="class_" type="string"/>
     </request>
@@ -890,7 +890,7 @@
     <event name="popup_done">
       <description summary="popup interaction is done">
 	The popup_done event is sent out when a popup grab is broken,
-	that is, when the users clicks a surface that doesn't belong
+	that is, when the user clicks a surface that doesn't belong
 	to the client owning the popup surface.
       </description>
     </event>
@@ -952,10 +952,10 @@
 
 	Destroying the wl_buffer after wl_buffer.release does not change
 	the surface contents. However, if the client destroys the
-	wl_buffer before receiving wl_buffer.release, the surface
+	wl_buffer before receiving the wl_buffer.release event, the surface
 	contents become undefined immediately.
 
-	Only if wl_surface.attach is sent with a NULL wl_buffer, the
+	If wl_surface.attach is sent with a NULL wl_buffer, the
 	following wl_surface.commit will remove the surface content.
       </description>
 
