@@ -164,6 +164,67 @@
     </para>
   </section>
   <xi:include href="ProtocolInterfaces.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+  <section id="sect-Protocol-Versioning">
+    <title>Versioning</title>
+    <para>
+      Every interface is versioned and every protocol object implements a
+      particular version of its interface.  For global objects, the maximum
+      version supported by the server is advertised with the global and the
+      actual verion of the created protocol object is determined by the
+      version argument passed to wl_registry.bind().  For objects that are
+      not globals, their version is inferred from the object that created
+      them.
+    </para>
+    <para>
+      In order to keep things sane, this has a few implications for
+      interface versions:
+      <itemizedlist>
+	<listitem>
+	  <para>
+	    The object creation hierarchy must be a tree.  Otherwise,
+	    infering object versions from the parent object becomes a much
+	    more difficult to properly track.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    When the version of an interface increases, so does the version
+	    of its parent (recursively until you get to a global interface)
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    A global interface's version number acts like a counter for all
+	    of its child interfaces.  Whenever a child interface gets
+	    modified, the global parent's interface version number also
+	    increases (see above).  The child interface then takes on the
+	    same version number as the new version of its parent global
+	    interface.
+	  </para>
+	</listitem>
+      </itemizedlist>
+    </para>
+    <para>
+      To illustrate the above, consider the wl_compositor interface.  It
+      has two children, wl_surface and wl_region.  As of wayland version
+      1.2, wl_surface and wl_compositor are both at version 3.  If
+      something is added to the wl_region interface, both wl_region and
+      wl_compositor will get bumpped to version 4.  If, afterwards,
+      wl_surface is changed, both wl_compositor and wl_surface will be at
+      version 5.  In this way the global interface version is used as a
+      sort of "counter" for all of its child interfaces.  This makes it
+      very simple to know the version of the child given the version of its
+      parent.  The child is at the highest possible interface version that
+      is less than or equal to its parent's version.
+    </para>
+    <para>
+      It is worth noting a particular exception to the above versioning
+      scheme.  The wl_display (and, by extension, wl_registry) interface
+      cannot change because it is the core protocol object and its version
+      is never advertised nor is there a mechanism to request a different
+      version.
+    </para>
+  </section>
   <section id="sect-Protocol-Connect-Time">
     <title>Connect Time</title>
     <para>
@@ -196,10 +257,16 @@
   <section id="sect-Protocol-Creating-Objects">
     <title>Creating Objects</title>
     <para>
-      Each object has a unique ID. The IDs are allocated by the
-      client, from a range of IDs. The server tracks how many
-      IDs are left in the current range and sends a new range
-      when the client is about to run out.
+      Each object has a unique ID.  The IDs are allocated by the entity
+      creating the object (either client or server).  IDs allocated by the
+      client are in the range [1, 0xfeffffff] while IDs allocated by the
+      server are in the range [0xff000000, 0xffffffff].  The 0 ID is
+      reserved to represent a null or non-existant object.
+
+      For efficiency purposes, the IDs are densely packed in the sense that
+      the ID N will not be used until N-1 has been used.  Any ID allocation
+      algorithm that does not maintain this property is incompatible with
+      the implementation in libwayland.
     </para>
   </section>
   <section id="sect-Protocol-Compositor">
@@ -285,11 +352,11 @@
       A surface can change the pointer image when the surface is the pointer
       focus of the input device.  Wayland doesn't automatically change the
       pointer image when a pointer enters a surface, but expects the
-      application to set the cursor it wants in response the pointer
+      application to set the cursor it wants in response to the pointer
       focus and motion events.  The rationale is that a client has to manage
       changing pointer images for UI elements within the surface in response
       to motion events anyway, so we'll make that the only mechanism for
-      setting changing the pointer image.  If the server receives a request
+      setting or changing the pointer image.  If the server receives a request
       to set the pointer image after the surface loses pointer focus, the
       request is ignored.  To the client this will look like it successfully
       set the pointer image.
@@ -312,8 +379,8 @@
   <section id="sect-Protocol-Output">
     <title>Output</title>
     <para>
-      A output is a global object, advertised at connect time or as they
-      come and go.
+      An output is a global object, advertised at connect time or as it
+      comes and goes.
     </para>
     <para>
       See <xref linkend="protocol-spec-interface-wl_output"/> for the protocol
@@ -452,7 +519,7 @@
 	</para>
 	<para>
 	  When the drag ends, the receiving client receives a
-	  <function>wl_data_device.drop</function> event at which it is expect
+	  <function>wl_data_device.drop</function> event at which it is expected
 	  to transfer the data using the
 	  <function>wl_data_offer.receive</function> request.
 	</para>
