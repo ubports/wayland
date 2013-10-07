@@ -1,3 +1,10 @@
+wayland (1.2.1-2) UNRELEASED; urgency=low
+
+  * control: Bump the libwayland0 C/R to (<< 1.1.0) so that it covers
+    the ubuntu version too, and add it to -cursor.
+
+ -- Timo Aaltonen <tjaalton@ubuntu.com>  Mon, 07 Oct 2013 10:42:39 +0300
+
 wayland (1.2.1-1) unstable; urgency=low
 
   [ Sven Joachim ]

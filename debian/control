@@ -27,8 +27,8 @@ Multi-Arch: same
 Depends:
  ${shlibs:Depends},
  ${misc:Depends},
-Conflicts: libwayland0 (<< 1.0.5)
-Replaces: libwayland0 (<< 1.0.5)
+Conflicts: libwayland0 (<< 1.1.0)
+Replaces: libwayland0 (<< 1.1.0)
 Description: wayland compositor infrastructure - client library
  Wayland is a protocol for a compositor to talk to its clients as well
  as a C library implementation of that protocol. The compositor can be
@@ -66,8 +66,8 @@ Multi-Arch: same
 Depends:
  ${shlibs:Depends},
  ${misc:Depends},
-Conflicts: libwayland0 (<< 1.0.5)
-Replaces: libwayland0 (<< 1.0.5)
+Conflicts: libwayland0 (<< 1.1.0)
+Replaces: libwayland0 (<< 1.1.0)
 Breaks: weston (<< 1.2.0)
 Description: wayland compositor infrastructure - server library
  Wayland is a protocol for a compositor to talk to its clients as well
@@ -106,6 +106,8 @@ Multi-Arch: same
 Depends:
  ${shlibs:Depends},
  ${misc:Depends},
+Conflicts: libwayland0 (<< 1.1.0)
+Replaces: libwayland0 (<< 1.1.0)
 Description: wayland compositor infrastructure - cursor library
  Wayland is a protocol for a compositor to talk to its clients as well
  as a C library implementation of that protocol. The compositor can be
