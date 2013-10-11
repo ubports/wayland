@@ -97,17 +97,6 @@ int wl_connection_write(struct wl_connection *connection, const void *data, size
 int wl_connection_queue(struct wl_connection *connection,
 			const void *data, size_t count);
 
-union wl_argument {
-	int32_t i;
-	uint32_t u;
-	wl_fixed_t f;
-	const char *s;
-	struct wl_object *o;
-	uint32_t n;
-	struct wl_array *a;
-	int32_t h;
-};
-
 struct wl_closure {
 	int count;
 	const struct wl_message *message;
@@ -163,6 +152,9 @@ enum wl_closure_invoke_flag {
 void
 wl_closure_invoke(struct wl_closure *closure, uint32_t flags,
 		  struct wl_object *target, uint32_t opcode, void *data);
+void
+wl_closure_dispatch(struct wl_closure *closure, wl_dispatcher_func_t dispatcher,
+		    struct wl_object *target, uint32_t opcode);
 int
 wl_closure_send(struct wl_closure *closure, struct wl_connection *connection);
 int
@@ -175,5 +167,10 @@ wl_closure_destroy(struct wl_closure *closure);
 extern wl_log_func_t wl_log_handler;
 
 void wl_log(const char *fmt, ...);
+
+struct wl_display;
+
+struct wl_array *
+wl_display_get_additional_shm_formats(struct wl_display *display);
 
 #endif

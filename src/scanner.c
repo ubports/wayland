@@ -606,7 +606,7 @@ emit_stubs(struct wl_list *message_list, struct interface *interface)
 		exit(EXIT_FAILURE);
 	}
 
-	if (!has_destructor && strcmp(interface->name, "wl_display") != 0)
+	if (!has_destroy && strcmp(interface->name, "wl_display") != 0)
 		printf("static inline void\n"
 		       "%s_destroy(struct %s *%s)\n"
 		       "{\n"
@@ -1178,6 +1178,8 @@ int main(int argc, char *argv[])
 		mode = SERVER_HEADER;
 	else if (strcmp(argv[1], "code") == 0)
 		mode = CODE;
+	else
+		usage(EXIT_FAILURE);
 
 	wl_list_init(&protocol.interface_list);
 	protocol.type_index = 0;
@@ -1210,7 +1212,7 @@ int main(int argc, char *argv[])
 
 	XML_ParserFree(ctx.parser);
 
-	switch(mode) {
+	switch (mode) {
 		case CLIENT_HEADER:
 			emit_header(&protocol, 0);
 			break;

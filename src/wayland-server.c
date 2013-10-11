@@ -92,6 +92,8 @@ struct wl_display {
 	struct wl_list client_list;
 
 	struct wl_signal destroy_signal;
+
+	struct wl_array additional_shm_formats;
 };
 
 struct wl_global {
@@ -112,21 +114,20 @@ struct wl_resource {
 	struct wl_client *client;
 	void *data;
 	int version;
+	wl_dispatcher_func_t dispatcher;
 };
 
 static int wl_debug = 0;
 
 WL_EXPORT void
-wl_resource_post_event(struct wl_resource *resource, uint32_t opcode, ...)
+wl_resource_post_event_array(struct wl_resource *resource, uint32_t opcode,
+			     union wl_argument *args)
 {
 	struct wl_closure *closure;
 	struct wl_object *object = &resource->object;
-	va_list ap;
 
-	va_start(ap, opcode);
-	closure = wl_closure_vmarshal(object, opcode, ap,
-				      &object->interface->events[opcode]);
-	va_end(ap);
+	closure = wl_closure_marshal(object, opcode, args,
+				     &object->interface->events[opcode]);
 
 	if (closure == NULL) {
 		resource->client->error = 1;
@@ -142,18 +143,31 @@ wl_resource_post_event(struct wl_resource *resource, uint32_t opcode, ...)
 	wl_closure_destroy(closure);
 }
 
-
 WL_EXPORT void
-wl_resource_queue_event(struct wl_resource *resource, uint32_t opcode, ...)
+wl_resource_post_event(struct wl_resource *resource, uint32_t opcode, ...)
 {
-	struct wl_closure *closure;
+	union wl_argument args[WL_CLOSURE_MAX_ARGS];
 	struct wl_object *object = &resource->object;
 	va_list ap;
 
 	va_start(ap, opcode);
-	closure = wl_closure_vmarshal(object, opcode, ap,
-				      &object->interface->events[opcode]);
+	wl_argument_from_va_list(object->interface->events[opcode].signature,
+				 args, WL_CLOSURE_MAX_ARGS, ap);
 	va_end(ap);
+
+	wl_resource_post_event_array(resource, opcode, args);
+}
+
+
+WL_EXPORT void
+wl_resource_queue_event_array(struct wl_resource *resource, uint32_t opcode,
+			      union wl_argument *args)
+{
+	struct wl_closure *closure;
+	struct wl_object *object = &resource->object;
+
+	closure = wl_closure_marshal(object, opcode, args,
+				     &object->interface->events[opcode]);
 
 	if (closure == NULL) {
 		resource->client->error = 1;
@@ -167,6 +181,21 @@ wl_resource_queue_event(struct wl_resource *resource, uint32_t opcode, ...)
 		wl_closure_print(closure, object, true);
 
 	wl_closure_destroy(closure);
+}
+
+WL_EXPORT void
+wl_resource_queue_event(struct wl_resource *resource, uint32_t opcode, ...)
+{
+	union wl_argument args[WL_CLOSURE_MAX_ARGS];
+	struct wl_object *object = &resource->object;
+	va_list ap;
+
+	va_start(ap, opcode);
+	wl_argument_from_va_list(object->interface->events[opcode].signature,
+				 args, WL_CLOSURE_MAX_ARGS, ap);
+	va_end(ap);
+
+	wl_resource_queue_event_array(resource, opcode, args);
 }
 
 WL_EXPORT void
@@ -298,8 +327,14 @@ wl_client_connection_data(int fd, uint32_t mask, void *data)
 		if (wl_debug)
 			wl_closure_print(closure, object, false);
 
-		wl_closure_invoke(closure, WL_CLOSURE_INVOKE_SERVER, object,
-				  opcode, client);
+		if ((resource_flags & WL_MAP_ENTRY_LEGACY) ||
+		    resource->dispatcher == NULL) {
+			wl_closure_invoke(closure, WL_CLOSURE_INVOKE_SERVER,
+					  object, opcode, client);
+		} else {
+			wl_closure_dispatch(closure, resource->dispatcher,
+					    object, opcode);
+		}
 
 		wl_closure_destroy(closure);
 
@@ -466,7 +501,7 @@ wl_resource_get_link(struct wl_resource *resource)
 WL_EXPORT struct wl_resource *
 wl_resource_from_link(struct wl_list *link)
 {
-	struct wl_resource *resource;
+	struct wl_resource *resource = NULL;
 
 	return wl_container_of(link, resource, link);
 }
@@ -711,6 +746,8 @@ wl_display_create(void)
 	display->id = 1;
 	display->serial = 0;
 
+	wl_array_init(&display->additional_shm_formats);
+
 	if (!wl_global_create(display, &wl_display_interface, 1,
 			      display, bind_display)) {
 		wl_event_loop_destroy(display->loop);
@@ -741,6 +778,8 @@ wl_display_destroy(struct wl_display *display)
 
 	wl_list_for_each_safe(global, gnext, &display->global_list, link)
 		free(global);
+
+	wl_array_release(&display->additional_shm_formats);
 
 	free(display);
 }
@@ -1026,8 +1065,20 @@ wl_resource_set_implementation(struct wl_resource *resource,
 	resource->object.implementation = implementation;
 	resource->data = data;
 	resource->destroy = destroy;
+	resource->dispatcher = NULL;
 }
 
+WL_EXPORT void
+wl_resource_set_dispatcher(struct wl_resource *resource,
+			   wl_dispatcher_func_t dispatcher,
+			   const void *implementation,
+			   void *data, wl_resource_destroy_func_t destroy)
+{
+	resource->dispatcher = dispatcher;
+	resource->object.implementation = implementation;
+	resource->data = data;
+	resource->destroy = destroy;
+}
 
 WL_EXPORT struct wl_resource *
 wl_resource_create(struct wl_client *client,
@@ -1053,6 +1104,7 @@ wl_resource_create(struct wl_client *client,
 	resource->client = client;
 	resource->data = NULL;
 	resource->version = version;
+	resource->dispatcher = NULL;
 
 	if (wl_map_insert_at(&client->objects, 0, resource->object.id, resource) < 0) {
 		wl_resource_post_error(client->display_resource,
@@ -1167,4 +1219,19 @@ WL_EXPORT void
 wl_display_remove_global(struct wl_display *display, struct wl_global *global)
 {
 	wl_global_destroy(global);
+}
+
+WL_EXPORT void
+wl_display_add_shm_format(struct wl_display *display, uint32_t format)
+{
+	uint32_t *p;
+
+	p = wl_array_add(&display->additional_shm_formats, sizeof *p);
+	*p = format;
+}
+
+struct wl_array *
+wl_display_get_additional_shm_formats(struct wl_display *display)
+{
+	return &display->additional_shm_formats;
 }

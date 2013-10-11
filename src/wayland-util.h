@@ -20,6 +20,11 @@
  * OF THIS SOFTWARE.
  */
 
+/** \file wayland-util.h
+ *
+ * \brief Utility classes, functions, and macros.
+ */
+
 #ifndef WAYLAND_UTIL_H
 #define WAYLAND_UTIL_H
 
@@ -61,8 +66,9 @@ struct wl_interface {
 	const struct wl_message *events;
 };
 
-/**
- * wl_list - linked list
+/** \class wl_list
+ *
+ * \brief doubly-linked list
  *
  * The list head is of "struct wl_list" type, and must be initialized
  * using wl_list_init().  All entries in the list must be of the same
@@ -110,6 +116,41 @@ int wl_list_length(const struct wl_list *list);
 int wl_list_empty(const struct wl_list *list);
 void wl_list_insert_list(struct wl_list *list, struct wl_list *other);
 
+/**
+ * Retrieves a pointer to the containing struct of a given member item.
+ *
+ * This macro allows conversion from a pointer to a item to its containing
+ * struct. This is useful if you have a contained item like a wl_list,
+ * wl_listener, or wl_signal, provided via a callback or other means and would
+ * like to retrieve the struct that contains it.
+ *
+ * To demonstrate, the following example retrieves a pointer to
+ * `example_container` given only its `destroy_listener` member:
+ *
+ * ~~~
+ * struct example_container {
+ *     struct wl_listener destroy_listener;
+ *     \comment{other members...}
+ * };
+ *
+ * void example_container_destroy(struct wl_listener *listener, void *data)
+ * {
+ *     struct example_container *ctr = NULL;
+ *
+ *     ctr = wl_container_of(listener, ctr, destroy_listener);
+ *     \comment{destroy ctr...}
+ * }
+ * ~~~
+ *
+ * \param ptr A valid pointer to the contained item.
+ *
+ * \param sample A pointer to the type of content that the list item stores.
+ * Sample does not need be a valid pointer; a null pointer will suffice.
+ *
+ * \param member The named location of ptr within the sample type.
+ *
+ * \return The container for the specified pointer.
+ */
 #ifdef __GNUC__
 #define wl_container_of(ptr, sample, member)				\
 	(__typeof__(sample))((char *)(ptr)	-			\
@@ -198,6 +239,46 @@ static inline wl_fixed_t wl_fixed_from_int(int i)
 {
 	return i * 256;
 }
+
+/**
+ * \brief A union representing all of the basic data types that can be passed
+ * along the wayland wire format.
+ *
+ * This union represents all of the basic data types that can be passed in the
+ * wayland wire format.  It is used by dispatchers and runtime-friendly
+ * versions of the event and request marshaling functions.
+ */
+union wl_argument {
+	int32_t i; /**< signed integer */
+	uint32_t u; /**< unsigned integer */
+	wl_fixed_t f; /**< fixed point */
+	const char *s; /**< string */
+	struct wl_object *o; /**< object */
+	uint32_t n; /**< new_id */
+	struct wl_array *a; /**< array */
+	int32_t h; /**< file descriptor */
+};
+
+/**
+ * \brief A function pointer type for a dispatcher.
+ *
+ * A dispatcher is a function that handles the emitting of callbacks in client
+ * code.  For programs directly using the C library, this is done by using
+ * libffi to call function pointers.  When binding to languages other than C,
+ * dispatchers provide a way to abstract the function calling process to be
+ * friendlier to other function calling systems.
+ *
+ * A dispatcher takes five arguments:  The first is the dispatcher-specific
+ * implementation data associated with the target object.  The second is the
+ * object on which the callback is being invoked (either wl_proxy or
+ * wl_resource).  The third and fourth arguments are the opcode the wl_messsage
+ * structure corresponding to the callback being emitted.  The final argument
+ * is an array of arguments recieved from the other process via the wire
+ * protocol.
+ */
+typedef int (*wl_dispatcher_func_t)(const void *, void *, uint32_t,
+				    const struct wl_message *,
+				    union wl_argument *);
 
 typedef void (*wl_log_func_t)(const char *, va_list);
 

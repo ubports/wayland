@@ -129,27 +129,109 @@ wl_client_get_object(struct wl_client *client, uint32_t id);
 void
 wl_client_post_no_memory(struct wl_client *client);
 
+/** \class wl_listener
+ *
+ * \brief A single listener for Wayland signals
+ *
+ * wl_listener provides the means to listen for wl_signal notifications. Many
+ * Wayland objects use wl_listener for notification of significant events like
+ * object destruction.
+ *
+ * Clients should create wl_listener objects manually and can register them as
+ * listeners to signals using #wl_signal_add, assuming the signal is
+ * directly accessible. For opaque structs like wl_event_loop, adding a
+ * listener should be done through provided accessor methods. A listener can
+ * only listen to one signal at a time.
+ *
+ * ~~~
+ * struct wl_listener your_listener;
+ *
+ * your_listener.notify = your_callback_method;
+ *
+ * \comment{Direct access}
+ * wl_signal_add(&some_object->destroy_signal, &your_listener);
+ *
+ * \comment{Accessor access}
+ * wl_event_loop *loop = ...;
+ * wl_event_loop_add_destroy_listener(loop, &your_listener);
+ * ~~~
+ *
+ * If the listener is part of a larger struct, #wl_container_of can be used
+ * to retrieve a pointer to it:
+ *
+ * \code
+ * void your_listener(struct wl_listener *listener, void *data)
+ * {
+ * 	struct your_data *data = NULL;
+ *
+ * 	your_data = wl_container_of(listener, data, your_member_name);
+ * }
+ * \endcode
+ *
+ * If you need to remove a listener from a signal, use #wl_list_remove.
+ *
+ * \code
+ * wl_list_remove(&your_listener.link);
+ * \endcode
+ *
+ * \sa wl_signal
+ */
 struct wl_listener {
 	struct wl_list link;
 	wl_notify_func_t notify;
 };
 
+/** \class wl_signal
+ *
+ * \brief A source of a type of observable event
+ *
+ * Signals are recognized points where significant events can be observed.
+ * Compositors as well as the server can provide signals. Observers are
+ * wl_listener's that are added through #wl_signal_add. Signals are emitted
+ * using #wl_signal_emit, which will invoke all listeners until that
+ * listener is removed by #wl_list_remove (or whenever the signal is
+ * destroyed).
+ *
+ * \sa wl_listener for more information on using wl_signal
+ */
 struct wl_signal {
 	struct wl_list listener_list;
 };
 
+/** Initialize a new \ref wl_signal for use.
+ *
+ * \param signal The signal that will be initialized
+ *
+ * \memberof wl_signal
+ */
 static inline void
 wl_signal_init(struct wl_signal *signal)
 {
 	wl_list_init(&signal->listener_list);
 }
 
+/** Add the specified listener to this signal.
+ *
+ * \param signal The signal that will emit events to the listener
+ * \param listener The listener to add
+ *
+ * \memberof wl_signal
+ */
 static inline void
 wl_signal_add(struct wl_signal *signal, struct wl_listener *listener)
 {
 	wl_list_insert(signal->listener_list.prev, &listener->link);
 }
 
+/** Gets the listener struct for the specified callback.
+ *
+ * \param signal The signal that contains the specified listener
+ * \param notify The listener that is the target of this search
+ * \return the list item that corresponds to the specified listener, or NULL
+ * if none was found
+ *
+ * \memberof wl_signal
+ */
 static inline struct wl_listener *
 wl_signal_get(struct wl_signal *signal, wl_notify_func_t notify)
 {
@@ -162,6 +244,13 @@ wl_signal_get(struct wl_signal *signal, wl_notify_func_t notify)
 	return NULL;
 }
 
+/** Emits this signal, notifying all registered listeners.
+ *
+ * \param signal The signal object that will emit the signal
+ * \param data The data that will be emitted with the signal
+ *
+ * \memberof wl_signal
+ */
 static inline void
 wl_signal_emit(struct wl_signal *signal, void *data)
 {
@@ -241,8 +330,12 @@ wl_display_remove_global(struct wl_display *display,
  */
 void wl_resource_post_event(struct wl_resource *resource,
 			    uint32_t opcode, ...);
+void wl_resource_post_event_array(struct wl_resource *resource,
+				  uint32_t opcode, union wl_argument *args);
 void wl_resource_queue_event(struct wl_resource *resource,
 			     uint32_t opcode, ...);
+void wl_resource_queue_event_array(struct wl_resource *resource,
+				   uint32_t opcode, union wl_argument *args);
 
 /* msg is a printf format string, variable args are its args. */
 void wl_resource_post_error(struct wl_resource *resource,
@@ -264,6 +357,12 @@ wl_resource_set_implementation(struct wl_resource *resource,
 			       const void *implementation,
 			       void *data,
 			       wl_resource_destroy_func_t destroy);
+void
+wl_resource_set_dispatcher(struct wl_resource *resource,
+			   wl_dispatcher_func_t dispatcher,
+			   const void *implementation,
+			   void *data,
+			   wl_resource_destroy_func_t destroy);
 
 void
 wl_resource_destroy(struct wl_resource *resource);
@@ -298,6 +397,19 @@ struct wl_listener *
 wl_resource_get_destroy_listener(struct wl_resource *resource,
 				 wl_notify_func_t notify);
 
+#define wl_resource_for_each(resource, list)					\
+	for (resource = 0, resource = wl_resource_from_link((list)->next);	\
+	     wl_resource_get_link(resource) != (list);				\
+	     resource = wl_resource_from_link(wl_resource_get_link(resource)->next))
+
+#define wl_resource_for_each_safe(resource, tmp, list)					\
+	for (resource = 0, tmp = 0,							\
+	     resource = wl_resource_from_link((list)->next),	\
+	     tmp = wl_resource_from_link((list)->next->next);	\
+	     wl_resource_get_link(resource) != (list);				\
+	     resource = tmp,							\
+	     tmp = wl_resource_from_link(wl_resource_get_link(resource)->next))
+
 struct wl_shm_buffer;
 
 struct wl_shm_buffer *
@@ -320,6 +432,9 @@ wl_shm_buffer_get_height(struct wl_shm_buffer *buffer);
 
 int
 wl_display_init_shm(struct wl_display *display);
+
+void
+wl_display_add_shm_format(struct wl_display *display, uint32_t format);
 
 struct wl_shm_buffer *
 wl_shm_buffer_create(struct wl_client *client,
