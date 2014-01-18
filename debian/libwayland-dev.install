@@ -22,5 +22,5 @@ usr/share/aclocal/wayland-scanner.m4
 usr/share/wayland/wayland-scanner.mk
 
 # Documentation
-usr/share/wayland/wayland.xml usr/share/doc/wayland/wayland.xml
-usr/share/wayland/wayland.dtd usr/share/doc/wayland/wayland.dtd
+usr/share/wayland/wayland.xml
+usr/share/wayland/wayland.dtd
