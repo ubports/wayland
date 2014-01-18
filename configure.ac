@@ -2,7 +2,7 @@ AC_PREREQ([2.64])
 
 m4_define([wayland_major_version], [1])
 m4_define([wayland_minor_version], [3])
-m4_define([wayland_micro_version], [0])
+m4_define([wayland_micro_version], [91])
 m4_define([wayland_version],
           [wayland_major_version.wayland_minor_version.wayland_micro_version])
 
@@ -39,7 +39,7 @@ if test "x$GCC" = "xyes"; then
 fi
 AC_SUBST(GCC_CFLAGS)
 
-AC_CHECK_FUNCS([accept4 mkostemp])
+AC_CHECK_FUNCS([accept4 mkostemp posix_fallocate])
 
 AC_CHECK_DECL(SFD_CLOEXEC,[],
 	      [AC_MSG_ERROR("SFD_CLOEXEC is needed to compile wayland")],
@@ -86,6 +86,9 @@ fi
 
 AC_PATH_PROG(XSLTPROC, xsltproc)
 AM_CONDITIONAL([HAVE_XSLTPROC], [test "x$XSLTPROC" != "x"])
+
+AC_PATH_PROG(XMLLINT, xmllint)
+AM_CONDITIONAL([HAVE_XMLLINT], [test "x$XMLLINT" != "x"])
 
 AC_MSG_CHECKING([for docbook manpages stylesheet])
 MANPAGES_STYLESHEET=http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl

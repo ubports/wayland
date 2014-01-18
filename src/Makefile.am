@@ -27,7 +27,7 @@ libwayland_server_la_SOURCES =			\
 	event-loop.c
 
 libwayland_client_la_LIBADD = $(FFI_LIBS) libwayland-util.la -lrt -lm
-libwayland_client_la_LDFLAGS = -version-info 1:0:1
+libwayland_client_la_LDFLAGS = -version-info 2:0:2
 libwayland_client_la_SOURCES =			\
 	wayland-protocol.c			\
 	wayland-client.c
@@ -36,7 +36,7 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = wayland-client.pc wayland-server.pc
 
 AM_CPPFLAGS = $(FFI_CFLAGS)
-AM_CFLAGS = $(GCC_CFLAGS)
+AM_CFLAGS = $(GCC_CFLAGS) -pthread
 
 protocoldir = $(top_srcdir)/protocol
 

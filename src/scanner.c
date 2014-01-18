@@ -43,6 +43,11 @@ usage(int ret)
 
 #define XML_BUFFER_SIZE 4096
 
+struct location {
+	const char *filename;
+	int line_number;
+};
+
 struct description {
 	char *summary;
 	char *text;
@@ -59,6 +64,7 @@ struct protocol {
 };
 
 struct interface {
+	struct location loc;
 	char *name;
 	char *uppercase_name;
 	int version;
@@ -71,11 +77,13 @@ struct interface {
 };
 
 struct message {
+	struct location loc;
 	char *name;
 	char *uppercase_name;
 	struct wl_list arg_list;
 	struct wl_list link;
 	int arg_count;
+	int new_id_count;
 	int type_index;
 	int all_null;
 	int destructor;
@@ -120,7 +128,7 @@ struct entry {
 };
 
 struct parse_context {
-	const char *filename;
+	struct location loc;
 	XML_Parser parser;
 	struct protocol *protocol;
 	struct interface *interface;
@@ -249,11 +257,30 @@ desc_dump(char *desc, const char *fmt, ...)
 }
 
 static void
-fail(struct parse_context *ctx, const char *msg)
+fail(struct location *loc, const char *msg, ...)
 {
-	fprintf(stderr, "%s:%ld: %s\n",
-		ctx->filename, XML_GetCurrentLineNumber(ctx->parser), msg);
+	va_list ap;
+
+	va_start(ap, msg);
+	fprintf(stderr, "%s:%d: error: ",
+		loc->filename, loc->line_number);
+	vfprintf(stderr, msg, ap);
+	fprintf(stderr, "\n");
+	va_end(ap);
 	exit(EXIT_FAILURE);
+}
+
+static void
+warn(struct location *loc, const char *msg, ...)
+{
+	va_list ap;
+
+	va_start(ap, msg);
+	fprintf(stderr, "%s:%d: warning: ",
+		loc->filename, loc->line_number);
+	vfprintf(stderr, msg, ap);
+	fprintf(stderr, "\n");
+	va_end(ap);
 }
 
 static int
@@ -286,6 +313,7 @@ start_element(void *data, const char *element_name, const char **atts)
 	char *end;
 	int i, version;
 
+	ctx->loc.line_number = XML_GetCurrentLineNumber(ctx->parser);
 	name = NULL;
 	type = NULL;
 	version = 0;
@@ -317,7 +345,7 @@ start_element(void *data, const char *element_name, const char **atts)
 	ctx->character_data_length = 0;
 	if (strcmp(element_name, "protocol") == 0) {
 		if (name == NULL)
-			fail(ctx, "no protocol name given");
+			fail(&ctx->loc, "no protocol name given");
 
 		ctx->protocol->name = xstrdup(name);
 		ctx->protocol->uppercase_name = uppercase_dup(name);
@@ -326,12 +354,13 @@ start_element(void *data, const char *element_name, const char **atts)
 		
 	} else if (strcmp(element_name, "interface") == 0) {
 		if (name == NULL)
-			fail(ctx, "no interface name given");
+			fail(&ctx->loc, "no interface name given");
 
 		if (version == 0)
-			fail(ctx, "no interface version given");
+			fail(&ctx->loc, "no interface version given");
 
 		interface = xmalloc(sizeof *interface);
+		interface->loc = ctx->loc;
 		interface->name = xstrdup(name);
 		interface->uppercase_name = uppercase_dup(name);
 		interface->version = version;
@@ -346,13 +375,15 @@ start_element(void *data, const char *element_name, const char **atts)
 	} else if (strcmp(element_name, "request") == 0 ||
 		   strcmp(element_name, "event") == 0) {
 		if (name == NULL)
-			fail(ctx, "no request name given");
+			fail(&ctx->loc, "no request name given");
 
 		message = xmalloc(sizeof *message);
+		message->loc = ctx->loc;
 		message->name = xstrdup(name);
 		message->uppercase_name = uppercase_dup(name);
 		wl_list_init(&message->arg_list);
 		message->arg_count = 0;
+		message->new_id_count = 0;
 		message->description = NULL;
 
 		if (strcmp(element_name, "request") == 0)
@@ -368,23 +399,25 @@ start_element(void *data, const char *element_name, const char **atts)
 			message->destructor = 0;
 
 		if (since != NULL) {
+			errno = 0;
 			version = strtol(since, &end, 0);
 			if (errno == EINVAL || end == since || *end != '\0')
-				fail(ctx, "invalid integer\n");
+				fail(&ctx->loc,
+				     "invalid integer (%s)\n", since);
 			if (version < ctx->interface->since)
-				fail(ctx, "since version not increasing\n");
+				fail(&ctx->loc, "since version not increasing\n");
 			ctx->interface->since = version;
 		}
 
 		message->since = ctx->interface->since;
 
 		if (strcmp(name, "destroy") == 0 && !message->destructor)
-			fail(ctx, "destroy request should be destructor type");
+			fail(&ctx->loc, "destroy request should be destructor type");
 
 		ctx->message = message;
 	} else if (strcmp(element_name, "arg") == 0) {
 		if (name == NULL)
-			fail(ctx, "no argument name given");
+			fail(&ctx->loc, "no argument name given");
 
 		arg = xmalloc(sizeof *arg);
 		arg->name = xstrdup(name);
@@ -406,11 +439,15 @@ start_element(void *data, const char *element_name, const char **atts)
 		} else if (strcmp(type, "object") == 0) {
 			arg->type = OBJECT;
 		} else {
-			fail(ctx, "unknown type");
+			fail(&ctx->loc, "unknown type (%s)", type);
 		}
 
 		switch (arg->type) {
 		case NEW_ID:
+			ctx->message->new_id_count++;
+
+			/* Fall through to OBJECT case. */
+
 		case OBJECT:
 			if (interface_name)
 				arg->interface_name = xstrdup(interface_name);
@@ -419,7 +456,7 @@ start_element(void *data, const char *element_name, const char **atts)
 			break;
 		default:
 			if (interface_name != NULL)
-				fail(ctx, "interface not allowed");
+				fail(&ctx->loc, "interface attribute not allowed for type %s", type);
 			break;
 		}
 
@@ -428,10 +465,10 @@ start_element(void *data, const char *element_name, const char **atts)
 		else if (strcmp(allow_null, "true") == 0)
 			arg->nullable = 1;
 		else
-			fail(ctx, "invalid value for allow-null attribute");
+			fail(&ctx->loc, "invalid value for allow-null attribute (%s)", allow_null);
 
 		if (allow_null != NULL && !is_nullable_type(arg))
-			fail(ctx, "allow-null is only valid for objects, strings, and arrays");
+			fail(&ctx->loc, "allow-null is only valid for objects, strings, and arrays");
 
 		arg->summary = NULL;
 		if (summary)
@@ -441,7 +478,7 @@ start_element(void *data, const char *element_name, const char **atts)
 		ctx->message->arg_count++;
 	} else if (strcmp(element_name, "enum") == 0) {
 		if (name == NULL)
-			fail(ctx, "no enum name given");
+			fail(&ctx->loc, "no enum name given");
 
 		enumeration = xmalloc(sizeof *enumeration);
 		enumeration->name = xstrdup(name);
@@ -455,7 +492,7 @@ start_element(void *data, const char *element_name, const char **atts)
 		ctx->enumeration = enumeration;
 	} else if (strcmp(element_name, "entry") == 0) {
 		if (name == NULL)
-			fail(ctx, "no entry name given");
+			fail(&ctx->loc, "no entry name given");
 
 		entry = xmalloc(sizeof *entry);
 		entry->name = xstrdup(name);
@@ -469,7 +506,7 @@ start_element(void *data, const char *element_name, const char **atts)
 			       &entry->link);
 	} else if (strcmp(element_name, "description") == 0) {
 		if (summary == NULL)
-			fail(ctx, "description without summary");
+			fail(&ctx->loc, "description without summary");
 
 		description = xmalloc(sizeof *description);
 		description->summary = xstrdup(summary);
@@ -600,9 +637,10 @@ emit_stubs(struct wl_list *message_list, struct interface *interface)
 	}
 
 	if (!has_destructor && has_destroy) {
-		fprintf(stderr,
-			"interface %s has method named destroy but"
-			"no destructor", interface->name);
+		fail(&interface->loc,
+		     "interface '%s' has method named destroy "
+		     "but no destructor",
+		     interface->name);
 		exit(EXIT_FAILURE);
 	}
 
@@ -620,6 +658,14 @@ emit_stubs(struct wl_list *message_list, struct interface *interface)
 		return;
 
 	wl_list_for_each(m, message_list, link) {
+		if (m->new_id_count > 1) {
+			warn(&m->loc,
+			     "request '%s::%s' has more than "
+			     "one new_id arg, not emitting stub\n",
+			     interface->name, m->name);
+			continue;
+		}
+
 		ret = NULL;
 		wl_list_for_each(a, &m->arg_list, link) {
 			if (a->type == NEW_ID)
@@ -654,31 +700,34 @@ emit_stubs(struct wl_list *message_list, struct interface *interface)
 		       "{\n");
 		if (ret) {
 			printf("\tstruct wl_proxy *%s;\n\n"
-			       "\t%s = wl_proxy_create("
-			       "(struct wl_proxy *) %s,\n",
-			       ret->name, ret->name, interface->name);
-			if (ret->interface_name == NULL)
-				printf("\t\t\t     interface);\n");
-			else
-				printf("\t\t\t     &%s_interface);\n",
-				       ret->interface_name);
+			       "\t%s = wl_proxy_marshal_constructor("
+			       "(struct wl_proxy *) %s,\n"
+			       "\t\t\t %s_%s, ",
+			       ret->name, ret->name,
+			       interface->name,
+			       interface->uppercase_name,
+			       m->uppercase_name);
 
-			printf("\tif (!%s)\n"
-			       "\t\treturn NULL;\n\n",
-			       ret->name);
+			if (ret->interface_name == NULL)
+				printf("interface");
+			else
+				printf("&%s_interface", ret->interface_name);
+		} else {
+			printf("\twl_proxy_marshal((struct wl_proxy *) %s,\n"
+			       "\t\t\t %s_%s",
+			       interface->name,
+			       interface->uppercase_name,
+			       m->uppercase_name);
 		}
 
-		printf("\twl_proxy_marshal((struct wl_proxy *) %s,\n"
-		       "\t\t\t %s_%s",
-		       interface->name,
-		       interface->uppercase_name,
-		       m->uppercase_name);
-
 		wl_list_for_each(a, &m->arg_list, link) {
-			if (a->type == NEW_ID && a->interface_name == NULL)
-				printf(", interface->name, version");
-			printf(", ");
-			printf("%s", a->name);
+			if (a->type == NEW_ID) {
+				if (a->interface_name == NULL)
+					printf(", interface->name, version");
+				printf(", NULL");
+			} else {
+				printf(", %s", a->name);
+			}
 		}
 		printf(");\n");
 
@@ -1188,7 +1237,7 @@ int main(int argc, char *argv[])
 	memset(&ctx, 0, sizeof ctx);
 	ctx.protocol = &protocol;
 
-	ctx.filename = "<stdin>";
+	ctx.loc.filename = "<stdin>";
 	ctx.parser = XML_ParserCreate(NULL);
 	XML_SetUserData(ctx.parser, &ctx);
 	if (ctx.parser == NULL) {

@@ -20,8 +20,8 @@
  * OF THIS SOFTWARE.
  */
 
-#ifndef WAYLAND_H
-#define WAYLAND_H
+#ifndef WAYLAND_SERVER_H
+#define WAYLAND_SERVER_H
 
 #ifdef  __cplusplus
 extern "C" {
@@ -411,6 +411,12 @@ wl_resource_get_destroy_listener(struct wl_resource *resource,
 	     tmp = wl_resource_from_link(wl_resource_get_link(resource)->next))
 
 struct wl_shm_buffer;
+
+void
+wl_shm_buffer_begin_access(struct wl_shm_buffer *buffer);
+
+void
+wl_shm_buffer_end_access(struct wl_shm_buffer *buffer);
 
 struct wl_shm_buffer *
 wl_shm_buffer_get(struct wl_resource *resource);
