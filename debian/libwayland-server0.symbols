@@ -102,7 +102,9 @@ libwayland-server.so.0 libwayland-server0 #MINVER#
  wl_seat_interface@Base 1.0.2
  wl_shell_interface@Base 1.0.2
  wl_shell_surface_interface@Base 1.0.2
+ wl_shm_buffer_begin_access@Base 1.3.92
  wl_shm_buffer_create@Base 1.0.2
+ wl_shm_buffer_end_access@Base 1.3.92
  wl_shm_buffer_get@Base 1.2.0
  wl_shm_buffer_get_data@Base 1.0.2
  wl_shm_buffer_get_format@Base 1.0.2
@@ -111,5 +113,7 @@ libwayland-server.so.0 libwayland-server0 #MINVER#
  wl_shm_buffer_get_width@Base 1.0.2
  wl_shm_interface@Base 1.0.2
  wl_shm_pool_interface@Base 1.0.2
+ wl_subcompositor_interface@Base 1.3.92
+ wl_subsurface_interface@Base 1.3.92
  wl_surface_interface@Base 1.0.2
  wl_touch_interface@Base 1.0.2
