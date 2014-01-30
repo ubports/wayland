@@ -1,3 +1,16 @@
+wayland (1.4.0-1) UNRELEASED; urgency=medium
+
+  * New upstream release 1.4.0:
+    - SHM Buffer SIBGUS protection.
+    - Subsurfaces protocol moved to wayland repo and promoted to official
+      wayland protocol
+    - wl_proxy_set_queue() can take a NULL queue to reset back to default
+      queue.
+    - Fix race between wl_proxy_create() and wl_proxy_marshal()
+    - scanner error message improvements and documentation improvements
+
+ -- Hector Oron <zumbi@debian.org>  Thu, 30 Jan 2014 22:40:00 +0100
+
 wayland (1.3.92-1) unstable; urgency=medium
 
   * New upstream release (1.3.92)
