@@ -8,6 +8,9 @@ wayland (1.4.0-1) UNRELEASED; urgency=medium
       queue.
     - Fix race between wl_proxy_create() and wl_proxy_marshal()
     - scanner error message improvements and documentation improvements
+  * d/control: Further bump the libwayland0 C/R to cover Collabora version.
+    Thanks Peter Green for patch.
+    (Closes: #731607)
 
  -- Hector Oron <zumbi@debian.org>  Thu, 30 Jan 2014 22:40:00 +0100
 
