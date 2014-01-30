@@ -107,9 +107,6 @@ TEST(destroy_res_tst)
 	wl_resource_set_implementation(res, NULL, &destroyed, res_destroy_func);
 	wl_resource_add_destroy_listener(res, &destroy_listener);
 
-	/* without implementation this should be ignored .. */
-	wl_resource_post_event(res, 0);
-
 	id = wl_resource_get_id(res);
 	link = wl_resource_get_link(res);
 	assert(link);
@@ -156,6 +153,7 @@ TEST(create_resource_with_same_id)
 
 	/* this one should replace the old one */
 	res2 = wl_resource_create(client, &wl_display_interface, 1, id);
+	assert(res2 != NULL);
 	assert(wl_client_get_object(client, id) == res2);
 
 	wl_resource_destroy(res2);
