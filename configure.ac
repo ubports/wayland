@@ -1,7 +1,7 @@
 AC_PREREQ([2.64])
 
 m4_define([wayland_major_version], [1])
-m4_define([wayland_minor_version], [4])
+m4_define([wayland_minor_version], [5])
 m4_define([wayland_micro_version], [0])
 m4_define([wayland_version],
           [wayland_major_version.wayland_minor_version.wayland_micro_version])
@@ -20,7 +20,7 @@ AC_SUBST([WAYLAND_VERSION], [wayland_version])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
-AM_INIT_AUTOMAKE([1.11 foreign no-dist-gzip dist-xz])
+AM_INIT_AUTOMAKE([1.11 foreign no-dist-gzip dist-xz subdir-objects])
 
 AM_SILENT_RULES([yes])
 
@@ -87,9 +87,6 @@ fi
 AC_PATH_PROG(XSLTPROC, xsltproc)
 AM_CONDITIONAL([HAVE_XSLTPROC], [test "x$XSLTPROC" != "x"])
 
-AC_PATH_PROG(XMLLINT, xmllint)
-AM_CONDITIONAL([HAVE_XMLLINT], [test "x$XMLLINT" != "x"])
-
 AC_MSG_CHECKING([for docbook manpages stylesheet])
 MANPAGES_STYLESHEET=http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl
 AC_PATH_PROGS_FEATURE_CHECK([XSLTPROC_TMP], [xsltproc],
@@ -130,21 +127,17 @@ fi
 AM_CONDITIONAL([HAVE_PUBLICAN], [test "x$PUBLICAN" != "x"])
 
 AC_CONFIG_FILES([Makefile
-		 cursor/Makefile
 		 cursor/wayland-cursor.pc
 		 cursor/wayland-cursor-uninstalled.pc
 		 doc/Makefile
 		 doc/publican/Makefile
 		 doc/doxygen/Makefile
 		 doc/man/Makefile
-		 src/Makefile
 		 src/wayland-server-uninstalled.pc
 		 src/wayland-client-uninstalled.pc
 		 src/wayland-scanner-uninstalled.pc
 		 src/wayland-server.pc
 		 src/wayland-client.pc
 		 src/wayland-scanner.pc
-		 src/wayland-version.h
-		 protocol/Makefile
-		 tests/Makefile])
+		 src/wayland-version.h])
 AC_OUTPUT

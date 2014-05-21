@@ -97,7 +97,6 @@ add_source(struct wl_event_loop *loop,
 	struct epoll_event ep;
 
 	if (source->fd < 0) {
-		fprintf(stderr, "could not add source\n: %m");
 		free(source);
 		return NULL;
 	}
@@ -173,9 +172,9 @@ wl_event_source_timer_dispatch(struct wl_event_source *source,
 	int len;
 
 	len = read(source->fd, &expires, sizeof expires);
-	if (len != sizeof expires)
+	if (!(len == -1 && errno == EAGAIN) && len != sizeof expires)
 		/* Is there anything we can do here?  Will this ever happen? */
-		fprintf(stderr, "timerfd read error: %m\n");
+		wl_log("timerfd read error: %m\n");
 
 	return timer_source->func(timer_source->base.data);
 }
@@ -196,7 +195,8 @@ wl_event_loop_add_timer(struct wl_event_loop *loop,
 		return NULL;
 
 	source->base.interface = &timer_source_interface;
-	source->base.fd = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC);
+	source->base.fd = timerfd_create(CLOCK_MONOTONIC,
+									 TFD_CLOEXEC | TFD_NONBLOCK);
 	source->func = func;
 
 	return add_source(loop, &source->base, WL_EVENT_READABLE, data);
@@ -211,10 +211,8 @@ wl_event_source_timer_update(struct wl_event_source *source, int ms_delay)
 	its.it_interval.tv_nsec = 0;
 	its.it_value.tv_sec = ms_delay / 1000;
 	its.it_value.tv_nsec = (ms_delay % 1000) * 1000 * 1000;
-	if (timerfd_settime(source->fd, 0, &its, NULL) < 0) {
-		fprintf(stderr, "could not set timerfd\n: %m");
+	if (timerfd_settime(source->fd, 0, &its, NULL) < 0)
 		return -1;
-	}
 
 	return 0;
 }
@@ -237,7 +235,7 @@ wl_event_source_signal_dispatch(struct wl_event_source *source,
 	len = read(source->fd, &signal_info, sizeof signal_info);
 	if (len != sizeof signal_info)
 		/* Is there anything we can do here?  Will this ever happen? */
-		fprintf(stderr, "signalfd read error: %m\n");
+		wl_log("signalfd read error: %m\n");
 
 	return signal_source->func(signal_source->signal_number,
 				   signal_source->base.data);

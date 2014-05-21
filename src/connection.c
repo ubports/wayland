@@ -61,10 +61,17 @@ struct wl_connection {
 	int want_flush;
 };
 
-static void
+static int
 wl_buffer_put(struct wl_buffer *b, const void *data, size_t count)
 {
 	uint32_t head, size;
+
+	if (count > sizeof(b->data)) {
+		wl_log("Data too big for buffer (%d > %d).\n",
+		       count, sizeof(b->data));
+		errno = E2BIG;
+		return -1;
+	}
 
 	head = MASK(b->head);
 	if (head + count <= sizeof b->data) {
@@ -76,6 +83,8 @@ wl_buffer_put(struct wl_buffer *b, const void *data, size_t count)
 	}
 
 	b->head += count;
+
+	return 0;
 }
 
 static void
@@ -243,8 +252,8 @@ decode_cmsg(struct wl_buffer *buffer, struct msghdr *msg)
 			size /= sizeof(int32_t);
 			for (i = 0; i < size; i++)
 				close(((int*)CMSG_DATA(cmsg))[i]);
-		} else {
-			wl_buffer_put(buffer, CMSG_DATA(cmsg), size);
+		} else if (wl_buffer_put(buffer, CMSG_DATA(cmsg), size) < 0) {
+				return -1;
 		}
 	}
 
@@ -350,7 +359,9 @@ wl_connection_write(struct wl_connection *connection,
 			return -1;
 	}
 
-	wl_buffer_put(&connection->out, data, count);
+	if (wl_buffer_put(&connection->out, data, count) < 0)
+		return -1;
+
 	connection->want_flush = 1;
 
 	return 0;
@@ -367,7 +378,7 @@ wl_connection_queue(struct wl_connection *connection,
 			return -1;
 	}
 
-	wl_buffer_put(&connection->out, data, count);
+	return wl_buffer_put(&connection->out, data, count);
 
 	return 0;
 }
@@ -394,9 +405,7 @@ wl_connection_put_fd(struct wl_connection *connection, int32_t fd)
 			return -1;
 	}
 
-	wl_buffer_put(&connection->fds_out, &fd, sizeof fd);
-
-	return 0;
+	return wl_buffer_put(&connection->fds_out, &fd, sizeof fd);
 }
 
 const char *
@@ -512,7 +521,7 @@ wl_closure_marshal(struct wl_object *sender, uint32_t opcode,
 
 	count = arg_count_for_signature(message->signature);
 	if (count > WL_CLOSURE_MAX_ARGS) {
-		printf("too many args (%d)\n", count);
+		wl_log("too many args (%d)\n", count);
 		errno = EINVAL;
 		return NULL;
 	}
@@ -557,13 +566,13 @@ wl_closure_marshal(struct wl_object *sender, uint32_t opcode,
 			fd = args[i].h;
 			dup_fd = wl_os_dupfd_cloexec(fd, 0);
 			if (dup_fd < 0) {
-				fprintf(stderr, "dup failed: %m");
+				wl_log("dup failed: %m");
 				abort();
 			}
 			closure->args[i].h = dup_fd;
 			break;
 		default:
-			fprintf(stderr, "unhandled format code: '%c'\n",
+			wl_log("unhandled format code: '%c'\n",
 				arg.type);
 			assert(0);
 			break;
@@ -615,7 +624,7 @@ wl_connection_demarshal(struct wl_connection *connection,
 
 	count = arg_count_for_signature(message->signature);
 	if (count > WL_CLOSURE_MAX_ARGS) {
-		printf("too many args (%d)\n", count);
+		wl_log("too many args (%d)\n", count);
 		errno = EINVAL;
 		wl_connection_consume(connection, size);
 		return NULL;
@@ -642,7 +651,7 @@ wl_connection_demarshal(struct wl_connection *connection,
 		signature = get_next_argument(signature, &arg);
 
 		if (arg.type != 'h' && p + 1 > end) {
-			printf("message too short, "
+			wl_log("message too short, "
 			       "object (%d), message %s(%s)\n",
 			       *p, message->name, message->signature);
 			errno = EINVAL;
@@ -669,7 +678,7 @@ wl_connection_demarshal(struct wl_connection *connection,
 
 			next = p + DIV_ROUNDUP(length, sizeof *p);
 			if (next > end) {
-				printf("message too short, "
+				wl_log("message too short, "
 				       "object (%d), message %s(%s)\n",
 				       closure->sender_id, message->name,
 				       message->signature);
@@ -680,7 +689,7 @@ wl_connection_demarshal(struct wl_connection *connection,
 			s = (char *) p;
 
 			if (length > 0 && s[length - 1] != '\0') {
-				printf("string not nul-terminated, "
+				wl_log("string not nul-terminated, "
 				       "message %s(%s)\n",
 				       message->name, message->signature);
 				errno = EINVAL;
@@ -695,7 +704,7 @@ wl_connection_demarshal(struct wl_connection *connection,
 			closure->args[i].n = id;
 
 			if (id == 0 && !arg.nullable) {
-				printf("NULL object received on non-nullable "
+				wl_log("NULL object received on non-nullable "
 				       "type, message %s(%s)\n", message->name,
 				       message->signature);
 				errno = EINVAL;
@@ -707,7 +716,7 @@ wl_connection_demarshal(struct wl_connection *connection,
 			closure->args[i].n = id;
 
 			if (id == 0 && !arg.nullable) {
-				printf("NULL new ID received on non-nullable "
+				wl_log("NULL new ID received on non-nullable "
 				       "type, message %s(%s)\n", message->name,
 				       message->signature);
 				errno = EINVAL;
@@ -715,7 +724,7 @@ wl_connection_demarshal(struct wl_connection *connection,
 			}
 
 			if (wl_map_reserve_new(objects, id) < 0) {
-				printf("not a valid new object id (%d), "
+				wl_log("not a valid new object id (%u), "
 				       "message %s(%s)\n",
 				       id, message->name, message->signature);
 				errno = EINVAL;
@@ -728,7 +737,7 @@ wl_connection_demarshal(struct wl_connection *connection,
 
 			next = p + DIV_ROUNDUP(length, sizeof *p);
 			if (next > end) {
-				printf("message too short, "
+				wl_log("message too short, "
 				       "object (%d), message %s(%s)\n",
 				       closure->sender_id, message->name,
 				       message->signature);
@@ -745,7 +754,7 @@ wl_connection_demarshal(struct wl_connection *connection,
 			break;
 		case 'h':
 			if (connection->fds_in.tail == connection->fds_in.head) {
-				printf("file descriptor expected, "
+				wl_log("file descriptor expected, "
 				       "object (%d), message %s(%s)\n",
 				       closure->sender_id, message->name,
 				       message->signature);
@@ -758,7 +767,7 @@ wl_connection_demarshal(struct wl_connection *connection,
 			closure->args[i].h = fd;
 			break;
 		default:
-			printf("unknown type\n");
+			wl_log("unknown type\n");
 			assert(0);
 			break;
 		}
@@ -817,7 +826,7 @@ wl_closure_lookup_objects(struct wl_closure *closure, struct wl_map *objects)
 				 * destroyed client side */
 				object = NULL;
 			} else if (object == NULL && id != 0) {
-				printf("unknown object (%u), message %s(%s)\n",
+				wl_log("unknown object (%u), message %s(%s)\n",
 				       id, message->name, message->signature);
 				object = NULL;
 				errno = EINVAL;
@@ -827,7 +836,7 @@ wl_closure_lookup_objects(struct wl_closure *closure, struct wl_map *objects)
 			if (object != NULL && message->types[i] != NULL &&
 			    !wl_interface_equal((object)->interface,
 						message->types[i])) {
-				printf("invalid object (%u), type (%s), "
+				wl_log("invalid object (%u), type (%s), "
 				       "message %s(%s)\n",
 				       id, (object)->interface->name,
 				       message->name, message->signature);
@@ -893,7 +902,7 @@ convert_arguments_to_ffi(const char *signature, uint32_t flags,
 			ffi_args[i] = &args[i].h;
 			break;
 		default:
-			printf("unknown type\n");
+			wl_log("unknown type\n");
 			assert(0);
 			break;
 		}
@@ -953,8 +962,8 @@ copy_fds_to_connection(struct wl_closure *closure,
 
 		fd = closure->args[i].h;
 		if (wl_connection_put_fd(connection, fd)) {
-			fprintf(stderr, "request could not be marshaled: "
-				"can't send file descriptor");
+			wl_log("request could not be marshaled: "
+			       "can't send file descriptor");
 			return -1;
 		}
 	}

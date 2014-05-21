@@ -404,12 +404,14 @@ start_element(void *data, const char *element_name, const char **atts)
 			if (errno == EINVAL || end == since || *end != '\0')
 				fail(&ctx->loc,
 				     "invalid integer (%s)\n", since);
-			if (version < ctx->interface->since)
-				fail(&ctx->loc, "since version not increasing\n");
-			ctx->interface->since = version;
+		} else {
+			version = 1;
 		}
 
-		message->since = ctx->interface->since;
+		if (version < ctx->interface->since)
+			warn(&ctx->loc, "since version not increasing\n");
+		ctx->interface->since = version;
+		message->since = version;
 
 		if (strcmp(name, "destroy") == 0 && !message->destructor)
 			fail(&ctx->loc, "destroy request should be destructor type");
@@ -572,6 +574,18 @@ emit_opcodes(struct wl_list *message_list, struct interface *interface)
 	wl_list_for_each(m, message_list, link)
 		printf("#define %s_%s\t%d\n",
 		       interface->uppercase_name, m->uppercase_name, opcode++);
+
+	printf("\n");
+}
+
+static void
+emit_opcode_versions(struct wl_list *message_list, struct interface *interface)
+{
+	struct message *m;
+
+	wl_list_for_each(m, message_list, link)
+		printf("#define %s_%s_SINCE_VERSION\t%d\n",
+		       interface->uppercase_name, m->uppercase_name, m->since);
 
 	printf("\n");
 }
@@ -1002,6 +1016,7 @@ emit_header(struct protocol *protocol, int server)
 		if (server) {
 			emit_structs(&i->request_list, i);
 			emit_opcodes(&i->event_list, i);
+			emit_opcode_versions(&i->event_list, i);
 			emit_event_wrappers(&i->event_list, i);
 		} else {
 			emit_structs(&i->event_list, i);
@@ -1019,11 +1034,13 @@ emit_header(struct protocol *protocol, int server)
 
 static void
 emit_types_forward_declarations(struct protocol *protocol,
-				struct wl_list *message_list)
+				struct wl_list *message_list,
+				struct wl_array *types)
 {
 	struct message *m;
 	struct arg *a;
 	int length;
+	char **p;
 
 	wl_list_for_each(m, message_list, link) {
 		length = 0;
@@ -1037,8 +1054,8 @@ emit_types_forward_declarations(struct protocol *protocol,
 					continue;
 
 				m->all_null = 0;
-				printf("extern const struct wl_interface %s_interface;\n",
-				       a->interface_name);
+				p = fail_on_null(wl_array_add(types, sizeof *p));
+				*p = a->interface_name;
 				break;
 			default:
 				break;
@@ -1153,10 +1170,20 @@ emit_messages(struct wl_list *message_list,
 	printf("};\n\n");
 }
 
+static int
+cmp_names(const void *p1, const void *p2)
+{
+	const char * const *s1 = p1, * const *s2 = p2;
+
+	return strcmp(*s1, *s2);
+}
+
 static void
 emit_code(struct protocol *protocol)
 {
 	struct interface *i;
+	struct wl_array types;
+	char **p, *prev;
 
 	if (protocol->copyright)
 		format_copyright(protocol->copyright);
@@ -1165,10 +1192,20 @@ emit_code(struct protocol *protocol)
 	       "#include <stdint.h>\n"
 	       "#include \"wayland-util.h\"\n\n");
 
+	wl_array_init(&types);
 	wl_list_for_each(i, &protocol->interface_list, link) {
-		emit_types_forward_declarations(protocol, &i->request_list);
-		emit_types_forward_declarations(protocol, &i->event_list);
+		emit_types_forward_declarations(protocol, &i->request_list, &types);
+		emit_types_forward_declarations(protocol, &i->event_list, &types);
 	}
+	qsort(types.data, types.size / sizeof *p, sizeof *p, cmp_names);
+	prev = NULL;
+	wl_array_for_each(p, &types) {
+		if (prev && strcmp(*p, prev) == 0)
+			continue;
+		printf("extern const struct wl_interface %s_interface;\n", *p);
+		prev = *p;
+	}
+	wl_array_release(&types);
 	printf("\n");
 
 	printf("static const struct wl_interface *types[] = {\n");

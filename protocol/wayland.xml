@@ -45,6 +45,8 @@
 	The object returned by this request will be destroyed by the
 	compositor after the callback is fired and as such the client must not
 	attempt to use it after that point.
+
+	The callback_data passed in the callback is the event serial.
       </description>
       <arg name="callback" type="new_id" interface="wl_callback"/>
     </request>
@@ -55,7 +57,7 @@
 	to list and bind the global objects available from the
 	compositor.
       </description>
-      <arg name="callback" type="new_id" interface="wl_registry"/>
+      <arg name="registry" type="new_id" interface="wl_registry"/>
     </request>
 
     <event name="error">
@@ -170,7 +172,7 @@
       <description summary="done event">
        Notify the client when the related request is done.
       </description>
-      <arg name="serial" type="uint" summary="serial of the event"/>
+      <arg name="callback_data" type="uint" summary="request-specific data for the wl_callback"/>
     </event>
   </interface>
 
@@ -244,7 +246,8 @@
       <description summary="change the size of the pool mapping">
 	This request will cause the server to remap the backing memory
 	for the pool from the file descriptor passed when the pool was
-	created, but using the new size.
+	created, but using the new size.  This request can only be
+	used to make the pool bigger.
       </description>
 
       <arg name="size" type="int"/>
@@ -1057,25 +1060,39 @@
     </request>
 
     <request name="frame">
-      <description summary="request repaint feedback">
-	Request notification when the next frame is displayed. Useful
-	for throttling redrawing operations, and driving animations.
+      <description summary="request a frame throttling hint">
+	Request a notification when it is a good time start drawing a new
+	frame, by creating a frame callback. This is useful for throttling
+	redrawing operations, and driving animations.
+
+	When a client is animating on a wl_surface, it can use the 'frame'
+	request to get notified when it is a good time to draw and commit the
+	next frame of animation. If the client commits an update earlier than
+	that, it is likely that some updates will not make it to the display,
+	and the client is wasting resources by drawing too often.
+
 	The frame request will take effect on the next wl_surface.commit.
 	The notification will only be posted for one frame unless
-	requested again.
+	requested again. For a wl_surface, the notifications are posted in
+	the order the frame requests were committed.
+
+	The server must send the notifications so that a client
+	will not send excessive updates, while still allowing
+	the highest possible update rate for clients that wait for the reply
+	before drawing again. The server should give some time for the client
+	to draw and commit after sending the frame callback events to let them
+	hit the next output refresh.
 
 	A server should avoid signalling the frame callbacks if the
 	surface is not visible in any way, e.g. the surface is off-screen,
 	or completely obscured by other opaque surfaces.
 
-	A client can request a frame callback even without an attach,
-	damage, or any other state changes. wl_surface.commit triggers a
-	display update, so the callback event will arrive after the next
-	output refresh where the surface is visible.
-
 	The object returned by this request will be destroyed by the
 	compositor after the callback is fired and as such the client must not
 	attempt to use it after that point.
+
+	The callback_data passed in the callback is the current time, in
+	milliseconds.
       </description>
 
       <arg name="callback" type="new_id" interface="wl_callback"/>
@@ -1196,6 +1213,11 @@
 
 	A newly created surface has its buffer transformation set to normal.
 
+	wl_surface.set_buffer_transform changes the pending buffer
+	transformation. wl_surface.commit copies the pending buffer
+	transformation to the current one. Otherwise, the pending and current
+	values are never changed.
+
 	The purpose of this request is to allow clients to render content
 	according to the output transform, thus permiting the compositor to
 	use certain optimizations even if the display is rotated. Using
@@ -1221,6 +1243,10 @@
 	Buffer scale is double-buffered state, see wl_surface.commit.
 
 	A newly created surface has its buffer scale set to 1.
+
+	wl_surface.set_buffer_scale changes the pending buffer scale.
+	wl_surface.commit copies the pending buffer scale to the current one.
+	Otherwise, the pending and current values are never changed.
 
 	The purpose of this request is to allow clients to supply higher
 	resolution buffer data for use on high resolution outputs. Its
@@ -1358,10 +1384,6 @@
       <arg name="hotspot_y" type="int" summary="y coordinate in surface-relative coordinates"/>
     </request>
 
-    <request name="release" type="destructor" since="3">
-      <description summary="release the pointer object"/>
-    </request>
-
     <event name="enter">
       <description summary="enter event">
 	Notification that this seat's pointer is focused on a certain
@@ -1459,6 +1481,13 @@
       <arg name="axis" type="uint"/>
       <arg name="value" type="fixed"/>
     </event>
+
+    <!-- Version 3 additions -->
+
+    <request name="release" type="destructor" since="3">
+      <description summary="release the pointer object"/>
+    </request>
+
   </interface>
 
   <interface name="wl_keyboard" version="3">
@@ -1467,10 +1496,6 @@
       associated with a seat.
     </description>
 
-    <request name="release" type="destructor" since="3">
-      <description summary="release the keyboard object"/>
-    </request>
-
     <enum name="keymap_format">
       <description summary="keyboard mapping format">
 	This specifies the format of the keymap provided to the
@@ -1478,7 +1503,8 @@
       </description>
       <entry name="no_keymap" value="0"
 	     summary="no keymap; client must understand how to interpret the raw keycode"/>
-      <entry name="xkb_v1" value="1" summary="libxkbcommon compatible"/>
+      <entry name="xkb_v1" value="1"
+             summary="libxkbcommon compatible; to determine the xkb keycode, clients must add 8 to the key event keycode"/>
     </enum>
 
     <event name="keymap">
@@ -1546,6 +1572,12 @@
       <arg name="mods_locked" type="uint"/>
       <arg name="group" type="uint"/>
     </event>
+
+    <!-- Version 3 additions -->
+
+    <request name="release" type="destructor" since="3">
+      <description summary="release the keyboard object"/>
+    </request>
   </interface>
 
   <interface name="wl_touch" version="3">
@@ -1559,10 +1591,6 @@
       and ending with an up event. Events relating to the same
       contact point can be identified by the ID of the sequence.
     </description>
-
-    <request name="release" type="destructor" since="3">
-      <description summary="release the touch object"/>
-    </request>
 
     <event name="down">
       <description summary="touch down event and beginning of a touch sequence">
@@ -1616,6 +1644,12 @@
 	this surface may re-use the touch point ID.
       </description>
     </event>
+
+    <!-- Version 3 additions -->
+
+    <request name="release" type="destructor" since="3">
+      <description summary="release the touch object"/>
+    </request>
   </interface>
 
   <interface name="wl_output" version="2">

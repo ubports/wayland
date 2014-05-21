@@ -51,6 +51,13 @@ extern "C" {
 #define WL_DEPRECATED
 #endif
 
+/* Printf annotation */
+#if defined(__GNUC__) && __GNUC__ >= 4
+#define WL_PRINTF(x, y) __attribute__((__format__(__printf__, x, y)))
+#else
+#define WL_PRINTF(x, y)
+#endif
+
 struct wl_message {
 	const char *name;
 	const char *signature;
@@ -135,7 +142,7 @@ void wl_list_insert_list(struct wl_list *list, struct wl_list *other);
  *
  * void example_container_destroy(struct wl_listener *listener, void *data)
  * {
- *     struct example_container *ctr = NULL;
+ *     struct example_container *ctr;
  *
  *     ctr = wl_container_of(listener, ctr, destroy_listener);
  *     \comment{destroy ctr...}
@@ -144,44 +151,40 @@ void wl_list_insert_list(struct wl_list *list, struct wl_list *other);
  *
  * \param ptr A valid pointer to the contained item.
  *
- * \param sample A pointer to the type of content that the list item stores.
- * Sample does not need be a valid pointer; a null pointer will suffice.
+ * \param sample A pointer to the type of content that the list item
+ * stores. Sample does not need be a valid pointer; a null or
+ * an uninitialised pointer will suffice.
  *
  * \param member The named location of ptr within the sample type.
  *
  * \return The container for the specified pointer.
  */
-#ifdef __GNUC__
 #define wl_container_of(ptr, sample, member)				\
-	(__typeof__(sample))((char *)(ptr)	-			\
-		 ((char *)&(sample)->member - (char *)(sample)))
-#else
-#define wl_container_of(ptr, sample, member)				\
-	(void *)((char *)(ptr)	-				        \
-		 ((char *)&(sample)->member - (char *)(sample)))
-#endif
+	(__typeof__(sample))((char *)(ptr) -				\
+			     offsetof(__typeof__(*sample), member))
+/* If the above macro causes problems on your compiler you might be
+ * able to find an alternative name for the non-standard __typeof__
+ * operator and add a special case here */
 
 #define wl_list_for_each(pos, head, member)				\
-	for (pos = 0, pos = wl_container_of((head)->next, pos, member);	\
+	for (pos = wl_container_of((head)->next, pos, member);	\
 	     &pos->member != (head);					\
 	     pos = wl_container_of(pos->member.next, pos, member))
 
 #define wl_list_for_each_safe(pos, tmp, head, member)			\
-	for (pos = 0, tmp = 0, 						\
-	     pos = wl_container_of((head)->next, pos, member),		\
+	for (pos = wl_container_of((head)->next, pos, member),		\
 	     tmp = wl_container_of((pos)->member.next, tmp, member);	\
 	     &pos->member != (head);					\
 	     pos = tmp,							\
 	     tmp = wl_container_of(pos->member.next, tmp, member))
 
 #define wl_list_for_each_reverse(pos, head, member)			\
-	for (pos = 0, pos = wl_container_of((head)->prev, pos, member);	\
+	for (pos = wl_container_of((head)->prev, pos, member);	\
 	     &pos->member != (head);					\
 	     pos = wl_container_of(pos->member.prev, pos, member))
 
 #define wl_list_for_each_reverse_safe(pos, tmp, head, member)		\
-	for (pos = 0, tmp = 0, 						\
-	     pos = wl_container_of((head)->prev, pos, member),	\
+	for (pos = wl_container_of((head)->prev, pos, member),	\
 	     tmp = wl_container_of((pos)->member.prev, tmp, member);	\
 	     &pos->member != (head);					\
 	     pos = tmp,							\
@@ -280,7 +283,7 @@ typedef int (*wl_dispatcher_func_t)(const void *, void *, uint32_t,
 				    const struct wl_message *,
 				    union wl_argument *);
 
-typedef void (*wl_log_func_t)(const char *, va_list);
+typedef void (*wl_log_func_t)(const char *, va_list) WL_PRINTF(1, 0);
 
 #ifdef  __cplusplus
 }

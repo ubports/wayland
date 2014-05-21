@@ -117,7 +117,7 @@ struct wl_resource {
 	wl_dispatcher_func_t dispatcher;
 };
 
-static int wl_debug = 0;
+static int debug_server = 0;
 
 WL_EXPORT void
 wl_resource_post_event_array(struct wl_resource *resource, uint32_t opcode,
@@ -137,7 +137,7 @@ wl_resource_post_event_array(struct wl_resource *resource, uint32_t opcode,
 	if (wl_closure_send(closure, resource->client->connection))
 		resource->client->error = 1;
 
-	if (wl_debug)
+	if (debug_server)
 		wl_closure_print(closure, object, true);
 
 	wl_closure_destroy(closure);
@@ -177,7 +177,7 @@ wl_resource_queue_event_array(struct wl_resource *resource, uint32_t opcode,
 	if (wl_closure_queue(closure, resource->client->connection))
 		resource->client->error = 1;
 
-	if (wl_debug)
+	if (debug_server)
 		wl_closure_print(closure, object, true);
 
 	wl_closure_destroy(closure);
@@ -313,7 +313,7 @@ wl_client_connection_data(int fd, uint32_t mask, void *data)
 		if (closure == NULL && errno == ENOMEM) {
 			wl_resource_post_no_memory(resource);
 			break;
-		} else if ((closure == NULL && errno == EINVAL) ||
+		} else if (closure == NULL ||
 			   wl_closure_lookup_objects(closure, &client->objects) < 0) {
 			wl_resource_post_error(client->display_resource,
 					       WL_DISPLAY_ERROR_INVALID_METHOD,
@@ -321,10 +321,11 @@ wl_client_connection_data(int fd, uint32_t mask, void *data)
 					       object->interface->name,
 					       object->id,
 					       message->name);
+			wl_closure_destroy(closure);
 			break;
 		}
 
-		if (wl_debug)
+		if (debug_server)
 			wl_closure_print(closure, object, false);
 
 		if ((resource_flags & WL_MAP_ENTRY_LEGACY) ||
@@ -571,7 +572,7 @@ wl_resource_get_link(struct wl_resource *resource)
 WL_EXPORT struct wl_resource *
 wl_resource_from_link(struct wl_list *link)
 {
-	struct wl_resource *resource = NULL;
+	struct wl_resource *resource;
 
 	return wl_container_of(link, resource, link);
 }
@@ -664,8 +665,6 @@ WL_EXPORT void
 wl_client_destroy(struct wl_client *client)
 {
 	uint32_t serial = 0;
-	
-	wl_log("disconnect from client %p\n", client);
 
 	wl_signal_emit(&client->destroy_signal, client);
 
@@ -790,6 +789,15 @@ bind_display(struct wl_client *client,
 				       destroy_client_display_resource);
 }
 
+/** Create Wayland display object.
+ *
+ * \param None
+ * \return The Wayland display object. Null if failed to create
+ *
+ * This creates the wl_display object.
+ *
+ * \memberof wl_display
+ */
 WL_EXPORT struct wl_display *
 wl_display_create(void)
 {
@@ -798,7 +806,7 @@ wl_display_create(void)
 
 	debug = getenv("WAYLAND_DEBUG");
 	if (debug && (strstr(debug, "server") || strstr(debug, "1")))
-		wl_debug = 1;
+		debug_server = 1;
 
 	display = malloc(sizeof *display);
 	if (display == NULL)
@@ -1089,8 +1097,6 @@ wl_display_add_socket(struct wl_display *display, const char *name)
 		errno = ENAMETOOLONG;
 		return -1;
 	};
-
-	wl_log("using socket %s\n", s->addr.sun_path);
 
 	s->fd_lock = get_socket_lock(s);
 	if (s->fd_lock < 0) {
