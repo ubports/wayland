@@ -2,6 +2,8 @@ wayland (1.5.0-1) UNRELEASED; urgency=medium
 
   * New upstream release.
   * Switch back to source format 1.0 for now.
+  * debian/libwayland-dev.install:
+    + Update path for wayland-scanner.pc.
 
  -- Emilio Pozuelo Monfort <pochu@debian.org>  Wed, 21 May 2014 21:22:34 +0200
 
