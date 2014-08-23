@@ -23,11 +23,13 @@ libwayland-client.so.0 libwayland-client0 #MINVER#
  wl_display_flush@Base 1.0.2
  wl_display_get_error@Base 1.0.2
  wl_display_get_fd@Base 1.0.2
+ wl_display_get_protocol_error@Base 1.5.91
  wl_display_interface@Base 1.0.2
  wl_display_prepare_read@Base 1.2.0
  wl_display_prepare_read_queue@Base 1.2.0
  wl_display_read_events@Base 1.2.0
  wl_display_roundtrip@Base 1.0.2
+ wl_display_roundtrip_queue@Base 1.5.91
  wl_event_queue_destroy@Base 1.0.2
  wl_keyboard_interface@Base 1.0.2
  wl_list_empty@Base 1.0.2

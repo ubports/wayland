@@ -1,6 +1,7 @@
 wayland (1.5.91-1) UNRELEASED; urgency=medium
 
   * New upstream development release.
+  * Update debian/libwayland-client0.symbols with two additions
 
  -- Andreas Henriksson <andreas@fatal.se>  Sat, 23 Aug 2014 16:03:00 +0200
 
