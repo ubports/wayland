@@ -2,7 +2,7 @@ AC_PREREQ([2.64])
 
 m4_define([wayland_major_version], [1])
 m4_define([wayland_minor_version], [5])
-m4_define([wayland_micro_version], [0])
+m4_define([wayland_micro_version], [91])
 m4_define([wayland_version],
           [wayland_major_version.wayland_minor_version.wayland_micro_version])
 
@@ -112,7 +112,7 @@ if test "x$enable_documentation" = "xyes"; then
 	AC_PATH_PROG(PUBLICAN, publican)
 
 	if test "x$PUBLICAN" != "x"; then
-		PUBLICAN_VERSION=[`$PUBLICAN -v | sed -e 's/version=\([0-9]*\.[0-9]*\).*/\1/'`]
+		PUBLICAN_VERSION=[`$PUBLICAN -v | sed -e 's/version=v\?\([0-9]*\.[0-9]*\).*/\1/'`]
 
 		if test [ 1 -eq `echo "${PUBLICAN_VERSION} < 2.8" | bc` ]; then
 			AC_MSG_ERROR([Publican version is not supported. Install publican >= 2.8 or disable the documentation using --disable-documentation])

@@ -69,22 +69,35 @@ struct wl_global {
 };
 
 struct wl_event_queue {
-	struct wl_list link;
 	struct wl_list event_list;
 	struct wl_display *display;
-	pthread_cond_t cond;
 };
 
 struct wl_display {
 	struct wl_proxy proxy;
 	struct wl_connection *connection;
+
+	/* errno of the last wl_display error */
 	int last_error;
+
+	/* When display gets an error event from some object, it stores
+	 * information about it here, so that client can get this
+	 * information afterwards */
+	struct {
+		/* Code of the error. It can be compared to
+		 * the interface's errors enumeration. */
+		uint32_t code;
+		/* interface (protocol) in which the error occurred */
+		const struct wl_interface *interface;
+		/* id of the proxy that caused the error. There's no warranty
+		 * that the proxy is still valid. It's up to client how it will
+		 * use it */
+		uint32_t id;
+	} protocol_error;
 	int fd;
-	pthread_t display_thread;
 	struct wl_map objects;
 	struct wl_event_queue display_queue;
 	struct wl_event_queue default_queue;
-	struct wl_list event_queue_list;
 	pthread_mutex_t mutex;
 
 	int reader_count;
@@ -96,28 +109,88 @@ struct wl_display {
 
 static int debug_client = 0;
 
+/**
+ * This function is called for local errors (no memory, server hung up)
+ *
+ * \param display
+ * \param error    error value (EINVAL, EFAULT, ...)
+ *
+ * \note this function is called with display mutex locked
+ */
 static void
 display_fatal_error(struct wl_display *display, int error)
 {
-	struct wl_event_queue *iter;
-
 	if (display->last_error)
 		return;
 
 	if (!error)
-		error = 1;
+		error = EFAULT;
 
 	display->last_error = error;
 
-	wl_list_for_each(iter, &display->event_queue_list, link)
-		pthread_cond_broadcast(&iter->cond);
+       pthread_cond_broadcast(&display->reader_cond);
+       /* prevent from indefinite looping in read_events()
+	* (when calling pthread_cond_wait under condition
+	* display->read_serial == serial) */
+       ++display->read_serial;
 }
 
+/**
+ * This function is called for error events
+ * and indicates that in some object an error occured.
+ * Difference between this function and display_fatal_error()
+ * is that this one handles errors that will come by wire,
+ * whereas display_fatal_error() is called for local errors.
+ *
+ * \param display
+ * \param code    error code
+ * \param id      id of the object that generated the error
+ * \param intf    protocol interface
+ */
 static void
-wl_display_fatal_error(struct wl_display *display, int error)
+display_protocol_error(struct wl_display *display, uint32_t code,
+		       uint32_t id, const struct wl_interface *intf)
 {
+	int err;
+
+	if (display->last_error)
+		return;
+
+	/* set correct errno */
+	if (wl_interface_equal(intf, &wl_display_interface)) {
+		switch (code) {
+		case WL_DISPLAY_ERROR_INVALID_OBJECT:
+		case WL_DISPLAY_ERROR_INVALID_METHOD:
+			err = EINVAL;
+			break;
+		case WL_DISPLAY_ERROR_NO_MEMORY:
+			err = ENOMEM;
+			break;
+		default:
+			err = EFAULT;
+		}
+	} else {
+		err = EPROTO;
+	}
+
 	pthread_mutex_lock(&display->mutex);
-	display_fatal_error(display, error);
+
+	display->last_error = err;
+
+	display->protocol_error.code = code;
+	display->protocol_error.id = id;
+	display->protocol_error.interface = intf;
+
+	/*
+	 * here it is not necessary to broadcast reader's cond like in
+	 * display_fatal_error, because this function is called from
+	 * an event handler and that means that read_events() is done
+	 * and woke up all threads. Since wl_display_prepare_read()
+	 * fails when there are events in the queue, no threads
+	 * can sleep in read_events() during dispatching
+	 * (and therefore during calling this function), so this is safe.
+	 */
+
 	pthread_mutex_unlock(&display->mutex);
 }
 
@@ -125,7 +198,6 @@ static void
 wl_event_queue_init(struct wl_event_queue *queue, struct wl_display *display)
 {
 	wl_list_init(&queue->event_list);
-	pthread_cond_init(&queue->cond, NULL);
 	queue->display = display;
 }
 
@@ -140,7 +212,6 @@ wl_event_queue_release(struct wl_event_queue *queue)
 		wl_list_remove(&closure->link);
 		wl_closure_destroy(closure);
 	}
-	pthread_cond_destroy(&queue->cond);
 }
 
 /** Destroy an event queue
@@ -162,7 +233,6 @@ wl_event_queue_destroy(struct wl_event_queue *queue)
 	struct wl_display *display = queue->display;
 
 	pthread_mutex_lock(&display->mutex);
-	wl_list_remove(&queue->link);
 	wl_event_queue_release(queue);
 	free(queue);
 	pthread_mutex_unlock(&display->mutex);
@@ -186,10 +256,6 @@ wl_display_create_queue(struct wl_display *display)
 		return NULL;
 
 	wl_event_queue_init(queue, display);
-
-	pthread_mutex_lock(&display->mutex);
-	wl_list_insert(&display->event_queue_list, &queue->link);
-	pthread_mutex_unlock(&display->mutex);
 
 	return queue;
 }
@@ -579,25 +645,12 @@ display_handle_error(void *data,
 		     uint32_t code, const char *message)
 {
 	struct wl_proxy *proxy = object;
-	int err;
 
 	wl_log("%s@%u: error %d: %s\n",
 	       proxy->object.interface->name, proxy->object.id, code, message);
 
-	switch (code) {
-	case WL_DISPLAY_ERROR_INVALID_OBJECT:
-	case WL_DISPLAY_ERROR_INVALID_METHOD:
-		err = EINVAL;
-		break;
-	case WL_DISPLAY_ERROR_NO_MEMORY:
-		err = ENOMEM;
-		break;
-	default:
-		err = EFAULT;
-		break;
-	}
-
-	wl_display_fatal_error(display, err);
+	display_protocol_error(display, code, proxy->object.id,
+			       proxy->object.interface);
 }
 
 static void
@@ -711,7 +764,6 @@ wl_display_connect_to_fd(int fd)
 	wl_map_init(&display->objects, WL_MAP_CLIENT_SIDE);
 	wl_event_queue_init(&display->default_queue, display);
 	wl_event_queue_init(&display->display_queue, display);
-	wl_list_init(&display->event_queue_list);
 	pthread_mutex_init(&display->mutex, NULL);
 	pthread_cond_init(&display->reader_cond, NULL);
 	display->reader_count = 0;
@@ -821,10 +873,10 @@ wl_display_get_fd(struct wl_display *display)
 static void
 sync_callback(void *data, struct wl_callback *callback, uint32_t serial)
 {
-   int *done = data;
+	int *done = data;
 
-   *done = 1;
-   wl_callback_destroy(callback);
+	*done = 1;
+	wl_callback_destroy(callback);
 }
 
 static const struct wl_callback_listener sync_listener = {
@@ -834,15 +886,16 @@ static const struct wl_callback_listener sync_listener = {
 /** Block until all pending request are processed by the server
  *
  * \param display The display context object
+ * \param queue The queue on which to run the roundtrip
  * \return The number of dispatched events on success or -1 on failure
  *
  * Blocks until the server process all currently issued requests and
- * sends out pending events on all event queues.
+ * sends out pending events on the event queue.
  *
  * \memberof wl_display
  */
 WL_EXPORT int
-wl_display_roundtrip(struct wl_display *display)
+wl_display_roundtrip_queue(struct wl_display *display, struct wl_event_queue *queue)
 {
 	struct wl_callback *callback;
 	int done, ret = 0;
@@ -851,14 +904,31 @@ wl_display_roundtrip(struct wl_display *display)
 	callback = wl_display_sync(display);
 	if (callback == NULL)
 		return -1;
+	wl_proxy_set_queue((struct wl_proxy *) callback, queue);
 	wl_callback_add_listener(callback, &sync_listener, &done);
 	while (!done && ret >= 0)
-		ret = wl_display_dispatch(display);
+		ret = wl_display_dispatch_queue(display, queue);
 
 	if (ret == -1 && !done)
 		wl_callback_destroy(callback);
 
 	return ret;
+}
+
+/** Block until all pending request are processed by the server
+ *
+ * \param display The display context object
+ * \return The number of dispatched events on success or -1 on failure
+ *
+ * Blocks until the server process all currently issued requests and
+ * sends out pending events on the default event queue.
+ *
+ * \memberof wl_display
+ */
+WL_EXPORT int
+wl_display_roundtrip(struct wl_display *display)
+{
+	return wl_display_roundtrip_queue(display, &display->default_queue);
 }
 
 static int
@@ -972,8 +1042,6 @@ queue_event(struct wl_display *display, int len)
 	else
 		queue = proxy->queue;
 
-	if (wl_list_empty(&queue->event_list))
-		pthread_cond_signal(&queue->cond);
 	wl_list_insert(queue->event_list.prev, &closure->link);
 
 	return size;
@@ -1131,6 +1199,13 @@ wl_display_read_events(struct wl_display *display)
 	int ret;
 
 	pthread_mutex_lock(&display->mutex);
+
+	if (display->last_error) {
+		pthread_mutex_unlock(&display->mutex);
+
+		errno = display->last_error;
+		return -1;
+	}
 
 	ret = read_events(display);
 
@@ -1485,6 +1560,50 @@ wl_display_get_error(struct wl_display *display)
 
 	return ret;
 }
+
+/**
+ * Retrieves the information about a protocol error:
+ *
+ * \param display    The Wayland display
+ * \param interface  if not NULL, stores the interface where the error occurred
+ * \param id         if not NULL, stores the object id that generated
+ *                   the error. There's no guarantee the object is
+ *                   still valid; the client must know if it deleted the object.
+ * \return           The error code as defined in the interface specification.
+ *
+ * \code
+ * int err = wl_display_get_error(display);
+ *
+ * if (err == EPROTO) {
+ *        code = wl_display_get_protocol_error(display, &interface, &id);
+ *        handle_error(code, interface, id);
+ * }
+ *
+ * ...
+ *
+ *  \endcode
+ */
+WL_EXPORT uint32_t
+wl_display_get_protocol_error(struct wl_display *display,
+			      const struct wl_interface **interface,
+			      uint32_t *id)
+{
+	uint32_t ret;
+
+	pthread_mutex_lock(&display->mutex);
+
+	ret = display->protocol_error.code;
+
+	if (interface)
+		*interface = display->protocol_error.interface;
+	if (id)
+		*id = display->protocol_error.id;
+
+	pthread_mutex_unlock(&display->mutex);
+
+	return ret;
+}
+
 
 /** Send all buffered requests on the display to the server
  *

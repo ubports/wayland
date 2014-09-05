@@ -92,6 +92,7 @@ struct wl_display *wl_display_create(void);
 void wl_display_destroy(struct wl_display *display);
 struct wl_event_loop *wl_display_get_event_loop(struct wl_display *display);
 int wl_display_add_socket(struct wl_display *display, const char *name);
+const char *wl_display_add_socket_auto(struct wl_display *display);
 void wl_display_terminate(struct wl_display *display);
 void wl_display_run(struct wl_display *display);
 void wl_display_flush_clients(struct wl_display *display);
@@ -168,7 +169,7 @@ wl_client_post_no_memory(struct wl_client *client);
  * }
  * \endcode
  *
- * If you need to remove a listener from a signal, use #wl_list_remove.
+ * If you need to remove a listener from a signal, use wl_list_remove().
  *
  * \code
  * wl_list_remove(&your_listener.link);
@@ -189,7 +190,7 @@ struct wl_listener {
  * Compositors as well as the server can provide signals. Observers are
  * wl_listener's that are added through #wl_signal_add. Signals are emitted
  * using #wl_signal_emit, which will invoke all listeners until that
- * listener is removed by #wl_list_remove (or whenever the signal is
+ * listener is removed by wl_list_remove() (or whenever the signal is
  * destroyed).
  *
  * \sa wl_listener for more information on using wl_signal

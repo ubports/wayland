@@ -30,6 +30,11 @@
 
 #include "wayland-util.h"
 
+enum side {
+	CLIENT,
+	SERVER,
+};
+
 static int
 usage(int ret)
 {
@@ -846,16 +851,15 @@ emit_enumerations(struct interface *interface)
 }
 
 static void
-emit_structs(struct wl_list *message_list, struct interface *interface)
+emit_structs(struct wl_list *message_list, struct interface *interface, enum side side)
 {
 	struct message *m;
 	struct arg *a;
-	int is_interface, n;
+	int n;
 
 	if (wl_list_empty(message_list))
 		return;
 
-	is_interface = message_list == &interface->request_list;
 	if (interface->description) {
 		struct description *desc = interface->description;
 		printf("/**\n");
@@ -871,7 +875,7 @@ emit_structs(struct wl_list *message_list, struct interface *interface)
 		printf(" */\n");
 	}
 	printf("struct %s_%s {\n", interface->name,
-	       is_interface ? "interface" : "listener");
+	       (side == SERVER) ? "interface" : "listener");
 
 	wl_list_for_each(m, message_list, link) {
 		struct description *mdesc = m->description;
@@ -881,7 +885,7 @@ emit_structs(struct wl_list *message_list, struct interface *interface)
 			  "\t * %s - ", m->name);
 		wl_list_for_each(a, &m->arg_list, link) {
 
-			if (is_interface && a->type == NEW_ID &&
+			if (side == SERVER && a->type == NEW_ID &&
 			    a->interface_name == NULL)
 				printf("\t * @interface: name of the objects interface\n"
 				       "\t * @version: version of the objects interface\n");
@@ -901,7 +905,7 @@ emit_structs(struct wl_list *message_list, struct interface *interface)
 		printf("\tvoid (*%s)(", m->name);
 
 		n = strlen(m->name) + 17;
-		if (is_interface) {
+		if (side == SERVER) {
 			printf("struct wl_client *client,\n"
 			       "%sstruct wl_resource *resource",
 			       indent(n));
@@ -914,14 +918,14 @@ emit_structs(struct wl_list *message_list, struct interface *interface)
 		wl_list_for_each(a, &m->arg_list, link) {
 			printf(",\n%s", indent(n));
 
-			if (is_interface && a->type == OBJECT)
+			if (side == SERVER && a->type == OBJECT)
 				printf("struct wl_resource *");
-			else if (is_interface && a->type == NEW_ID && a->interface_name == NULL)
+			else if (side == SERVER && a->type == NEW_ID && a->interface_name == NULL)
 				printf("const char *interface, uint32_t version, uint32_t ");
-			else if (!is_interface && a->type == OBJECT && a->interface_name == NULL)
+			else if (side == CLIENT && a->type == OBJECT && a->interface_name == NULL)
 				printf("void *");
 
-			else if (!is_interface && a->type == NEW_ID)
+			else if (side == CLIENT && a->type == NEW_ID)
 				printf("struct %s *", a->interface_name);
 			else
 				emit_type(a);
@@ -934,7 +938,7 @@ emit_structs(struct wl_list *message_list, struct interface *interface)
 
 	printf("};\n\n");
 
-	if (!is_interface) {
+	if (side == CLIENT) {
 	    printf("static inline int\n"
 		   "%s_add_listener(struct %s *%s,\n"
 		   "%sconst struct %s_listener *listener, void *data)\n"
@@ -974,10 +978,10 @@ format_copyright(const char *copyright)
 }
 
 static void
-emit_header(struct protocol *protocol, int server)
+emit_header(struct protocol *protocol, enum side side)
 {
 	struct interface *i;
-	const char *s = server ? "SERVER" : "CLIENT";
+	const char *s = (side == SERVER) ? "SERVER" : "CLIENT";
 
 	if (protocol->copyright)
 		format_copyright(protocol->copyright);
@@ -996,7 +1000,7 @@ emit_header(struct protocol *protocol, int server)
 	       "struct wl_resource;\n\n",
 	       protocol->uppercase_name, s,
 	       protocol->uppercase_name, s,
-	       server ? "wayland-util.h" : "wayland-client.h");
+	       (side == SERVER) ? "wayland-util.h" : "wayland-client.h");
 
 	wl_list_for_each(i, &protocol->interface_list, link)
 		printf("struct %s;\n", i->name);
@@ -1013,13 +1017,13 @@ emit_header(struct protocol *protocol, int server)
 
 		emit_enumerations(i);
 
-		if (server) {
-			emit_structs(&i->request_list, i);
+		if (side == SERVER) {
+			emit_structs(&i->request_list, i, side);
 			emit_opcodes(&i->event_list, i);
 			emit_opcode_versions(&i->event_list, i);
 			emit_event_wrappers(&i->event_list, i);
 		} else {
-			emit_structs(&i->event_list, i);
+			emit_structs(&i->event_list, i, side);
 			emit_opcodes(&i->request_list, i);
 			emit_stubs(&i->request_list, i);
 		}
@@ -1300,10 +1304,10 @@ int main(int argc, char *argv[])
 
 	switch (mode) {
 		case CLIENT_HEADER:
-			emit_header(&protocol, 0);
+			emit_header(&protocol, CLIENT);
 			break;
 		case SERVER_HEADER:
-			emit_header(&protocol, 1);
+			emit_header(&protocol, SERVER);
 			break;
 		case CODE:
 			emit_code(&protocol);

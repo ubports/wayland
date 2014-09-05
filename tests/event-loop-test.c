@@ -37,7 +37,7 @@ fd_dispatch(int fd, uint32_t mask, void *data)
 	int *p = data;
 
 	assert(mask == 0);
-	*p = 1;
+	++(*p);
 
 	return 0;
 }
@@ -58,7 +58,7 @@ TEST(event_loop_post_dispatch_check)
 	wl_event_source_check(source);
 
 	wl_event_loop_dispatch(loop, 0);
-	assert(dispatch_ran);
+	assert(dispatch_ran == 1);
 
 	assert(close(p[0]) == 0);
 	assert(close(p[1]) == 0);
@@ -148,7 +148,7 @@ signal_callback(int signal_number, void *data)
 	int *got_it = data;
 
 	assert(signal_number == SIGUSR1);
-	*got_it = 1;
+	++(*got_it);
 
 	return 1;
 }
@@ -161,23 +161,63 @@ TEST(event_loop_signal)
 
 	source = wl_event_loop_add_signal(loop, SIGUSR1,
 					  signal_callback, &got_it);
+	assert(source);
+
 	wl_event_loop_dispatch(loop, 0);
 	assert(!got_it);
 	kill(getpid(), SIGUSR1);
 	wl_event_loop_dispatch(loop, 0);
-	assert(got_it);
+	assert(got_it == 1);
 
 	wl_event_source_remove(source);
 	wl_event_loop_destroy(loop);
 }
 
+TEST(event_loop_multiple_same_signals)
+{
+	struct wl_event_loop *loop = wl_event_loop_create();
+	struct wl_event_source *s1, *s2;
+	int calls_no = 0;
+	int i;
+
+	s1 = wl_event_loop_add_signal(loop, SIGUSR1,
+				      signal_callback, &calls_no);
+	assert(s1);
+
+	s2 = wl_event_loop_add_signal(loop, SIGUSR1,
+				      signal_callback, &calls_no);
+	assert(s2);
+
+	assert(wl_event_loop_dispatch(loop, 0) == 0);
+	assert(!calls_no);
+
+	/* Try it more times */
+	for (i = 0; i < 5; ++i) {
+		calls_no = 0;
+		kill(getpid(), SIGUSR1);
+		assert(wl_event_loop_dispatch(loop, 0) == 0);
+		assert(calls_no == 2);
+	}
+
+	wl_event_source_remove(s1);
+
+	/* Try it again  with one source */
+	calls_no = 0;
+	kill(getpid(), SIGUSR1);
+	assert(wl_event_loop_dispatch(loop, 0) == 0);
+	assert(calls_no == 1);
+
+	wl_event_source_remove(s2);
+
+	wl_event_loop_destroy(loop);
+}
 
 static int
 timer_callback(void *data)
 {
 	int *got_it = data;
 
-	*got_it = 1;
+	++(*got_it);
 
 	return 1;
 }
@@ -194,11 +234,13 @@ TEST(event_loop_timer)
 	wl_event_loop_dispatch(loop, 0);
 	assert(!got_it);
 	wl_event_loop_dispatch(loop, 20);
-	assert(got_it);
+	assert(got_it == 1);
 
 	wl_event_source_remove(source);
 	wl_event_loop_destroy(loop);
 }
+
+#define MSEC_TO_USEC(msec) ((msec) * 1000)
 
 struct timer_update_context {
 	struct wl_event_source *source1, *source2;
@@ -240,16 +282,28 @@ TEST(event_loop_timer_updates)
 	 */
 
 	context.source1 = wl_event_loop_add_timer(loop, timer_update_callback_1,
-											  &context);
+						  &context);
 	assert(context.source1);
-	wl_event_source_timer_update(context.source1, 10);
+	assert(wl_event_source_timer_update(context.source1, 10) == 0);
 
 	context.source2 = wl_event_loop_add_timer(loop, timer_update_callback_2,
-											  &context);
+						  &context);
 	assert(context.source2);
-	wl_event_source_timer_update(context.source2, 10);
+	assert(wl_event_source_timer_update(context.source2, 10) == 0);
 
 	context.count = 0;
+
+	/* Since calling the functions between source2's update and
+	 * wl_event_loop_dispatch() takes some time, it may happen
+	 * that only one timer expires until we call epoll_wait.
+	 * This naturally means that only one source is dispatched
+	 * and the test fails. To fix that, sleep 15 ms before
+	 * calling wl_event_loop_dispatch(). That should be enough
+	 * for the second timer to expire.
+	 *
+	 * https://bugs.freedesktop.org/show_bug.cgi?id=80594
+	 */
+	usleep(MSEC_TO_USEC(15));
 
 	gettimeofday(&start_time, NULL);
 	wl_event_loop_dispatch(loop, 20);
