@@ -110,6 +110,26 @@ struct wl_display {
 static int debug_client = 0;
 
 /**
+ * This helper function wakes up all threads that are
+ * waiting for display->reader_cond (i. e. when reading is done,
+ * canceled, or an error occured)
+ *
+ * NOTE: must be called with display->mutex locked
+ */
+static void
+display_wakeup_threads(struct wl_display *display)
+{
+	/* Thread can get sleeping only in read_events(). If we're
+	 * waking it up, it means that the read completed or was
+	 * canceled, so we must increase the read_serial.
+	 * This prevents from indefinite sleeping in read_events().
+	 */
+	++display->read_serial;
+
+	pthread_cond_broadcast(&display->reader_cond);
+}
+
+/**
  * This function is called for local errors (no memory, server hung up)
  *
  * \param display
@@ -128,11 +148,7 @@ display_fatal_error(struct wl_display *display, int error)
 
 	display->last_error = error;
 
-       pthread_cond_broadcast(&display->reader_cond);
-       /* prevent from indefinite looping in read_events()
-	* (when calling pthread_cond_wait under condition
-	* display->read_serial == serial) */
-       ++display->read_serial;
+	display_wakeup_threads(display);
 }
 
 /**
@@ -182,7 +198,7 @@ display_protocol_error(struct wl_display *display, uint32_t code,
 	display->protocol_error.interface = intf;
 
 	/*
-	 * here it is not necessary to broadcast reader's cond like in
+	 * here it is not necessary to wake up threads like in
 	 * display_fatal_error, because this function is called from
 	 * an event handler and that means that read_events() is done
 	 * and woke up all threads. Since wl_display_prepare_read()
@@ -270,12 +286,11 @@ proxy_create(struct wl_proxy *factory, const struct wl_interface *interface)
 	if (proxy == NULL)
 		return NULL;
 
+	memset(proxy, 0, sizeof *proxy);
+
 	proxy->object.interface = interface;
-	proxy->object.implementation = NULL;
-	proxy->dispatcher = NULL;
 	proxy->display = display;
 	proxy->queue = factory->queue;
-	proxy->flags = 0;
 	proxy->refcount = 1;
 
 	proxy->object.id = wl_map_insert_new(&display->objects, 0, proxy);
@@ -327,13 +342,12 @@ wl_proxy_create_for_id(struct wl_proxy *factory,
 	if (proxy == NULL)
 		return NULL;
 
+	memset(proxy, 0, sizeof *proxy);
+
 	proxy->object.interface = interface;
-	proxy->object.implementation = NULL;
 	proxy->object.id = id;
-	proxy->dispatcher = NULL;
 	proxy->display = display;
 	proxy->queue = factory->queue;
-	proxy->flags = 0;
 	proxy->refcount = 1;
 
 	wl_map_insert_at(&display->objects, 0, id, proxy);
@@ -1138,8 +1152,13 @@ read_events(struct wl_display *display)
 	if (display->reader_count == 0) {
 		total = wl_connection_read(display->connection);
 		if (total == -1) {
-			if (errno == EAGAIN)
+			if (errno == EAGAIN) {
+				/* we must wake up threads whenever
+				 * the reader_count dropped to 0 */
+				display_wakeup_threads(display);
+
 				return 0;
+			}
 
 			display_fatal_error(display, errno);
 			return -1;
@@ -1162,8 +1181,7 @@ read_events(struct wl_display *display)
 			}
 		}
 
-		display->read_serial++;
-		pthread_cond_broadcast(&display->reader_cond);
+		display_wakeup_threads(display);
 	} else {
 		serial = display->read_serial;
 		while (display->read_serial == serial)
@@ -1172,6 +1190,14 @@ read_events(struct wl_display *display)
 	}
 
 	return 0;
+}
+
+static void
+cancel_read(struct wl_display *display)
+{
+	display->reader_count--;
+	if (display->reader_count == 0)
+		display_wakeup_threads(display);
 }
 
 /** Read events from display file descriptor
@@ -1201,6 +1227,7 @@ wl_display_read_events(struct wl_display *display)
 	pthread_mutex_lock(&display->mutex);
 
 	if (display->last_error) {
+		cancel_read(display);
 		pthread_mutex_unlock(&display->mutex);
 
 		errno = display->last_error;
@@ -1347,11 +1374,7 @@ wl_display_cancel_read(struct wl_display *display)
 {
 	pthread_mutex_lock(&display->mutex);
 
-	display->reader_count--;
-	if (display->reader_count == 0) {
-		display->read_serial++;
-		pthread_cond_broadcast(&display->reader_cond);
-	}
+	cancel_read(display);
 
 	pthread_mutex_unlock(&display->mutex);
 }

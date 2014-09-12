@@ -333,6 +333,43 @@ register_reading(struct wl_display *display)
 	assert(wl_display_flush(display) >= 0);
 }
 
+#define USEC_TO_NSEC(n) (1000 * (n))
+
+/* since we are using alarm() and SIGABRT, we can not
+ * use usleep function (see 'man usleep') */
+static void
+test_usleep(useconds_t usec)
+{
+	struct timespec ts = {
+		.tv_sec = 0,
+		.tv_nsec = USEC_TO_NSEC(usec)
+	};
+
+	assert(nanosleep(&ts, NULL) == 0);
+}
+
+/* create thread that will call prepare+read so that
+ * it will block */
+static pthread_t
+create_thread(struct client *c, void *(*func)(void*))
+{
+	pthread_t thread;
+
+	c->display_stopped = 0;
+	/* func must set display->stopped to 1 before sleeping */
+	assert(pthread_create(&thread, NULL, func, c) == 0);
+
+	/* make sure the thread is sleeping. It's a little bit racy
+	 * (setting display_stopped to 1 and calling wl_display_read_events)
+	 * so call usleep once again after the loop ends - it should
+	 * be sufficient... */
+	while (c->display_stopped == 0)
+		test_usleep(500);
+	test_usleep(10000);
+
+	return thread;
+}
+
 static void *
 thread_read_error(void *data)
 {
@@ -369,16 +406,7 @@ threading_post_err(void)
 	c->display_stopped = 0;
 
 	/* create new thread that will register its intention too */
-	assert(pthread_create(&thread, NULL, thread_read_error, c) == 0);
-
-	/* make sure thread is sleeping. It's a little bit racy
-	 * (setting display_stopped to 1 and calling wl_display_read_events)
-	 * so call usleep once again after the loop ends - it should
-	 * be sufficient... */
-	while (c->display_stopped == 0)
-		usleep(500);
-
-	usleep(10000);
+	thread = create_thread(c, thread_read_error);
 
 	/* so now we have sleeping thread waiting for a pthread_cond signal.
 	 * The main thread must call wl_display_read_events().
@@ -429,22 +457,6 @@ thread_prepare_and_read(void *data)
 	pthread_exit(NULL);
 }
 
-static pthread_t
-create_thread(struct client *c)
-{
-	pthread_t thread;
-
-	c->display_stopped = 0;
-	assert(pthread_create(&thread, NULL, thread_prepare_and_read, c) == 0);
-
-	/* make sure thread is sleeping */
-	while (c->display_stopped == 0)
-		usleep(500);
-	usleep(10000);
-
-	return thread;
-}
-
 /* test cancel read*/
 static void
 threading_cancel_read(void)
@@ -454,9 +466,9 @@ threading_cancel_read(void)
 
 	register_reading(c->wl_display);
 
-	th1 = create_thread(c);
-	th2 = create_thread(c);
-	th3 = create_thread(c);
+	th1 = create_thread(c, thread_prepare_and_read);
+	th2 = create_thread(c, thread_prepare_and_read);
+	th3 = create_thread(c, thread_prepare_and_read);
 
 	/* all the threads are sleeping, waiting until read or cancel
 	 * is called. Cancel the read and let the threads proceed */
@@ -478,6 +490,45 @@ TEST(threading_cancel_read_tst)
 	struct display *d = display_create();
 
 	client_create(d, threading_cancel_read);
+	display_run(d);
+
+	display_destroy(d);
+}
+
+static void
+threading_read_eagain(void)
+{
+	struct client *c = client_connect();
+	pthread_t th1, th2, th3;
+
+	register_reading(c->wl_display);
+
+	th1 = create_thread(c, thread_prepare_and_read);
+	th2 = create_thread(c, thread_prepare_and_read);
+	th3 = create_thread(c, thread_prepare_and_read);
+
+	/* All the threads are sleeping, waiting until read or cancel
+	 * is called. Since we have no data on socket waiting,
+	 * the wl_connection_read should end up with error and set errno
+	 * to EAGAIN. Check if the threads are woken up in this case. */
+	assert(wl_display_read_events(c->wl_display) == 0);
+	/* errno should be still set to EAGAIN if wl_connection_read
+	 * set it - check if we're testing the right case */
+	assert(errno == EAGAIN);
+
+	alarm(3);
+	pthread_join(th1, NULL);
+	pthread_join(th2, NULL);
+	pthread_join(th3, NULL);
+
+	client_disconnect(c);
+}
+
+TEST(threading_read_eagain_tst)
+{
+	struct display *d = display_create();
+	client_create(d, threading_read_eagain);
+
 	display_run(d);
 
 	display_destroy(d);
@@ -520,8 +571,8 @@ threading_read_after_error(void)
 
 	/* make sure thread is sleeping */
 	while (c->display_stopped == 0)
-		usleep(500);
-	usleep(10000);
+		test_usleep(500);
+	test_usleep(10000);
 
 	assert(wl_display_read_events(c->wl_display) == -1);
 
