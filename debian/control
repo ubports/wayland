@@ -17,7 +17,7 @@ Build-Depends:
  libffi-dev,
 Standards-Version: 3.9.5
 Vcs-Git: git://anonscm.debian.org/pkg-xorg/wayland/wayland
-Vcs-Browser: http://git.debian.org/?p=pkg-xorg/wayland/wayland.git
+Vcs-Browser: http://anonscm.debian.org/cgit/pkg-xorg/wayland/wayland.git
 Homepage: http://wayland.freedesktop.org/
 
 Package: libwayland-client0
