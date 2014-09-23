@@ -16,7 +16,7 @@ Build-Depends:
  libexpat1-dev,
  libffi-dev,
 Standards-Version: 3.9.5
-Vcs-Git: git://git.debian.org/git/pkg-xorg/wayland/wayland
+Vcs-Git: git://anonscm.debian.org/pkg-xorg/wayland/wayland
 Vcs-Browser: http://git.debian.org/?p=pkg-xorg/wayland/wayland.git
 Homepage: http://wayland.freedesktop.org/
 
