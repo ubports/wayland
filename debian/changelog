@@ -1,6 +1,11 @@
-wayland (1.6.0-3) UNRELEASED; urgency=medium
+wayland (1.6.1-1) experimental; urgency=medium
 
-  * d/control: update VCS URL 
+  * New bugfix upstream release:
+    - documentation: fix several typoes.
+    - scanner, client: several improvements.
+    - tests: fix memory leak
+  * d/control: update VCS URL
+  * d/control: bump standards version, no changes needed.
 
  -- Hector Oron <zumbi@debian.org>  Wed, 24 Sep 2014 01:01:26 +0200
 
