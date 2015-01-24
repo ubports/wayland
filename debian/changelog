@@ -1,3 +1,9 @@
+wayland (1.6.1-2) experimental; urgency=medium
+
+  * Rebuild against upstream tarball.
+
+ -- Hector Oron <zumbi@debian.org>  Sat, 24 Jan 2015 10:39:19 +0100
+
 wayland (1.6.1-1) experimental; urgency=medium
 
   * New bugfix upstream release:
