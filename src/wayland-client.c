@@ -427,8 +427,8 @@ wl_proxy_add_listener(struct wl_proxy *proxy,
  * Gets the address to the proxy's listener; which is the listener set with
  * \ref wl_proxy_add_listener.
  *
- * This function is useful in client with multiple listeners on the same
- * interface to allow the identification of which code to eexecute.
+ * This function is useful in clients with multiple listeners on the same
+ * interface to allow the identification of which code to execute.
  *
  * \memberof wl_proxy
  */
@@ -829,9 +829,12 @@ wl_display_connect(const char *name)
 
 	connection = getenv("WAYLAND_SOCKET");
 	if (connection) {
+		int prev_errno = errno;
+		errno = 0;
 		fd = strtol(connection, &end, 0);
-		if (*end != '\0')
+		if (errno != 0 || connection == end || *end != '\0')
 			return NULL;
+		errno = prev_errno;
 
 		flags = fcntl(fd, F_GETFD);
 		if (flags != -1)
@@ -1187,6 +1190,11 @@ read_events(struct wl_display *display)
 		while (display->read_serial == serial)
 			pthread_cond_wait(&display->reader_cond,
 					  &display->mutex);
+
+		if (display->last_error) {
+			errno = display->last_error;
+			return -1;
+		}
 	}
 
 	return 0;
@@ -1209,7 +1217,7 @@ cancel_read(struct wl_display *display)
  * This will read events from the file descriptor for the display.
  * This function does not dispatch events, it only reads and queues
  * events into their corresponding event queues.  If no data is
- * avilable on the file descriptor, wl_display_read_events() returns
+ * available on the file descriptor, wl_display_read_events() returns
  * immediately.  To dispatch events that may have been queued, call
  * wl_display_dispatch_pending() or
  * wl_display_dispatch_queue_pending().

@@ -404,11 +404,13 @@ start_element(void *data, const char *element_name, const char **atts)
 			message->destructor = 0;
 
 		if (since != NULL) {
+			int prev_errno = errno;
 			errno = 0;
 			version = strtol(since, &end, 0);
-			if (errno == EINVAL || end == since || *end != '\0')
+			if (errno != 0 || end == since || *end != '\0')
 				fail(&ctx->loc,
 				     "invalid integer (%s)\n", since);
+			errno = prev_errno;
 		} else {
 			version = 1;
 		}
@@ -884,7 +886,6 @@ emit_structs(struct wl_list *message_list, struct interface *interface, enum sid
 		desc_dump(mdesc ? mdesc->summary : "(none)",
 			  "\t * %s - ", m->name);
 		wl_list_for_each(a, &m->arg_list, link) {
-
 			if (side == SERVER && a->type == NEW_ID &&
 			    a->interface_name == NULL)
 				printf("\t * @interface: name of the objects interface\n"
@@ -1296,8 +1297,14 @@ int main(int argc, char *argv[])
 			fprintf(stderr, "fread: %m\n");
 			exit(EXIT_FAILURE);
 		}
-		XML_ParseBuffer(ctx.parser, len, len == 0);
-
+		if (XML_ParseBuffer(ctx.parser, len, len == 0) == 0) {
+			fprintf(stderr,
+				"Error parsing XML at line %ld col %ld: %s\n",
+				XML_GetCurrentLineNumber(ctx.parser),
+				XML_GetCurrentColumnNumber(ctx.parser),
+				XML_ErrorString(XML_GetErrorCode(ctx.parser)));
+			exit(EXIT_FAILURE);
+		}
 	} while (len > 0);
 
 	XML_ParserFree(ctx.parser);

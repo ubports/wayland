@@ -287,7 +287,7 @@ wl_connection_flush(struct wl_connection *connection)
 		msg.msg_namelen = 0;
 		msg.msg_iov = iov;
 		msg.msg_iovlen = count;
-		msg.msg_control = cmsg;
+		msg.msg_control = (clen > 0) ? cmsg : NULL;
 		msg.msg_controllen = clen;
 		msg.msg_flags = 0;
 
@@ -931,6 +931,11 @@ wl_closure_invoke(struct wl_closure *closure, uint32_t flags,
 		     count + 2, &ffi_type_void, ffi_types);
 
 	implementation = target->implementation;
+	if (!implementation[opcode]) {
+		wl_log("listener function for opcode %u of %s is NULL\n",
+			opcode, target->interface->name);
+		abort();
+	}
 	ffi_call(&cif, implementation[opcode], NULL, ffi_args);
 }
 
