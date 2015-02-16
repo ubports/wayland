@@ -11,6 +11,8 @@ Build-Depends:
  dh-autoreconf,
  pkg-config,
  doxygen,
+ graphviz,
+ xmlto,
  xsltproc,
  docbook-xsl,
  libexpat1-dev,
