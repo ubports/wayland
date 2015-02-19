@@ -3,7 +3,7 @@ wayland (1.7.0-1) UNRELEASED; urgency=medium
   * New upstream release.
   * control: Add xmlto and graphviz to build-depends to build the
     new documentation.
-  * -dev.install: Add new documentation files.
+  * libwayland-doc: Add a new package for documentation files.
 
  -- Timo Aaltonen <tjaalton@debian.org>  Tue, 10 Feb 2015 12:48:10 +0200
 

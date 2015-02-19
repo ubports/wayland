@@ -24,4 +24,3 @@ usr/share/wayland/wayland-scanner.mk
 # Documentation
 usr/share/wayland/wayland.xml
 usr/share/wayland/wayland.dtd
-usr/share/doc/wayland/Wayland/en-US/html/
