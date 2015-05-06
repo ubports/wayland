@@ -1,11 +1,15 @@
-wayland (1.7.0-1) UNRELEASED; urgency=medium
+wayland (1.7.0-1) experimental; urgency=medium
 
+  [ Timo Aaltonen ]
   * New upstream release.
   * control: Add xmlto and graphviz to build-depends to build the
     new documentation.
   * libwayland-doc: Add a new package for documentation files.
 
- -- Timo Aaltonen <tjaalton@debian.org>  Tue, 10 Feb 2015 12:48:10 +0200
+  [ Hector Oron ]
+  * Upload to experimental.
+
+ -- Hector Oron <zumbi@debian.org>  Wed, 06 May 2015 12:35:23 +0200
 
 wayland (1.6.1-2) experimental; urgency=medium
 
