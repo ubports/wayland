@@ -1,8 +1,9 @@
-wayland (1.7.0-2) UNRELEASED; urgency=medium
+wayland (1.7.0-2) unstable; urgency=medium
 
   * Remove Cyril from Uploaders. Thanks for your past work!
+  * Upload to unstable.
 
- -- Emilio Pozuelo Monfort <pochu@debian.org>  Wed, 27 May 2015 00:34:24 +0200
+ -- Emilio Pozuelo Monfort <pochu@debian.org>  Wed, 27 May 2015 00:35:08 +0200
 
 wayland (1.7.0-1) experimental; urgency=medium
 
