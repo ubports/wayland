@@ -1389,7 +1389,7 @@
       <arg name="id" type="new_id" interface="wl_touch"/>
     </request>
 
-    <!-- Version 2 of additions -->
+    <!-- Version 2 additions -->
 
     <event name="name" since="2">
       <description summary="unique identifier for this seat">
@@ -1560,7 +1560,13 @@
     <!-- Version 3 additions -->
 
     <request name="release" type="destructor" since="3">
-      <description summary="release the pointer object"/>
+      <description summary="release the pointer object">
+        Using this request client can tell the server that it is not going to
+	use the pointer object anymore.
+
+	This request destroys the pointer proxy object, so user must not call
+	wl_pointer_destroy() after using this request.
+      </description>
     </request>
 
   </interface>
@@ -1764,7 +1770,7 @@
     <enum name="subpixel">
       <description summary="subpixel geometry information">
 	This enumeration describes how the physical
-	pixels on an output are layed out.
+	pixels on an output are laid out.
       </description>
       <entry name="unknown" value="0"/>
       <entry name="none" value="1"/>
@@ -2061,8 +2067,10 @@
 	coordinate system. The coordinates are not restricted to the parent
 	surface area. Negative values are allowed.
 
-	The next wl_surface.commit on the parent surface will reset
-	the sub-surface's position to the scheduled coordinates.
+	The scheduled coordinates will take effect whenever the state of the
+	parent surface is applied. When this happens depends on whether the
+	parent surface is in synchronized mode or not. See
+	wl_subsurface.set_sync and wl_subsurface.set_desync for details.
 
 	If more than one set_position request is invoked by the client before
 	the commit of the parent surface, the position of a new request always
@@ -2084,9 +2092,11 @@
 	will cause a protocol error.
 
 	The z-order is double-buffered. Requests are handled in order and
-	applied immediately to a pending state, then committed to the active
-	state on the next commit of the parent surface.
-	See wl_surface.commit and wl_subcompositor.get_subsurface.
+	applied immediately to a pending state. The final pending state is
+	copied to the active state the next time the state of the parent
+	surface is applied. When this happens depends on whether the parent
+	surface is in synchronized mode or not. See wl_subsurface.set_sync and
+	wl_subsurface.set_desync for details.
 
 	A new sub-surface is initially added as the top-most in the stack
 	of its siblings and parent.
@@ -2109,7 +2119,7 @@
     <request name="set_sync">
       <description summary="set sub-surface to synchronized mode">
 	Change the commit behaviour of the sub-surface to synchronized
-	mode, also described as the parent dependant mode.
+	mode, also described as the parent dependent mode.
 
 	In synchronized mode, wl_surface.commit on a sub-surface will
 	accumulate the committed state in a cache, but the state will
