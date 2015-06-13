@@ -28,6 +28,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include <expat.h>
+#include <getopt.h>
 
 #include "wayland-util.h"
 
@@ -39,11 +40,17 @@ enum side {
 static int
 usage(int ret)
 {
-	fprintf(stderr, "usage: ./scanner [client-header|server-header|code]\n");
+	fprintf(stderr, "usage: ./scanner [OPTION] [client-header|server-header|code]"
+		" [input_file output_file]\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "Converts XML protocol descriptions supplied on "
-			"stdin to client headers,\n"
-			"server headers, or protocol marshalling code.\n");
+			"stdin or input file to client\n"
+			"headers, server headers, or protocol marshalling code.\n\n");
+	fprintf(stderr, "options:\n");
+	fprintf(stderr, "    -h,  --help                  display this help and exit.\n"
+		        "    -c,  --include-core-only     include the core version of the headers,\n"
+	                "                                 that is e.g. wayland-client-core.h instead\n"
+	                "                                 of wayland-client.h.\n");
 	exit(ret);
 }
 
@@ -67,6 +74,7 @@ struct protocol {
 	int null_run_length;
 	char *copyright;
 	struct description *description;
+	bool core_headers;
 };
 
 struct interface {
@@ -357,7 +365,7 @@ start_element(void *data, const char *element_name, const char **atts)
 		ctx->protocol->uppercase_name = uppercase_dup(name);
 		ctx->protocol->description = NULL;
 	} else if (strcmp(element_name, "copyright") == 0) {
-		
+
 	} else if (strcmp(element_name, "interface") == 0) {
 		if (name == NULL)
 			fail(&ctx->loc, "no interface name given");
@@ -551,6 +559,10 @@ end_element(void *data, const XML_Char *name)
 		   strcmp(name, "event") == 0) {
 		ctx->message = NULL;
 	} else if (strcmp(name, "enum") == 0) {
+		if (wl_list_empty(&ctx->enumeration->entry_list)) {
+			fail(&ctx->loc, "enumeration %s was empty",
+			     ctx->enumeration->name);
+		}
 		ctx->enumeration = NULL;
 	}
 }
@@ -980,65 +992,6 @@ format_copyright(const char *copyright)
 }
 
 static void
-emit_header(struct protocol *protocol, enum side side)
-{
-	struct interface *i;
-	const char *s = (side == SERVER) ? "SERVER" : "CLIENT";
-
-	if (protocol->copyright)
-		format_copyright(protocol->copyright);
-
-	printf("#ifndef %s_%s_PROTOCOL_H\n"
-	       "#define %s_%s_PROTOCOL_H\n"
-	       "\n"
-	       "#ifdef  __cplusplus\n"
-	       "extern \"C\" {\n"
-	       "#endif\n"
-	       "\n"
-	       "#include <stdint.h>\n"
-	       "#include <stddef.h>\n"
-	       "#include \"%s\"\n\n"
-	       "struct wl_client;\n"
-	       "struct wl_resource;\n\n",
-	       protocol->uppercase_name, s,
-	       protocol->uppercase_name, s,
-	       (side == SERVER) ? "wayland-server.h" : "wayland-client.h");
-
-	wl_list_for_each(i, &protocol->interface_list, link)
-		printf("struct %s;\n", i->name);
-	printf("\n");
-
-	wl_list_for_each(i, &protocol->interface_list, link) {
-		printf("extern const struct wl_interface "
-		       "%s_interface;\n",
-		       i->name);
-	}
-	printf("\n");
-
-	wl_list_for_each(i, &protocol->interface_list, link) {
-
-		emit_enumerations(i);
-
-		if (side == SERVER) {
-			emit_structs(&i->request_list, i, side);
-			emit_opcodes(&i->event_list, i);
-			emit_opcode_versions(&i->event_list, i);
-			emit_event_wrappers(&i->event_list, i);
-		} else {
-			emit_structs(&i->event_list, i, side);
-			emit_opcodes(&i->request_list, i);
-			emit_stubs(&i->request_list, i);
-		}
-	}
-
-	printf("#ifdef  __cplusplus\n"
-	       "}\n"
-	       "#endif\n"
-	       "\n"
-	       "#endif\n");
-}
-
-static void
 emit_types_forward_declarations(struct protocol *protocol,
 				struct wl_list *message_list,
 				struct wl_array *types)
@@ -1071,6 +1024,102 @@ emit_types_forward_declarations(struct protocol *protocol,
 		if (m->all_null && length > protocol->null_run_length)
 			protocol->null_run_length = length;
 	}
+}
+
+static int
+cmp_names(const void *p1, const void *p2)
+{
+	const char * const *s1 = p1, * const *s2 = p2;
+
+	return strcmp(*s1, *s2);
+}
+
+static const char *
+get_include_name(bool core, enum side side)
+{
+	if (side == SERVER)
+		return core ? "wayland-server-core.h" : "wayland-server.h";
+	else
+		return core ? "wayland-client-core.h" : "wayland-client.h";
+}
+
+static void
+emit_header(struct protocol *protocol, enum side side)
+{
+	struct interface *i;
+	struct wl_array types;
+	const char *s = (side == SERVER) ? "SERVER" : "CLIENT";
+	char **p, *prev;
+
+	if (protocol->copyright)
+		format_copyright(protocol->copyright);
+
+	printf("#ifndef %s_%s_PROTOCOL_H\n"
+	       "#define %s_%s_PROTOCOL_H\n"
+	       "\n"
+	       "#ifdef  __cplusplus\n"
+	       "extern \"C\" {\n"
+	       "#endif\n"
+	       "\n"
+	       "#include <stdint.h>\n"
+	       "#include <stddef.h>\n"
+	       "#include \"%s\"\n\n"
+	       "struct wl_client;\n"
+	       "struct wl_resource;\n\n",
+	       protocol->uppercase_name, s,
+	       protocol->uppercase_name, s,
+	       get_include_name(protocol->core_headers, side));
+
+	wl_array_init(&types);
+	wl_list_for_each(i, &protocol->interface_list, link) {
+		emit_types_forward_declarations(protocol, &i->request_list, &types);
+		emit_types_forward_declarations(protocol, &i->event_list, &types);
+	}
+
+	wl_list_for_each(i, &protocol->interface_list, link) {
+		p = fail_on_null(wl_array_add(&types, sizeof *p));
+		*p = i->name;
+	}
+
+	qsort(types.data, types.size / sizeof *p, sizeof *p, cmp_names);
+	prev = NULL;
+	wl_array_for_each(p, &types) {
+		if (prev && strcmp(*p, prev) == 0)
+			continue;
+		printf("struct %s;\n", *p);
+		prev = *p;
+	}
+	wl_array_release(&types);
+	printf("\n");
+
+	wl_list_for_each(i, &protocol->interface_list, link) {
+		printf("extern const struct wl_interface "
+		       "%s_interface;\n", i->name);
+	}
+
+	printf("\n");
+
+	wl_list_for_each(i, &protocol->interface_list, link) {
+
+		emit_enumerations(i);
+
+		if (side == SERVER) {
+			emit_structs(&i->request_list, i, side);
+			emit_opcodes(&i->event_list, i);
+			emit_opcode_versions(&i->event_list, i);
+			emit_event_wrappers(&i->event_list, i);
+		} else {
+			emit_structs(&i->event_list, i, side);
+			emit_opcodes(&i->request_list, i);
+			emit_stubs(&i->request_list, i);
+		}
+	}
+
+	printf("#ifdef  __cplusplus\n"
+	       "}\n"
+	       "#endif\n"
+	       "\n"
+	       "#endif\n");
 }
 
 static void
@@ -1176,14 +1225,6 @@ emit_messages(struct wl_list *message_list,
 	printf("};\n\n");
 }
 
-static int
-cmp_names(const void *p1, const void *p2)
-{
-	const char * const *s1 = p1, * const *s2 = p2;
-
-	return strcmp(*s1, *s2);
-}
-
 static void
 emit_code(struct protocol *protocol)
 {
@@ -1252,31 +1293,80 @@ int main(int argc, char *argv[])
 {
 	struct parse_context ctx;
 	struct protocol protocol;
+	FILE *input = stdin;
 	int len;
 	void *buf;
+	bool help = false, core_headers = false;
+	bool fail = false;
+	int opt;
 	enum {
 		CLIENT_HEADER,
 		SERVER_HEADER,
 		CODE,
 	} mode;
 
-	if (argc != 2)
-		usage(EXIT_FAILURE);
-	else if (strcmp(argv[1], "help") == 0 || strcmp(argv[1], "--help") == 0)
+	static const struct option options[] = {
+		{ "help",              no_argument, NULL, 'h' },
+		{ "include-core-only", no_argument, NULL, 'c' },
+		{ 0,                   0,           NULL, 0 }
+	};
+
+	while (1) {
+		opt = getopt_long(argc, argv, "hc", options, NULL);
+
+		if (opt == -1)
+			break;
+
+		switch (opt) {
+		case 'h':
+			help = true;
+			break;
+		case 'c':
+			core_headers = true;
+			break;
+		default:
+			fail = true;
+			break;
+		}
+	}
+
+	argv += optind;
+	argc -= optind;
+
+	if (help)
 		usage(EXIT_SUCCESS);
-	else if (strcmp(argv[1], "client-header") == 0)
+	else if ((argc != 1 && argc != 3) || fail)
+		usage(EXIT_FAILURE);
+	else if (strcmp(argv[0], "help") == 0)
+		usage(EXIT_SUCCESS);
+	else if (strcmp(argv[0], "client-header") == 0)
 		mode = CLIENT_HEADER;
-	else if (strcmp(argv[1], "server-header") == 0)
+	else if (strcmp(argv[0], "server-header") == 0)
 		mode = SERVER_HEADER;
-	else if (strcmp(argv[1], "code") == 0)
+	else if (strcmp(argv[0], "code") == 0)
 		mode = CODE;
 	else
 		usage(EXIT_FAILURE);
+
+	if (argc == 3) {
+		input = fopen(argv[1], "r");
+		if (input == NULL) {
+			fprintf(stderr, "Could not open input file: %s\n",
+				strerror(errno));
+			exit(EXIT_FAILURE);
+		}
+		if (freopen(argv[2], "w", stdout) == NULL) {
+			fprintf(stderr, "Could not open output file: %s\n",
+				strerror(errno));
+			exit(EXIT_FAILURE);
+		}
+	}
 
 	wl_list_init(&protocol.interface_list);
 	protocol.type_index = 0;
 	protocol.null_run_length = 0;
 	protocol.copyright = NULL;
+	protocol.core_headers = core_headers;
 	memset(&ctx, 0, sizeof ctx);
 	ctx.protocol = &protocol;
 
@@ -1293,7 +1383,7 @@ int main(int argc, char *argv[])
 
 	do {
 		buf = XML_GetBuffer(ctx.parser, XML_BUFFER_SIZE);
-		len = fread(buf, 1, XML_BUFFER_SIZE, stdin);
+		len = fread(buf, 1, XML_BUFFER_SIZE, input);
 		if (len < 0) {
 			fprintf(stderr, "fread: %m\n");
 			exit(EXIT_FAILURE);
