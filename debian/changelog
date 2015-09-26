@@ -1,3 +1,9 @@
+wayland (1.9.0-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Héctor Orón Martínez <zumbi@debian.org>  Sun, 27 Sep 2015 00:08:11 +0200
+
 wayland (1.8.1-1) unstable; urgency=medium
 
   * New upstream release
