@@ -42,7 +42,6 @@
 #include <fcntl.h>
 #include <sys/file.h>
 #include <sys/stat.h>
-#include <ffi.h>
 
 #include "wayland-private.h"
 #include "wayland-server.h"
@@ -314,7 +313,6 @@ wl_client_connection_data(int fd, uint32_t mask, void *data)
 
 		closure = wl_connection_demarshal(client->connection, size,
 						  &client->objects, message);
-		len -= size;
 
 		if (closure == NULL && errno == ENOMEM) {
 			wl_resource_post_no_memory(resource);
@@ -347,6 +345,8 @@ wl_client_connection_data(int fd, uint32_t mask, void *data)
 
 		if (client->error)
 			break;
+
+		len = wl_connection_pending_input(connection);
 	}
 
 	if (client->error)
@@ -416,11 +416,10 @@ wl_client_create(struct wl_display *display, int fd)
 	struct wl_client *client;
 	socklen_t len;
 
-	client = malloc(sizeof *client);
+	client = zalloc(sizeof *client);
 	if (client == NULL)
 		return NULL;
 
-	memset(client, 0, sizeof *client);
 	client->display = display;
 	client->source = wl_event_loop_add_fd(display->loop, fd,
 					      WL_EVENT_READABLE,
@@ -490,6 +489,41 @@ wl_client_get_credentials(struct wl_client *client,
 		*uid = client->ucred.uid;
 	if (gid)
 		*gid = client->ucred.gid;
+}
+
+/** Get the file descriptor for the client
+ *
+ * \param client The display object
+ * \return The file descriptor to use for the connection
+ *
+ * This function returns the file descriptor for the given client.
+ *
+ * Be sure to use the file descriptor from the client for inspection only.
+ * If the caller does anything to the file descriptor that changes its state,
+ * it will likely cause problems.
+ *
+ * See also wl_client_get_credentials().
+ * It is recommended that you evaluate whether wl_client_get_credentials()
+ * can be applied to your use case instead of this function.
+ *
+ * If you would like to distinguish just between the client and the compositor
+ * itself from the client's request, it can be done by getting the client
+ * credentials and by checking the PID of the client and the compositor's PID.
+ * Regarding the case in which the socketpair() is being used, you need to be
+ * careful. Please note the documentation for wl_client_get_credentials().
+ *
+ * This function can be used for a compositor to validate a request from
+ * a client if there are additional information provided from the client's
+ * file descriptor. For instance, suppose you can get the security contexts
+ * from the client's file descriptor. The compositor can validate the client's
+ * request with the contexts and make a decision whether it permits or deny it.
+ *
+ * \memberof wl_client
+ */
+WL_EXPORT int
+wl_client_get_fd(struct wl_client *client)
+{
+	return wl_connection_get_fd(client->connection);
 }
 
 /** Look up an object in the client name space
@@ -696,6 +730,11 @@ registry_bind(struct wl_client *client,
 		wl_resource_post_error(resource,
 				       WL_DISPLAY_ERROR_INVALID_OBJECT,
 				       "invalid global %s (%d)", interface, name);
+	else if (version == 0)
+		wl_resource_post_error(resource,
+				       WL_DISPLAY_ERROR_INVALID_OBJECT,
+				       "invalid version for global %s (%d): 0 is not a valid version",
+				       interface, name);
 	else if (global->version < version)
 		wl_resource_post_error(resource,
 				       WL_DISPLAY_ERROR_INVALID_OBJECT,
@@ -780,7 +819,8 @@ bind_display(struct wl_client *client, struct wl_display *display)
 	client->display_resource =
 		wl_resource_create(client, &wl_display_interface, 1, 1);
 	if (client->display_resource == NULL) {
-		wl_client_post_no_memory(client);
+		/* DON'T send no-memory error to client - it has no
+		 * resource to which it could post the event */
 		return -1;
 	}
 
@@ -855,11 +895,10 @@ wl_socket_alloc(void)
 {
 	struct wl_socket *s;
 
-	s = malloc(sizeof *s);
+	s = zalloc(sizeof *s);
 	if (!s)
 		return NULL;
 
-	memset(s, 0, sizeof *s);
 	s->fd = -1;
 	s->fd_lock = -1;
 
@@ -909,9 +948,17 @@ wl_global_create(struct wl_display *display,
 	struct wl_global *global;
 	struct wl_resource *resource;
 
-	if (interface->version < version) {
-		wl_log("wl_global_create: implemented version higher "
-		       "than interface version%m\n");
+	if (version < 1) {
+		wl_log("wl_global_create: failing to create interface "
+		       "'%s' with version %d because it is less than 1\n",
+			interface->name, version);
+		return NULL;
+	}
+
+	if (version > interface->version) {
+		wl_log("wl_global_create: implemented version for '%s' "
+		       "higher than interface version (%d > %d)\n",
+		       interface->name, version, interface->version);
 		return NULL;
 	}
 
@@ -1197,6 +1244,50 @@ wl_display_add_socket_auto(struct wl_display *display)
 	wl_socket_destroy(s);
 	errno = EINVAL;
 	return NULL;
+}
+
+/**  Add a socket with an existing fd to Wayland display for the clients to connect.
+ *
+ * \param display Wayland display to which the socket should be added.
+ * \param sock_fd The existing socket file descriptor to be used
+ * \return 0 if success. -1 if failed.
+ *
+ * The existing socket fd must already be created, opened, and locked.
+ * The fd must be properly set to CLOEXEC and bound to a socket file
+ * with both bind() and listen() already called.
+ *
+ * \memberof wl_display
+ */
+WL_EXPORT int
+wl_display_add_socket_fd(struct wl_display *display, int sock_fd)
+{
+	struct wl_socket *s;
+	struct stat buf;
+
+	/* Require a valid fd or fail */
+	if (sock_fd < 0 || fstat(sock_fd, &buf) < 0 || !S_ISSOCK(buf.st_mode)) {
+		return -1;
+	}
+
+	s = wl_socket_alloc();
+	if (s == NULL)
+		return -1;
+
+	s->source = wl_event_loop_add_fd(display->loop, sock_fd,
+					 WL_EVENT_READABLE,
+					 socket_data, display);
+	if (s->source == NULL) {
+		wl_log("failed to establish event source\n");
+		wl_socket_destroy(s);
+		return -1;
+	}
+
+	/* Reuse the existing fd */
+	s->fd = sock_fd;
+
+	wl_list_insert(display->socket_list.prev, &s->link);
+
+	return 0;
 }
 
 /** Add a socket to Wayland display for the clients to connect.

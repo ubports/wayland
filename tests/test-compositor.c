@@ -91,17 +91,13 @@ get_socket_name(void)
 	return retval;
 }
 
-/**
- * Check client's state and terminate display when all clients exited
- */
 static void
-client_destroyed(struct wl_listener *listener, void *data)
+handle_client_destroy(void *data)
 {
+	struct client_info *ci = data;
 	struct display *d;
-	struct client_info *ci;
 	siginfo_t status;
 
-	ci = wl_container_of(listener, ci, destroy_listener);
 	d = ci->display;
 
 	assert(waitid(P_PID, ci->pid, &status, WEXITED) != -1);
@@ -132,11 +128,31 @@ client_destroyed(struct wl_listener *listener, void *data)
 	 * clients. In the case that the test would go through
 	 * the clients list manually, zero out the wl_client as a sign
 	 * that the client is not running anymore */
+}
+
+/**
+ * Check client's state and terminate display when all clients exited
+ */
+static void
+client_destroyed(struct wl_listener *listener, void *data)
+{
+	struct client_info *ci;
+	struct display *d;
+	struct wl_event_loop *loop;
+
+	/* Wait for client in an idle handler to avoid blocking the actual
+	 * client destruction (fd close etc. */
+	ci = wl_container_of(listener, ci, destroy_listener);
+	d = ci->display;
+	loop = wl_display_get_event_loop(d->wl_display);
+	wl_event_loop_add_idle(loop, handle_client_destroy, ci);
+
 	ci->wl_client = NULL;
 }
 
 static void
-run_client(void (*client_main)(void), int wayland_sock, int client_pipe)
+run_client(void (*client_main)(void *data), void *data,
+	   int wayland_sock, int client_pipe)
 {
 	char s[8];
 	int cur_alloc, cur_fds;
@@ -155,7 +171,7 @@ run_client(void (*client_main)(void), int wayland_sock, int client_pipe)
 	cur_alloc = get_current_alloc_num();
 	cur_fds = count_open_fds();
 
-	client_main();
+	client_main(data);
 
 	/* Clients using wl_display_connect() will end up closing the socket
 	 * passed in through the WAYLAND_SOCKET environment variable. When
@@ -170,7 +186,8 @@ run_client(void (*client_main)(void), int wayland_sock, int client_pipe)
 
 static struct client_info *
 display_create_client(struct display *d,
-		      void (*client_main)(void),
+		      void (*client_main)(void *data),
+		      void *data,
 		      const char *name)
 {
 	int pipe_cli[2];
@@ -190,7 +207,7 @@ display_create_client(struct display *d,
 		close(sock_wayl[1]);
 		close(pipe_cli[1]);
 
-		run_client(client_main, sock_wayl[0], pipe_cli[0]);
+		run_client(client_main, data, sock_wayl[0], pipe_cli[0]);
 
 		close(sock_wayl[0]);
 		close(pipe_cli[0]);
@@ -231,11 +248,14 @@ display_create_client(struct display *d,
 }
 
 struct client_info *
-client_create_with_name(struct display *d, void (*client_main)(void),
+client_create_with_name(struct display *d,
+			void (*client_main)(void *data), void *data,
 			const char *name)
 {
 	int can_continue = 1;
-	struct client_info *cl = display_create_client(d, client_main, name);
+	struct client_info *cl = display_create_client(d,
+						       client_main, data,
+						       name);
 
 	/* let the show begin! */
 	assert(write(cl->pipe, &can_continue, sizeof(int)) == sizeof(int));

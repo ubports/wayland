@@ -127,7 +127,7 @@ wl_array_add(struct wl_array *array, size_t size)
 			data = malloc(alloc);
 
 		if (data == NULL)
-			return 0;
+			return NULL;
 		array->data = data;
 		array->alloc = alloc;
 	}
@@ -384,4 +384,16 @@ wl_log(const char *fmt, ...)
 	va_start(argp, fmt);
 	wl_log_handler(fmt, argp);
 	va_end(argp);
+}
+
+void
+wl_abort(const char *fmt, ...)
+{
+	va_list argp;
+
+	va_start(argp, fmt);
+	wl_log_handler(fmt, argp);
+	va_end(argp);
+
+	abort();
 }
