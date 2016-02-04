@@ -1,3 +1,15 @@
+wayland (1.9.92-1) experimental; urgency=medium
+
+  * New upstream release, experimental upload.
+
+  [ Hideki Yamane ]
+  * debian/control
+    - add Build-Depends: libxml2-dev
+  * update debian/libwayland-{client,server}0.symbols
+  * update debian/watch (Closes: #813484)
+
+ -- Héctor Orón Martínez <zumbi@debian.org>  Thu, 04 Feb 2016 23:22:27 +0100
+
 wayland (1.9.0-1) unstable; urgency=medium
 
   * New upstream release
