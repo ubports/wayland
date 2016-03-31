@@ -1,3 +1,9 @@
+wayland (1.10.0-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Héctor Orón Martínez <zumbi@debian.org>  Thu, 31 Mar 2016 13:13:12 +0200
+
 wayland (1.9.92-1) experimental; urgency=medium
 
   * New upstream release, experimental upload.
