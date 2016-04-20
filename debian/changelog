@@ -1,4 +1,4 @@
-wayland (1.10.0-2) UNRELEASED; urgency=medium
+wayland (1.10.0-2) unstable; urgency=medium
 
   * Don't build the documentation on binary-arch only builds. Move the
     build-dependencies needed for the documentation to build-depends-indep.
@@ -6,7 +6,7 @@ wayland (1.10.0-2) UNRELEASED; urgency=medium
   * Move the manpages to libwayland-doc.
   * Switch to dbgsym packages.
 
- -- Emilio Pozuelo Monfort <pochu@debian.org>  Wed, 20 Apr 2016 19:58:36 +0200
+ -- Emilio Pozuelo Monfort <pochu@debian.org>  Wed, 20 Apr 2016 21:38:58 +0200
 
 wayland (1.10.0-1) unstable; urgency=medium
 
