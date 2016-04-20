@@ -9,14 +9,15 @@ Build-Depends:
  quilt,
  dh-autoreconf,
  pkg-config,
- doxygen,
- graphviz,
- xmlto,
  xsltproc,
  docbook-xsl,
  libexpat1-dev,
  libffi-dev,
  libxml2-dev,
+Build-Depends-Indep:
+ doxygen,
+ graphviz,
+ xmlto,
 Standards-Version: 3.9.6
 Vcs-Git: git://anonscm.debian.org/pkg-xorg/wayland/wayland
 Vcs-Browser: http://anonscm.debian.org/cgit/pkg-xorg/wayland/wayland.git
