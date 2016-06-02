@@ -1,6 +1,3 @@
-# Tool to build various other packages:
-usr/bin/wayland-scanner
-
 # Headers:
 usr/include
 
@@ -15,8 +12,6 @@ usr/lib/*/pkgconfig/wayland-client.pc
 usr/lib/*/pkgconfig/wayland-cursor.pc
 usr/lib/*/pkgconfig/wayland-server.pc
 usr/lib/*/pkgconfig/wayland-scanner.pc
-usr/share/aclocal/wayland-scanner.m4
-usr/share/wayland/wayland-scanner.mk
 
 # Documentation
 usr/share/wayland/wayland.xml

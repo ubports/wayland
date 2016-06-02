@@ -96,6 +96,7 @@ Depends:
  libwayland-cursor0 (= ${binary:Version}),
  ${shlibs:Depends},
  ${misc:Depends},
+Multi-Arch: same
 Description: wayland compositor infrastructure - development files
  Wayland is a protocol for a compositor to talk to its clients as well
  as a C library implementation of that protocol. The compositor can be
@@ -113,6 +114,7 @@ Architecture: all
 Priority: extra
 Depends:
  ${misc:Depends},
+Multi-Arch: foreign
 Conflicts: libwayland-dev (<< 1.10.0-2)
 Replaces: libwayland-dev (<< 1.10.0-2)
 Description: wayland compositor infrastructure - documentation files
@@ -125,3 +127,22 @@ Description: wayland compositor infrastructure - documentation files
  .
  This package contains the documentation for the Wayland libraries.
  Non-developers likely have little use for this package.
+
+Package: libwayland-bin
+Section: libdevel
+Architecture: any
+Priority: extra
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends},
+ libwayland-dev
+Multi-Arch: foreign
+Description: wayland compositor infrastructure - binary utilities
+ Wayland is a protocol for a compositor to talk to its clients as well
+ as a C library implementation of that protocol. The compositor can be
+ a standalone display server running on Linux kernel modesetting and
+ evdev input devices, an X application, or a wayland client
+ itself. The clients can be traditional applications, X servers
+ (rootless or fullscreen) or other display servers.
+ .
+ This package contains the development binary utilities
