@@ -4,6 +4,7 @@ wayland (1.11.0-1) UNRELEASED; urgency=medium
   * d/control: make libwayland-dev multiarch aware
     - based on a patch from Dima Kogan.
     (Closes: #739400)
+  * d/libwayland-client0.symbols: update with new symbols
 
  -- Héctor Orón Martínez <zumbi@debian.org>  Thu, 02 Jun 2016 11:30:33 +0200
 
