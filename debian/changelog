@@ -1,4 +1,4 @@
-wayland (1.11.0-1) UNRELEASED; urgency=medium
+wayland (1.11.0-1) unstable; urgency=medium
 
   * New upstream release
   * d/control: make libwayland-dev multiarch aware
@@ -6,7 +6,7 @@ wayland (1.11.0-1) UNRELEASED; urgency=medium
     (Closes: #739400)
   * d/libwayland-client0.symbols: update with new symbols
 
- -- Héctor Orón Martínez <zumbi@debian.org>  Thu, 02 Jun 2016 11:30:33 +0200
+ -- Héctor Orón Martínez <zumbi@debian.org>  Thu, 02 Jun 2016 11:37:00 +0200
 
 wayland (1.10.0-2) unstable; urgency=medium
 
