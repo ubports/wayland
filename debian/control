@@ -94,6 +94,7 @@ Depends:
  libwayland-client0 (= ${binary:Version}),
  libwayland-server0 (= ${binary:Version}),
  libwayland-cursor0 (= ${binary:Version}),
+ libwayland-bin (= ${binary:Version}),
  ${shlibs:Depends},
  ${misc:Depends},
 Multi-Arch: same
@@ -135,7 +136,6 @@ Priority: extra
 Depends:
  ${shlibs:Depends},
  ${misc:Depends},
- libwayland-dev
 Conflicts: libwayland-dev (<< 1.11.0-1)
 Multi-Arch: foreign
 Description: wayland compositor infrastructure - binary utilities
