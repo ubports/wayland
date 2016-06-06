@@ -1,3 +1,10 @@
+wayland (1.11.0-2) unstable; urgency=medium
+
+  * d/control: libwayland-dev depends on libwayland-bin
+  * d/control: libwayland-bin replaces libwayland-dev
+
+ -- Héctor Orón Martínez <zumbi@debian.org>  Mon, 06 Jun 2016 11:28:46 +0200
+
 wayland (1.11.0-1) unstable; urgency=medium
 
   * New upstream release
