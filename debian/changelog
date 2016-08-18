@@ -1,3 +1,9 @@
+wayland (1.11.91-1) experimental; urgency=medium
+
+  * New upstream pre-release
+
+ -- Héctor Orón Martínez <zumbi@debian.org>  Thu, 18 Aug 2016 17:18:52 +0200
+
 wayland (1.11.0-2) unstable; urgency=medium
 
   * d/control: libwayland-dev depends on libwayland-bin
