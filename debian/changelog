@@ -1,6 +1,7 @@
 wayland (1.11.94-1) UNRELEASED; urgency=medium
 
   * New upstream pre-release.
+  * Standards-Version is 3.9.8, no changes needed.
 
  -- Emilio Pozuelo Monfort <pochu@debian.org>  Wed, 14 Sep 2016 12:01:31 +0200
 
