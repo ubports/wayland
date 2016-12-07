@@ -1,6 +1,6 @@
 Upstream-Name: wayland
 Upstream-Contact: Kristian Høgsberg <krh@bitplanet.net>
-Source: http://wayland.freedesktop.org/releases/
+Source: https://wayland.freedesktop.org/releases/
 
 Files: debian/*
 Copyright: © 2011 Cyril Brulebois <kibi@debian.org>
