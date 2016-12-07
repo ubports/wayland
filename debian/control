@@ -7,7 +7,6 @@ Uploaders: Emilio Pozuelo Monfort <pochu@debian.org>,
 Build-Depends:
  debhelper (>= 10),
  quilt,
- dh-autoreconf,
  pkg-config,
  libexpat1-dev,
  libffi-dev,
