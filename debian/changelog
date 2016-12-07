@@ -2,6 +2,7 @@ wayland (1.12.0-1) UNRELEASED; urgency=medium
 
   * New upstream release. Closes: #840752.
   * Update various links to https.
+  * Verify upstream tarball signatures. Thanks Hideki Yamane.
 
  -- Emilio Pozuelo Monfort <pochu@debian.org>  Wed, 07 Dec 2016 17:34:30 +0100
 
