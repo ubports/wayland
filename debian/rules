@@ -2,8 +2,6 @@
 
 SOURCE=wayland
 
-BUILD_DOC=
-
 # Don't build the documentation when not building arch:all packages
 override_dh_auto_configure-arch:
 	dh_auto_configure -- --disable-documentation
