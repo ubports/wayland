@@ -1,6 +1,7 @@
 wayland (1.13.0-1) UNRELEASED; urgency=medium
 
   * New upstream release. (Closes: #870566)
+  * libwayland-server0.symbols: Updated.
 
  -- Timo Aaltonen <tjaalton@debian.org>  Thu, 03 Aug 2017 10:50:40 +0300
 
