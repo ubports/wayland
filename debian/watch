@@ -1,0 +1,4 @@
+#git=git://anongit.freedesktop.org/wayland/wayland
+version=4
+opts="pgpsigurlmangle=s%$%.sig%" \
+https://wayland.freedesktop.org/releases/wayland-([\d].*)\.tar\.xz
