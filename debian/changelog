@@ -1,6 +1,7 @@
 wayland (1.14.0-1) UNRELEASED; urgency=medium
 
   * New upstream release.
+  * libwayland-{client,server}0.symbols: Updated.
 
  -- Timo Aaltonen <tjaalton@debian.org>  Thu, 10 Aug 2017 10:44:33 +0300
 

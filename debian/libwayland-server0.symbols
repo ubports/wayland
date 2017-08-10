@@ -77,15 +77,6 @@ libwayland-server.so.0 libwayland-server0 #MINVER#
  wl_list_length@Base 1.0.2
  wl_list_remove@Base 1.0.2
  wl_log_set_handler_server@Base 1.0.2
- wl_map_for_each@Base 1.0.2
- wl_map_init@Base 1.0.2
- wl_map_insert_at@Base 1.0.2
- wl_map_insert_new@Base 1.0.2
- wl_map_lookup@Base 1.0.2
- wl_map_lookup_flags@Base 1.2.0
- wl_map_release@Base 1.0.2
- wl_map_remove@Base 1.0.2
- wl_map_reserve_new@Base 1.0.2
  wl_output_interface@Base 1.0.2
  wl_pointer_interface@Base 1.0.2
  wl_protocol_logger_destroy@Base 1.11.91
