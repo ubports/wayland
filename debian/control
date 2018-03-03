@@ -90,6 +90,7 @@ Package: libwayland-dev
 Section: libdevel
 Architecture: any
 Priority: extra
+Suggests: libwayland-doc
 Depends:
  libwayland-client0 (= ${binary:Version}),
  libwayland-server0 (= ${binary:Version}),
