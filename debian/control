@@ -11,6 +11,7 @@ Build-Depends:
  libexpat1-dev,
  libffi-dev,
  libxml2-dev,
+ libwayland-bin <cross>,
 Build-Depends-Indep:
  doxygen,
  graphviz,

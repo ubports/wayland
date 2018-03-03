@@ -2,9 +2,16 @@
 
 SOURCE=wayland
 
+ifneq (,$(filter cross,$(DEB_BUILD_PROFILES)))
+configure_flags += --with-host-scanner
+endif
 # Don't build the documentation when not building arch:all packages
-override_dh_auto_configure-arch:
-	dh_auto_configure -- --disable-documentation
+ifeq (,$(filter libwayland-doc,$(shell dh_listpackages)))
+configure_flags += --disable-documentation
+endif
+
+override_dh_auto_configure:
+	dh_auto_configure -- $(configure_flags)
 
 # Kill *.la files, and forget no-one:
 override_dh_install:
