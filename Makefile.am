@@ -64,8 +64,6 @@ include_HEADERS =				\
 	src/wayland-server-core.h		\
 	src/wayland-client.h			\
 	src/wayland-client-core.h		\
-	src/wayland-egl.h			\
-	src/wayland-egl-core.h			\
 	src/wayland-version.h
 
 nodist_include_HEADERS =			\
@@ -97,13 +95,17 @@ nodist_libwayland_client_la_SOURCES =		\
 pkgconfig_DATA += src/wayland-client.pc src/wayland-server.pc
 
 protocol/%-protocol.c : $(top_srcdir)/protocol/%.xml
-	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && $(wayland_scanner) code < $< > $@
+if USE_HOST_SCANNER
+	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && $(wayland_scanner) code $< $@
+else
+	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && $(wayland_scanner) public-code $< $@
+endif
 
 protocol/%-server-protocol.h : $(top_srcdir)/protocol/%.xml
-	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && $(wayland_scanner) server-header < $< > $@
+	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && $(wayland_scanner) server-header $< $@
 
 protocol/%-client-protocol.h : $(top_srcdir)/protocol/%.xml
-	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && $(wayland_scanner) client-header < $< > $@
+	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && $(wayland_scanner) client-header $< $@
 
 protocol/%-server-protocol-core.h : $(top_srcdir)/protocol/%.xml
 	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && $(wayland_scanner) server-header -c < $< > $@
@@ -114,11 +116,12 @@ protocol/%-client-protocol-core.h : $(top_srcdir)/protocol/%.xml
 BUILT_SOURCES =					\
 	$(nodist_libwayland_server_la_SOURCES)	\
 	$(nodist_libwayland_client_la_SOURCES)	\
-	$(nodist_headers_test_SOURCES)
+	$(nodist_headers_test_SOURCES)		\
+	$(nodist_display_test_SOURCES)
 
 CLEANFILES = $(BUILT_SOURCES) doc/doxygen/doxygen_sqlite3.db
 DISTCLEANFILES = src/wayland-version.h
-EXTRA_DIST = src/wayland-version.h.in
+EXTRA_DIST =
 
 
 
@@ -143,6 +146,19 @@ libwayland_cursor_la_CFLAGS =			\
 	-I$(top_srcdir)/src			\
 	-DICONDIR=\"$(ICONDIR)\"
 
+lib_LTLIBRARIES += libwayland-egl.la
+
+include_HEADERS += egl/wayland-egl.h
+include_HEADERS += egl/wayland-egl-core.h
+
+libwayland_egl_la_SOURCES = egl/wayland-egl.c
+libwayland_egl_la_LDFLAGS = -version-info 1
+
+pkgconfig_DATA += egl/wayland-egl.pc
+
+## XXX: backend interface
+include_HEADERS += egl/wayland-egl-backend.h
+pkgconfig_DATA += egl/wayland-egl-backend.pc
 
 built_test_programs =				\
 	array-test				\
@@ -164,7 +180,13 @@ built_test_programs =				\
 	message-test				\
 	headers-test				\
 	compositor-introspection-test		\
-	protocol-logger-test
+	protocol-logger-test			\
+	wayland-egl-abi-check
+
+EXTRA_DIST += egl/wayland-egl-symbols-check
+
+check_PROGRAMS = wayland-egl-abi-check
+wayland_egl_abi_check_SOURCES = egl/wayland-egl-abi-check.c
 
 if ENABLE_CPP_TEST
 built_test_programs += cpp-compile-test
@@ -174,10 +196,12 @@ AM_TESTS_ENVIRONMENT =							\
 	export WAYLAND_SCANNER='$(top_builddir)/wayland-scanner'	\
 	TEST_DATA_DIR='$(top_srcdir)/tests/data'			\
 	TEST_OUTPUT_DIR='$(top_builddir)/tests/output'			\
+	WAYLAND_EGL_LIB='$(top_builddir)/egl/.libs/libwayland-egl.so'	\
 	SED=$(SED)							\
 	;
 
 TESTS = $(built_test_programs)			\
+	egl/wayland-egl-symbols-check		\
 	tests/scanner-test.sh
 
 noinst_PROGRAMS =				\
@@ -207,6 +231,10 @@ client_test_SOURCES = tests/client-test.c
 client_test_LDADD = libtest-runner.la
 display_test_SOURCES = tests/display-test.c
 display_test_LDADD = libtest-runner.la
+nodist_display_test_SOURCES =				\
+	protocol/tests-server-protocol.h		\
+	protocol/tests-client-protocol.h 		\
+	protocol/tests-protocol.c
 connection_test_SOURCES = tests/connection-test.c
 connection_test_LDADD = libtest-runner.la
 event_loop_test_SOURCES = tests/event-loop-test.c
@@ -260,6 +288,7 @@ exec_fd_leak_checker_SOURCES = tests/exec-fd-leak-checker.c
 exec_fd_leak_checker_LDADD = libtest-runner.la
 
 EXTRA_DIST += tests/scanner-test.sh			\
+	protocol/tests.xml				\
 	tests/data/example.xml				\
 	tests/data/example-client.h			\
 	tests/data/example-server.h			\
@@ -270,7 +299,8 @@ EXTRA_DIST += tests/scanner-test.sh			\
 	tests/data/small-server.h			\
 	tests/data/small-code-core.c			\
 	tests/data/small-client-core.h			\
-	tests/data/small-server-core.h
+	tests/data/small-server-core.h			\
+	tests/data/small-private-code.c
 
 tests/scanner-test.sh: $(top_builddir)/wayland-scanner
 

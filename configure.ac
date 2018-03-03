@@ -2,7 +2,7 @@ AC_PREREQ([2.64])
 
 m4_define([wayland_major_version],  [1])
 m4_define([wayland_minor_version], [14])
-m4_define([wayland_micro_version],  [0])
+m4_define([wayland_micro_version], [91])
 m4_define([wayland_version],
           [wayland_major_version.wayland_minor_version.wayland_micro_version])
 
@@ -29,6 +29,7 @@ AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_GREP
 AM_PROG_AS
+AC_PROG_NM
 
 # check if we have C++ compiler. This is hacky workaround,
 # for a reason why it is this way see
@@ -193,6 +194,8 @@ AC_CONFIG_FILES([Makefile
 		 doc/publican/Makefile
 		 doc/doxygen/Makefile
 		 doc/man/Makefile
+		 egl/wayland-egl.pc
+		 egl/wayland-egl-backend.pc
 		 src/wayland-server-uninstalled.pc
 		 src/wayland-client-uninstalled.pc
 		 src/wayland-scanner-uninstalled.pc

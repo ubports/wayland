@@ -153,8 +153,6 @@ wl_array_copy(struct wl_array *array, struct wl_array *source)
 
 /** \cond */
 
-struct wl_object global_zombie_object;
-
 int
 wl_interface_equal(const struct wl_interface *a, const struct wl_interface *b)
 {
@@ -371,7 +369,7 @@ for_each_helper(struct wl_array *entries, wl_iterator_func_t func, void *data)
 
 	for (p = start; p < end; p++)
 		if (p->data && !map_entry_is_free(*p)) {
-			ret = func(map_entry_get_data(*p), data);
+			ret = func(map_entry_get_data(*p), data, map_entry_get_flags(*p));
 			if (ret != WL_ITERATOR_CONTINUE)
 				break;
 		}

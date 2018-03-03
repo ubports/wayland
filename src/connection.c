@@ -178,7 +178,7 @@ close_fds(struct wl_buffer *buffer, int max)
 	int32_t fds[sizeof(buffer->data) / sizeof(int32_t)], i, count;
 	size_t size;
 
-	size = buffer->head - buffer->tail;
+	size = wl_buffer_size(buffer);
 	if (size == 0)
 		return;
 
@@ -186,9 +186,16 @@ close_fds(struct wl_buffer *buffer, int max)
 	count = size / sizeof fds[0];
 	if (max > 0 && max < count)
 		count = max;
+	size = count * sizeof fds[0];
 	for (i = 0; i < count; i++)
 		close(fds[i]);
 	buffer->tail += size;
+}
+
+void
+wl_connection_close_fds_in(struct wl_connection *connection, int max)
+{
+	close_fds(&connection->fds_in, max);
 }
 
 int
@@ -221,7 +228,7 @@ build_cmsg(struct wl_buffer *buffer, char *data, int *clen)
 	struct cmsghdr *cmsg;
 	size_t size;
 
-	size = buffer->head - buffer->tail;
+	size = wl_buffer_size(buffer);
 	if (size > MAX_FDS_OUT * sizeof(int32_t))
 		size = MAX_FDS_OUT * sizeof(int32_t);
 
@@ -523,6 +530,64 @@ wl_argument_from_va_list(const char *signature, union wl_argument *args,
 	}
 }
 
+static void
+wl_closure_clear_fds(struct wl_closure *closure)
+{
+	const char *signature = closure->message->signature;
+	struct argument_details arg;
+	int i;
+
+	for (i = 0; i < closure->count; i++) {
+		signature = get_next_argument(signature, &arg);
+		if (arg.type == 'h')
+			closure->args[i].h = -1;
+	}
+}
+
+static struct wl_closure *
+wl_closure_init(const struct wl_message *message, uint32_t size,
+                int *num_arrays, union wl_argument *args)
+{
+	struct wl_closure *closure;
+	int count;
+
+	count = arg_count_for_signature(message->signature);
+	if (count > WL_CLOSURE_MAX_ARGS) {
+		wl_log("too many args (%d)\n", count);
+		errno = EINVAL;
+		return NULL;
+	}
+
+	if (size) {
+		*num_arrays = wl_message_count_arrays(message);
+		closure = malloc(sizeof *closure + size +
+				 *num_arrays * sizeof(struct wl_array));
+	} else {
+		closure = malloc(sizeof *closure);
+	}
+
+	if (!closure) {
+		errno = ENOMEM;
+		return NULL;
+	}
+
+	if (args)
+		memcpy(closure->args, args, count * sizeof *args);
+
+	closure->message = message;
+	closure->count = count;
+
+	/* Set these all to -1 so we can close any that have been
+	 * set to a real value during wl_closure_destroy().
+	 * We may have copied a bunch of fds into the closure with
+	 * memcpy previously, but those are undup()d client fds
+	 * that we would have replaced anyway.
+	 */
+	wl_closure_clear_fds(closure);
+
+	return closure;
+}
+
 struct wl_closure *
 wl_closure_marshal(struct wl_object *sender, uint32_t opcode,
 		   union wl_argument *args,
@@ -534,20 +599,11 @@ wl_closure_marshal(struct wl_object *sender, uint32_t opcode,
 	const char *signature;
 	struct argument_details arg;
 
-	count = arg_count_for_signature(message->signature);
-	if (count > WL_CLOSURE_MAX_ARGS) {
-		wl_log("too many args (%d)\n", count);
-		errno = EINVAL;
+	closure = wl_closure_init(message, 0, NULL, args);
+	if (closure == NULL)
 		return NULL;
-	}
 
-	closure = malloc(sizeof *closure);
-	if (closure == NULL) {
-		errno = ENOMEM;
-		return NULL;
-	}
-
-	memcpy(closure->args, args, count * sizeof *args);
+	count = closure->count;
 
 	signature = message->signature;
 	for (i = 0; i < count; i++) {
@@ -592,8 +648,6 @@ wl_closure_marshal(struct wl_object *sender, uint32_t opcode,
 
 	closure->sender_id = sender->id;
 	closure->opcode = opcode;
-	closure->message = message;
-	closure->count = count;
 
 	return closure;
 
@@ -627,27 +681,19 @@ wl_connection_demarshal(struct wl_connection *connection,
 	uint32_t *p, *next, *end, length, id;
 	int fd;
 	char *s;
-	unsigned int i, count, num_arrays;
+	int i, count, num_arrays;
 	const char *signature;
 	struct argument_details arg;
 	struct wl_closure *closure;
-	struct wl_array *array, *array_extra;
+	struct wl_array *array_extra;
 
-	count = arg_count_for_signature(message->signature);
-	if (count > WL_CLOSURE_MAX_ARGS) {
-		wl_log("too many args (%d)\n", count);
-		errno = EINVAL;
-		wl_connection_consume(connection, size);
-		return NULL;
-	}
-
-	num_arrays = wl_message_count_arrays(message);
-	closure = malloc(sizeof *closure + size + num_arrays * sizeof *array);
+	closure = wl_closure_init(message, size, &num_arrays, NULL);
 	if (closure == NULL) {
-		errno = ENOMEM;
 		wl_connection_consume(connection, size);
 		return NULL;
 	}
+
+	count = closure->count;
 
 	array_extra = closure->extra;
 	p = (uint32_t *)(closure->extra + num_arrays);
@@ -664,7 +710,8 @@ wl_connection_demarshal(struct wl_connection *connection,
 		if (arg.type != 'h' && p + 1 > end) {
 			wl_log("message too short, "
 			       "object (%d), message %s(%s)\n",
-			       *p, message->name, message->signature);
+			       closure->sender_id, message->name,
+			       message->signature);
 			errno = EINVAL;
 			goto err;
 		}
@@ -783,9 +830,6 @@ wl_connection_demarshal(struct wl_connection *connection,
 		}
 	}
 
-	closure->count = count;
-	closure->message = message;
-
 	wl_connection_consume(connection, size);
 
 	return closure;
@@ -795,6 +839,23 @@ wl_connection_demarshal(struct wl_connection *connection,
 	wl_connection_consume(connection, size);
 
 	return NULL;
+}
+
+bool
+wl_object_is_zombie(struct wl_map *map, uint32_t id)
+{
+	uint32_t flags;
+
+	/* Zombie objects only exist on the client side. */
+	if (map->side == WL_MAP_SERVER_SIDE)
+		return false;
+
+	/* Zombie objects can only have been created by the client. */
+	if (id >= WL_SERVER_ID_START)
+		return false;
+
+	flags = wl_map_lookup_flags(map, id);
+	return !!(flags & WL_MAP_ENTRY_ZOMBIE);
 }
 
 int
@@ -818,7 +879,7 @@ wl_closure_lookup_objects(struct wl_closure *closure, struct wl_map *objects)
 			closure->args[i].o = NULL;
 
 			object = wl_map_lookup(objects, id);
-			if (object == WL_ZOMBIE_OBJECT) {
+			if (wl_object_is_zombie(objects, id)) {
 				/* references object we've already
 				 * destroyed client side */
 				object = NULL;
@@ -933,6 +994,8 @@ wl_closure_invoke(struct wl_closure *closure, uint32_t flags,
 			 opcode, target->interface->name);
 	}
 	ffi_call(&cif, implementation[opcode], NULL, ffi_args);
+
+	wl_closure_clear_fds(closure);
 }
 
 void
@@ -941,6 +1004,8 @@ wl_closure_dispatch(struct wl_closure *closure, wl_dispatcher_func_t dispatcher,
 {
 	dispatcher(target->implementation, target, opcode, closure->message,
 		   closure->args);
+
+	wl_closure_clear_fds(closure);
 }
 
 static int
@@ -965,6 +1030,7 @@ copy_fds_to_connection(struct wl_closure *closure,
 			       "can't send file descriptor");
 			return -1;
 		}
+		closure->args[i].h = -1;
 	}
 
 	return 0;
@@ -1234,8 +1300,29 @@ wl_closure_print(struct wl_closure *closure, struct wl_object *target, int send)
 	fprintf(stderr, ")\n");
 }
 
+static int
+wl_closure_close_fds(struct wl_closure *closure)
+{
+	int i;
+	struct argument_details arg;
+	const char *signature = closure->message->signature;
+
+	for (i = 0; i < closure->count; i++) {
+		signature = get_next_argument(signature, &arg);
+		if (arg.type == 'h' && closure->args[i].h != -1)
+			close(closure->args[i].h);
+	}
+
+	return 0;
+}
+
 void
 wl_closure_destroy(struct wl_closure *closure)
 {
+	/* wl_closure_destroy has free() semantics */
+	if (!closure)
+		return;
+
+	wl_closure_close_fds(closure);
 	free(closure);
 }
