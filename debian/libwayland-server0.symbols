@@ -38,6 +38,7 @@ libwayland-server.so.0 libwayland-server0 #MINVER#
  wl_display_add_socket_fd@Base 1.9.91
  wl_display_create@Base 1.0.2
  wl_display_destroy@Base 1.0.2
+ wl_display_destroy_clients@Base 1.14.91
  wl_display_flush_clients@Base 1.0.2
  wl_display_get_client_list@Base 1.11.91
  wl_display_get_destroy_listener@Base 1.0.4
