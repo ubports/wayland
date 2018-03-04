@@ -1,3 +1,19 @@
+wayland (1.14.91-1) UNRELEASED; urgency=medium
+
+  [ Helmut Grohne ]
+  * Use wayland-scanner from libwayland-bin (Closes: #836687)
+    - Fixes cross builds
+
+  [ Héctor Orón Martínez ]
+  * New upstream pre-release
+  * debian/control: libwayland-dev suggests libwayland-doc (Closes: #857139)
+  * debian/libwayland-server0.symbols: update
+  * debian/control: update priority from extra to optional
+  * libwayland-egl1: add new package
+  * debian/control: bump standards version
+
+ -- Héctor Orón Martínez <zumbi@debian.org>  Sun, 04 Mar 2018 01:55:03 +0100
+
 wayland (1.14.0-1) unstable; urgency=medium
 
   * New upstream release.
