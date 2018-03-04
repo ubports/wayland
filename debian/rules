@@ -23,6 +23,8 @@ override_dh_makeshlibs:
 		-V 'libwayland-client0 (>= 1.2.0)' -- -c4
 	dh_makeshlibs -plibwayland-cursor0 \
 		-V 'libwayland-cursor0 (>= 1.0.4)' -- -c4
+	dh_makeshlibs -plibwayland-egl1 \
+		-V 'libwayland-egl1 (>= 1.14.91)' -- -c4
 	dh_makeshlibs -plibwayland-server0 \
 		-V 'libwayland-server0 (>= 1.2.0)' -- -c4
 

@@ -6,10 +6,14 @@ usr/lib/*/libwayland-client.a
 usr/lib/*/libwayland-client.so
 usr/lib/*/libwayland-cursor.a
 usr/lib/*/libwayland-cursor.so
+usr/lib/*/libwayland-egl.so
+usr/lib/*/libwayland-egl.a
 usr/lib/*/libwayland-server.a
 usr/lib/*/libwayland-server.so
 usr/lib/*/pkgconfig/wayland-client.pc
 usr/lib/*/pkgconfig/wayland-cursor.pc
+usr/lib/*/pkgconfig/wayland-egl-backend.pc
+usr/lib/*/pkgconfig/wayland-egl.pc
 usr/lib/*/pkgconfig/wayland-server.pc
 usr/lib/*/pkgconfig/wayland-scanner.pc
 
