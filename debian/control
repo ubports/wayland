@@ -89,7 +89,6 @@ Description: wayland compositor infrastructure - cursor library
 Package: libwayland-dev
 Section: libdevel
 Architecture: any
-Priority: extra
 Suggests: libwayland-doc
 Depends:
  libwayland-client0 (= ${binary:Version}),
@@ -113,7 +112,6 @@ Description: wayland compositor infrastructure - development files
 Package: libwayland-doc
 Section: doc
 Architecture: all
-Priority: extra
 Depends:
  ${misc:Depends},
 Multi-Arch: foreign
@@ -133,7 +131,6 @@ Description: wayland compositor infrastructure - documentation files
 Package: libwayland-bin
 Section: libdevel
 Architecture: any
-Priority: extra
 Depends:
  ${shlibs:Depends},
  ${misc:Depends},
