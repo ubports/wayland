@@ -1,4 +1,4 @@
-wayland (1.14.91-1) UNRELEASED; urgency=medium
+wayland (1.14.91-1) experimental; urgency=medium
 
   [ Helmut Grohne ]
   * Use wayland-scanner from libwayland-bin (Closes: #836687)
@@ -12,7 +12,7 @@ wayland (1.14.91-1) UNRELEASED; urgency=medium
   * libwayland-egl1: add new package
   * debian/control: bump standards version
 
- -- Héctor Orón Martínez <zumbi@debian.org>  Sun, 04 Mar 2018 01:55:03 +0100
+ -- Héctor Orón Martínez <zumbi@debian.org>  Tue, 13 Mar 2018 16:01:40 +0100
 
 wayland (1.14.0-1) unstable; urgency=medium
 
