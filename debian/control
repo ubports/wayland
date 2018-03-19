@@ -116,9 +116,11 @@ Depends:
  libwayland-client0 (= ${binary:Version}),
  libwayland-server0 (= ${binary:Version}),
  libwayland-cursor0 (= ${binary:Version}),
+ libwayland-egl1 (= ${binary:Version}),
  libwayland-bin (= ${binary:Version}),
  ${shlibs:Depends},
  ${misc:Depends},
+Conflicts: libegl1-mesa-dev
 Multi-Arch: same
 Description: wayland compositor infrastructure - development files
  Wayland is a protocol for a compositor to talk to its clients as well
