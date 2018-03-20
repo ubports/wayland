@@ -1,6 +1,7 @@
 wayland (1.14.92-1) UNRELEASED; urgency=medium
 
   * New upstream pre-release.
+  * signing-keys.asc: Updated.
 
  -- Timo Aaltonen <tjaalton@debian.org>  Tue, 20 Mar 2018 11:24:55 +0200
 
