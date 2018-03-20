@@ -4,6 +4,7 @@ wayland (1.14.92-1) UNRELEASED; urgency=medium
   * signing-keys.asc: Updated.
   * libwayland-dev.install: Drop static libs, they're not provided
     anymore.
+  * libwayland-egl1.symbols: Updated.
 
  -- Timo Aaltonen <tjaalton@debian.org>  Tue, 20 Mar 2018 11:24:55 +0200
 
