@@ -196,8 +196,9 @@ AM_TESTS_ENVIRONMENT =							\
 	export WAYLAND_SCANNER='$(top_builddir)/wayland-scanner'	\
 	TEST_DATA_DIR='$(top_srcdir)/tests/data'			\
 	TEST_OUTPUT_DIR='$(top_builddir)/tests/output'			\
-	WAYLAND_EGL_LIB='$(top_builddir)/egl/.libs/libwayland-egl.so'	\
+	WAYLAND_EGL_LIB='$(top_builddir)/.libs/libwayland-egl.so'	\
 	SED=$(SED)							\
+	NM='$(NM)'							\
 	;
 
 TESTS = $(built_test_programs)			\
