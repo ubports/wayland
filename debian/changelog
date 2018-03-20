@@ -1,10 +1,15 @@
 wayland (1.14.92-1) UNRELEASED; urgency=medium
 
+  [ Timo Aaltonen ]
   * New upstream pre-release.
   * signing-keys.asc: Updated.
   * libwayland-dev.install: Drop static libs, they're not provided
     anymore.
   * libwayland-egl1.symbols: Updated.
+  * control: Adjust Breaks/Provides for libwayland-egl migration.
+
+  [ Héctor Orón Martínez ]
+  * control: Fix uninstallability issues. (Closes: #893366)
 
  -- Timo Aaltonen <tjaalton@debian.org>  Tue, 20 Mar 2018 11:24:55 +0200
 
