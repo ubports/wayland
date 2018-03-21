@@ -1,6 +1,6 @@
-wayland (1.14.92-1) UNRELEASED; urgency=medium
+wayland (1.14.92-1) experimental; urgency=medium
 
-  [ Timo Aaltonen ]
+  [ Timo Aaltonen ]
   * New upstream pre-release.
   * signing-keys.asc: Updated.
   * libwayland-dev.install: Drop static libs, they're not provided
@@ -11,7 +11,7 @@ wayland (1.14.92-1) UNRELEASED; urgency=medium
   [ Héctor Orón Martínez ]
   * control: Fix uninstallability issues. (Closes: #893366)
 
- -- Timo Aaltonen <tjaalton@debian.org>  Tue, 20 Mar 2018 11:24:55 +0200
+ -- Timo Aaltonen <tjaalton@debian.org>  Wed, 21 Mar 2018 21:42:58 +0200
 
 wayland (1.14.91-1) experimental; urgency=medium
 
