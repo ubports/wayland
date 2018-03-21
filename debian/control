@@ -52,8 +52,8 @@ Multi-Arch: same
 Depends:
  ${shlibs:Depends},
  ${misc:Depends},
-Breaks: libwayland-egl1-mesa (<< 18.0.0~rc4-2)
-Replaces: libwayland-egl1-mesa (<< 18.0.0~rc4-2)
+Breaks: libwayland-egl1-mesa (<< 18.0.0~rc5-1)
+Replaces: libwayland-egl1-mesa (<< 18.0.0~rc5-1)
 Provides: libwayland-egl1-mesa
 Description: wayland compositor infrastructure - EGL library
  Wayland is a protocol for a compositor to talk to its clients as well
@@ -120,8 +120,8 @@ Depends:
  libwayland-bin (= ${binary:Version}),
  ${shlibs:Depends},
  ${misc:Depends},
-Breaks: libegl1-mesa-dev (<< 18.0.0~rc4-2)
-Replaces: libegl1-mesa-dev (<< 18.0.0~rc4-2)
+Breaks: libegl1-mesa-dev (<< 18.0.0~rc5-1)
+Replaces: libegl1-mesa-dev (<< 18.0.0~rc5-1)
 Multi-Arch: same
 Description: wayland compositor infrastructure - development files
  Wayland is a protocol for a compositor to talk to its clients as well
