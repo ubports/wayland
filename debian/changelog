@@ -1,3 +1,9 @@
+wayland (1.14.93-1) experimental; urgency=medium
+
+  * New upstrem release candidate.
+
+ -- Timo Aaltonen <tjaalton@debian.org>  Tue, 03 Apr 2018 10:53:33 +0300
+
 wayland (1.14.92-1) experimental; urgency=medium
 
   [ Timo Aaltonen ]
