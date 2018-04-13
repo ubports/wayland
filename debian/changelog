@@ -1,6 +1,7 @@
 wayland (1.15.0-1) UNRELEASED; urgency=medium
 
   * New upstream release.
+  * Put wayland-egl-backend.* to a separate dev-package.
 
  -- Timo Aaltonen <tjaalton@debian.org>  Wed, 11 Apr 2018 17:47:24 +0300
 

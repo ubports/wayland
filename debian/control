@@ -120,8 +120,6 @@ Depends:
  libwayland-bin (= ${binary:Version}),
  ${shlibs:Depends},
  ${misc:Depends},
-Breaks: libegl1-mesa-dev (<< 18.0.0~rc5-1)
-Replaces: libegl1-mesa-dev (<< 18.0.0~rc5-1)
 Multi-Arch: same
 Description: wayland compositor infrastructure - development files
  Wayland is a protocol for a compositor to talk to its clients as well
@@ -133,6 +131,27 @@ Description: wayland compositor infrastructure - development files
  .
  This package contains the development headers for the Wayland libraries.
  Non-developers likely have little use for this package.
+
+Package: libwayland-egl-backend-dev
+Section: libdevel
+Architecture: any
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends},
+Breaks: libegl1-mesa-dev (<< 18.0.0~rc5-1),
+ libwayland-dev (<< 1.15.0)
+Replaces: libegl1-mesa-dev (<< 18.0.0~rc5-1),
+ libwayland-dev (<< 1.15.0)
+Multi-Arch: same
+Description: wayland compositor infrastructure - EGL backend development files
+ Wayland is a protocol for a compositor to talk to its clients as well
+ as a C library implementation of that protocol. The compositor can be
+ a standalone display server running on Linux kernel modesetting and
+ evdev input devices, an X application, or a wayland client
+ itself. The clients can be traditional applications, X servers
+ (rootless or fullscreen) or other display servers.
+ .
+ This package contains the development headers for the Wayland EGL backend.
 
 Package: libwayland-doc
 Section: doc
