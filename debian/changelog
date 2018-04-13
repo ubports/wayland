@@ -3,6 +3,8 @@ wayland (1.15.0-1) UNRELEASED; urgency=medium
   * New upstream release.
   * Put wayland-egl-backend.* to a separate dev-package.
   * libwayland-egl1.symbols: Fixed.
+  * control: Bump Breaks/Replaces on libegl1-mesa-dev, so that this can
+    be synced to Ubuntu.
 
  -- Timo Aaltonen <tjaalton@debian.org>  Wed, 11 Apr 2018 17:47:24 +0300
 
