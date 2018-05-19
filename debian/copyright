@@ -7,13 +7,23 @@ Copyright: © 2011 Cyril Brulebois <kibi@debian.org>
 License: X11
 
 Files: *
-Copyright: © 2008-2012 Kristian Høgsberg
-           © 2010-2012 Intel Corporation
-           © 2011 Benjamin Franzke
-           © 2012 Collabora, Ltd.
-	   © 2012 Jonas Ådahl
-	   © 2002 Keith Packard
-	   © 1999 SuSE, Inc.
+Copyright:
+ © 1999 SuSE, Inc.
+ © 2002 Keith Packard
+ © 2006, 2008 Junio C Hamano
+ © 2008-2012 Kristian Høgsberg
+ © 2010-2012 Intel Corporation
+ © 2011 Benjamin Franzke
+ © 2012-2013, 2016 Collabora, Ltd
+ © 2012-2013 Jason Ekstrand
+ © 2012-2014 Jonas Ådahl
+ © 2013 Marek Chalupa
+ © 2014-2015 Red Hat, Inc.
+ © 2015 Giulio Camuffo
+ © 2016 Klarälvdalens Datakonsult AB
+ © 2016 Yong Bakos
+ © 2017 NVIDIA CORPORATION
+ © 2017 Samsung Electronics Co., Ltd
 License: X11
 
 License: X11
