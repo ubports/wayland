@@ -1,9 +1,9 @@
-wayland (1.15.0-2) UNRELEASED; urgency=medium
+wayland (1.15.0-2) unstable; urgency=medium
 
   * debian/copyright: add missing copyright holders. Closes: #897362.
   * Update Vcs-* for salsa.
 
- -- Emilio Pozuelo Monfort <pochu@debian.org>  Sat, 19 May 2018 12:18:47 +0200
+ -- Emilio Pozuelo Monfort <pochu@debian.org>  Sat, 19 May 2018 12:34:01 +0200
 
 wayland (1.15.0-1) unstable; urgency=medium
 
