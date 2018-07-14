@@ -1,6 +1,10 @@
 wayland (1.15.0-3) UNRELEASED; urgency=medium
 
+  [ Emilio Pozuelo Monfort ]
   * Update the watch file for the new upstream website layout.
+
+  [ Salvatore Bonaccorso ]
+  * Add debian/changelog entry for 1.14.0-2 (Closes: #903748)
 
  -- Emilio Pozuelo Monfort <pochu@debian.org>  Mon, 09 Jul 2018 14:46:07 +0200
 
@@ -57,6 +61,19 @@ wayland (1.14.91-1) experimental; urgency=medium
   * debian/control: bump standards version
 
  -- Héctor Orón Martínez <zumbi@debian.org>  Tue, 13 Mar 2018 16:01:40 +0100
+
+wayland (1.14.0-2) unstable; urgency=medium
+
+  * debian/patches/CVE-2017-16612.patch: (Closes: #889681)
+    - libXcursor before 1.1.15 has various integer overflows that could lead
+      to heap buffer overflows when processing malicious cursors, e.g., with
+      programs like GIMP. It is also possible that an attack vector exists
+      against the related code in cursor/xcursor.c in Wayland through
+      1.14.0.
+  * switch back to use upstream tarball
+  * debian/control: bump standards version, drop priority stanzas
+
+ -- Héctor Orón Martínez <zumbi@debian.org>  Sun, 04 Mar 2018 11:56:31 +0100
 
 wayland (1.14.0-1) unstable; urgency=medium
 
