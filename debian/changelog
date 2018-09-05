@@ -1,10 +1,13 @@
-wayland (1.15.0-3) UNRELEASED; urgency=medium
+wayland (1.16.0-1) UNRELEASED; urgency=medium
 
   [ Emilio Pozuelo Monfort ]
   * Update the watch file for the new upstream website layout.
 
   [ Salvatore Bonaccorso ]
   * Add debian/changelog entry for 1.14.0-2 (Closes: #903748)
+
+  [ Timo Aaltonen ]
+  * New upstream release.
 
  -- Emilio Pozuelo Monfort <pochu@debian.org>  Mon, 09 Jul 2018 14:46:07 +0200
 
