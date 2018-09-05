@@ -1,4 +1,4 @@
-wayland (1.16.0-1) UNRELEASED; urgency=medium
+wayland (1.16.0-1) unstable; urgency=medium
 
   [ Emilio Pozuelo Monfort ]
   * Update the watch file for the new upstream website layout.
@@ -9,7 +9,7 @@ wayland (1.16.0-1) UNRELEASED; urgency=medium
   [ Timo Aaltonen ]
   * New upstream release.
 
- -- Emilio Pozuelo Monfort <pochu@debian.org>  Mon, 09 Jul 2018 14:46:07 +0200
+ -- Timo Aaltonen <tjaalton@debian.org>  Wed, 05 Sep 2018 20:20:03 +0300
 
 wayland (1.15.0-2) unstable; urgency=medium
 
