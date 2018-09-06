@@ -1,3 +1,10 @@
+wayland (1.16.0-2) UNRELEASED; urgency=medium
+
+  * control: Bump breaks/replaces on libwayland-egl-mesa/libegl1-mesa-
+    dev, which got updated on Ubuntu.
+
+ -- Timo Aaltonen <tjaalton@debian.org>  Thu, 06 Sep 2018 16:02:11 +0300
+
 wayland (1.16.0-1) unstable; urgency=medium
 
   [ Emilio Pozuelo Monfort ]
