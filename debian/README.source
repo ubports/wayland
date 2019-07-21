@@ -1,3 +1,6 @@
+Useful upstream remote:
+git remote add upstream https://gitlab.freedesktop.org/wayland/wayland.git
+
 This package uses quilt to manage all modifications to the upstream
 source.  Changes are stored in the source package as diffs in
 debian/patches and applied during the build.
