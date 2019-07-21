@@ -22,6 +22,7 @@ libwayland-server.so.0 libwayland-server0 #MINVER#
  wl_client_get_link@Base 1.11.91
  wl_client_get_object@Base 1.0.2
  wl_client_new_object@Base 1.0.2
+ wl_client_post_implementation_error@Base 1.17.0
  wl_client_post_no_memory@Base 1.2.0
  wl_compositor_interface@Base 1.0.2
  wl_data_device_interface@Base 1.0.2
