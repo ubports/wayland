@@ -35,7 +35,6 @@
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
-#include <expat.h>
 #include <getopt.h>
 #include <limits.h>
 #include <unistd.h>
@@ -47,6 +46,10 @@
 extern char DTD_DATA_begin;
 extern int DTD_DATA_len;
 #endif
+
+/* Expat must be included after libxml as both want to declare XMLCALL; see
+ * the Git commit that 'git blame' for this comment points to for more. */
+#include <expat.h>
 
 #include "wayland-util.h"
 
@@ -133,6 +136,7 @@ is_dtd_valid(FILE *input, const char *filename)
 	rc = xmlValidateDtd(dtdctx, doc, dtd);
 	xmlFreeDoc(doc);
 	xmlFreeParserCtxt(ctx);
+	xmlFreeDtd(dtd);
 	xmlFreeValidCtxt(dtdctx);
 	/* xmlIOParseDTD consumes buffer */
 
@@ -370,7 +374,7 @@ desc_dump(char *desc, const char *fmt, ...)
 	putchar('\n');
 }
 
-static void
+static void __attribute__ ((noreturn))
 fail(struct location *loc, const char *msg, ...)
 {
 	va_list ap;
@@ -432,6 +436,7 @@ free_arg(struct arg *arg)
 	free(arg->name);
 	free(arg->interface_name);
 	free(arg->summary);
+	free(arg->enumeration_name);
 	free(arg);
 }
 

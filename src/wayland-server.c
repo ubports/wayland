@@ -273,17 +273,14 @@ wl_resource_queue_event(struct wl_resource *resource, uint32_t opcode, ...)
 	wl_resource_queue_event_array(resource, opcode, args);
 }
 
-WL_EXPORT void
-wl_resource_post_error(struct wl_resource *resource,
-		       uint32_t code, const char *msg, ...)
+static void
+wl_resource_post_error_vargs(struct wl_resource *resource,
+			     uint32_t code, const char *msg, va_list argp)
 {
 	struct wl_client *client = resource->client;
 	char buffer[128];
-	va_list ap;
 
-	va_start(ap, msg);
-	vsnprintf(buffer, sizeof buffer, msg, ap);
-	va_end(ap);
+	vsnprintf(buffer, sizeof buffer, msg, argp);
 
 	/*
 	 * When a client aborts, its resources are destroyed in id order,
@@ -298,6 +295,18 @@ wl_resource_post_error(struct wl_resource *resource,
 	wl_resource_post_event(client->display_resource,
 			       WL_DISPLAY_ERROR, resource, code, buffer);
 	client->error = 1;
+
+}
+
+WL_EXPORT void
+wl_resource_post_error(struct wl_resource *resource,
+		       uint32_t code, const char *msg, ...)
+{
+	va_list ap;
+
+	va_start(ap, msg);
+	wl_resource_post_error_vargs(resource, code, msg, ap);
+	va_end(ap);
 }
 
 static void
@@ -639,6 +648,30 @@ wl_client_post_no_memory(struct wl_client *client)
 {
 	wl_resource_post_error(client->display_resource,
 			       WL_DISPLAY_ERROR_NO_MEMORY, "no memory");
+}
+
+/** Report an internal server error
+ *
+ * \param client The client object
+ * \param msg A printf-style format string
+ * \param ... Format string arguments
+ *
+ * Report an unspecified internal implementation error and disconnect
+ * the client.
+ *
+ * \memberof wl_client
+ */
+WL_EXPORT void
+wl_client_post_implementation_error(struct wl_client *client,
+				    char const *msg, ...)
+{
+	va_list ap;
+
+	va_start(ap, msg);
+	wl_resource_post_error_vargs(client->display_resource,
+				     WL_DISPLAY_ERROR_IMPLEMENTATION,
+				     msg, ap);
+	va_end(ap);
 }
 
 WL_EXPORT void

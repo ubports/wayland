@@ -695,6 +695,14 @@ wl_connection_demarshal(struct wl_connection *connection,
 	struct wl_closure *closure;
 	struct wl_array *array_extra;
 
+	/* Space for sender_id and opcode */
+	if (size < 2 * sizeof *p) {
+		wl_log("message too short, invalid header\n");
+		wl_connection_consume(connection, size);
+		errno = EINVAL;
+		return NULL;
+	}
+
 	closure = wl_closure_init(message, size, &num_arrays, NULL);
 	if (closure == NULL) {
 		wl_connection_consume(connection, size);
@@ -1278,7 +1286,10 @@ wl_closure_print(struct wl_closure *closure, struct wl_object *target, int send)
 				wl_fixed_to_double(closure->args[i].f));
 			break;
 		case 's':
-			fprintf(stderr, "\"%s\"", closure->args[i].s);
+			if (closure->args[i].s)
+				fprintf(stderr, "\"%s\"", closure->args[i].s);
+			else
+				fprintf(stderr, "nil");
 			break;
 		case 'o':
 			if (closure->args[i].o)
