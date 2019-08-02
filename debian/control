@@ -5,7 +5,8 @@ Maintainer: Debian X Strike Force <debian-x@lists.debian.org>
 Uploaders: Emilio Pozuelo Monfort <pochu@debian.org>,
            Héctor Orón Martínez <zumbi@debian.org>
 Build-Depends:
- debhelper (>= 10),
+ debhelper,
+ dh-autoreconf,
  quilt,
  pkg-config,
  libexpat1-dev,

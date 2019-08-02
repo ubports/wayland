@@ -1,3 +1,9 @@
+wayland (1.16.0-1ubports1) xenial; urgency=medium
+
+  * Import to UBPorts and adapt for debhelper 9
+
+ -- TheKit <nekit1000@gmail.com>  Fri, 02 Aug 2019 19:38:13 +0200
+
 wayland (1.16.0-2) UNRELEASED; urgency=medium
 
   * control: Bump breaks/replaces on libwayland-egl-mesa/libegl1-mesa-
