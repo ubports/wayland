@@ -1,3 +1,9 @@
+wayland (1.18.0-1ubports1) xenial; urgency=medium
+
+  * Rebase xenial on top of debian-unstable
+
+ -- Alfred Neumayer <dev.beidl@gmail.com>  Wed, 24 Feb 2021 04:17:34 +0100
+
 wayland (1.18.0-2~exp1.1) unstable; urgency=medium
 
   * Non-maintainer upload.
@@ -37,6 +43,12 @@ wayland (1.17.0-1) unstable; urgency=medium
   * debian/libwayland-server0.symbols: update symbols file
 
  -- Héctor Orón Martínez <zumbi@debian.org>  Sun, 21 Jul 2019 20:30:10 +0200
+
+wayland (1.16.0-1ubports1) xenial; urgency=medium
+
+  * Import to UBPorts and adapt for debhelper 9
+
+ -- TheKit <nekit1000@gmail.com>  Fri, 02 Aug 2019 19:38:13 +0200
 
 wayland (1.16.0-1) unstable; urgency=medium
 
