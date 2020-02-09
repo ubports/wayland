@@ -71,6 +71,8 @@ libwayland-server.so.0 libwayland-server0 #MINVER#
  wl_global_destroy@Base 1.2.0
  wl_global_get_interface@Base 1.13.0
  wl_global_get_user_data@Base 1.13.0
+ wl_global_remove@Base 1.17.93
+ wl_global_set_user_data@Base 1.17.93
  wl_keyboard_interface@Base 1.0.2
  wl_list_empty@Base 1.0.2
  wl_list_init@Base 1.0.2
