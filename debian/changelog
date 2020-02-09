@@ -1,3 +1,10 @@
+wayland (1.17.93-1~exp1) UNRELEASED; urgency=medium
+
+  * RC1 for Wayland 1.18
+  * debian/control: bump Standards-Version, no changes
+
+ -- Héctor Orón Martínez <zumbi@debian.org>  Sun, 09 Feb 2020 20:46:40 +0100
+
 wayland (1.17.0-1) unstable; urgency=medium
 
   [ Timo Aaltonen ]
