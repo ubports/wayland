@@ -1,3 +1,9 @@
+wayland (1.18.0-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Héctor Orón Martínez <zumbi@debian.org>  Wed, 12 Feb 2020 11:08:11 +0100
+
 wayland (1.17.93-1~exp1) experimental; urgency=medium
 
   * RC1 for Wayland 1.18
