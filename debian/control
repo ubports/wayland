@@ -12,6 +12,7 @@ Build-Depends:
  libffi-dev,
  libxml2-dev,
  libwayland-bin <cross>,
+ meson,
 Build-Depends-Indep:
  doxygen,
  graphviz,
