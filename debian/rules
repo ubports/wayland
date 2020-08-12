@@ -2,12 +2,9 @@
 
 SOURCE=wayland
 
-ifneq (,$(filter cross,$(DEB_BUILD_PROFILES)))
-configure_flags += --with-host-scanner
-endif
 # Don't build the documentation when not building arch:all packages
 ifeq (,$(filter libwayland-doc,$(shell dh_listpackages)))
-configure_flags += --disable-documentation
+configure_flags += -Ddocumentation=false
 endif
 
 override_dh_auto_configure:
@@ -16,7 +13,7 @@ override_dh_auto_configure:
 # Kill *.la files, and forget no-one:
 override_dh_install:
 	find debian/tmp -name '*.la' -delete
-	dh_install --fail-missing
+	dh_missing --fail-missing
 
 override_dh_makeshlibs:
 	dh_makeshlibs -plibwayland-client0 \
@@ -40,7 +37,7 @@ override_dh_auto_test:
 	dh_auto_test || true
 
 %:
-	dh $@ --with quilt --builddirectory=build/
+	dh $@ --with quilt --builddirectory=build/ --buildsystem=meson
 
 # For maintainer use only, generate a tarball:
 gentarball: UV=$(shell dpkg-parsechangelog|awk '/^Version:/ {print $$2}'|sed 's/-.*$$//')
