@@ -1,8 +1,8 @@
-wayland (1.18.0-2~exp1) UNRELEASED; urgency=medium
+wayland (1.18.0-2~exp1) unstable; urgency=medium
 
   * Switch build system to meson
 
- -- Héctor Orón Martínez <zumbi@debian.org>  Wed, 12 Aug 2020 13:10:01 +0200
+ -- Héctor Orón Martínez <zumbi@debian.org>  Wed, 12 Aug 2020 13:38:40 +0200
 
 wayland (1.18.0-1) unstable; urgency=medium
 
