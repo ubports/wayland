@@ -119,6 +119,7 @@ Depends:
  libwayland-cursor0 (= ${binary:Version}),
  libwayland-egl1 (= ${binary:Version}),
  libwayland-bin (= ${binary:Version}),
+ libffi-dev,
  ${shlibs:Depends},
  ${misc:Depends},
 Breaks: libegl1-mesa-dev (<< 18.0.5-0),
