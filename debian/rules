@@ -4,7 +4,7 @@ SOURCE=wayland
 
 # Don't build the documentation when not building arch:all packages
 ifeq (,$(filter libwayland-doc,$(shell dh_listpackages)))
-configure_flags += -Ddocumentation=false
+configure_flags += --disable-documentation
 endif
 
 override_dh_auto_configure:
